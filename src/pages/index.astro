@@ -1,8 +1,16 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { Button } from '$lib/components/ui/button';
+import { supabase } from '../db/supabase';
+
+const { data, error } = await supabase.from("user_profiles").select('*');
+console.log(data);
 ---
 
-<Layout>
-	<Button>Click me</Button>
-</Layout>
+{
+  (
+    <ul>
+      {data?.map((entry) => (
+        <li>{entry.name}</li>
+      ))}
+    </ul>
+  )
+}
