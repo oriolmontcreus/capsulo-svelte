@@ -15,6 +15,7 @@ function getSupabaseBindings(env: Env): { url: string; anonKey: string } | null 
 	return { url, anonKey };
 }
 
+//TODO: We might want to give the user the option to change the protected cms route to a different prefix
 function isAdminRoute(pathname: string): boolean {
 	return pathname === "/admin" || pathname.startsWith("/admin/");
 }
