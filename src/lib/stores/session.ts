@@ -37,11 +37,16 @@ async function refreshUserProfile(next: Session | null): Promise<void> {
 	userProfile.set(data as UserProfile | null);
 }
 
-let listenersAttached = false;
+const AUTH_LISTENER_GUARD = "__capsuloSupabaseAuthListener";
 
 function attachAuthListeners() {
-	if (typeof window === "undefined" || listenersAttached) return;
-	listenersAttached = true;
+	//*** Guard to avoid attaching multiple listeners.
+	if (typeof window === "undefined") return;
+	const g = globalThis as typeof globalThis & { [AUTH_LISTENER_GUARD]?: boolean };
+	if (g[AUTH_LISTENER_GUARD]) return;
+	g[AUTH_LISTENER_GUARD] = true;
+	//***
+
 	supabase.auth.onAuthStateChange((_event, next) => {
 		session.set(next);
 		void refreshUserProfile(next);
