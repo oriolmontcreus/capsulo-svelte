@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { ArrowRight } from "@lucide/svelte";
 	import { supabase } from "../db/supabase";
 	import { onMount } from "svelte";
-	import { session, syncSession } from "./stores/session";
+	import { session, sessionDisplayName, syncSession, userProfile } from "./stores/session";
 	import * as Card from "$lib/components/ui/card";
 	import {
 		FieldGroup,
@@ -13,6 +14,9 @@
 	} from "$lib/components/ui/field";
 	import { Input } from "$lib/components/ui/input";
 	import { Button } from "$lib/components/ui/button";
+
+	const signedInUser = $derived($session?.user ?? null);
+	const continueAsName = $derived(sessionDisplayName($userProfile));
 
 	let email = $state("");
 	let feedback = $state("");
@@ -29,7 +33,7 @@
 		feedback = "";
 		const trimmed = email.trim();
 		if (!trimmed) {
-			feedback = "Introduce un correo.";
+			feedback = "Please enter your email.";
 			feedbackKind = "error";
 			return;
 		}
@@ -45,35 +49,36 @@
 			feedback = error.message;
 			feedbackKind = "error";
 		} else {
-			feedback = "Revisa tu correo para el enlace mágico.";
+			feedback = "Check your email for the magic link.";
 			feedbackKind = "success";
 		}
 	}
 </script>
 
-{#if $session?.user?.email}
-	<p class="text-muted-foreground mb-4 text-center text-sm">
-		Sesión iniciada como {$session.user.email}
-	</p>
-{/if}
-
 <Card.Root class="mx-auto w-full max-w-sm">
 	<Card.Header>
-		<Card.Title class="text-2xl">Iniciar sesión</Card.Title>
-		<Card.Description>
-			Introduce tu correo y te enviaremos un enlace para entrar.
+		<Card.Title class="text-2xl">Sign in</Card.Title>
+		<Card.Description class="text-balance">
+			Enter your email and we'll send you a link to sign in.
 		</Card.Description>
 	</Card.Header>
-	<Card.Content>
+	<Card.Content class="flex flex-col gap-4">
+		{#if signedInUser?.email}
+			<Button href="/" class="w-full" variant="secondary"
+				>
+				Continue as {continueAsName || signedInUser?.email}
+				<ArrowRight data-icon="inline-end" />
+			</Button>
+		{/if}
 		<form onsubmit={handleSubmit}>
 			<FieldGroup>
 				<Field>
-					<FieldLabel for={emailInputId}>Correo</FieldLabel>
+					<FieldLabel for={emailInputId}>Email</FieldLabel>
 					<FieldContent>
 						<Input
 							id={emailInputId}
 							type="email"
-							placeholder="m@ejemplo.com"
+							placeholder="you@example.com"
 							bind:value={email}
 							required
 							autocomplete="email"
@@ -87,7 +92,7 @@
 					</FieldContent>
 				</Field>
 				<Field>
-					<Button type="submit" class="w-full">Enviar enlace mágico</Button>
+					<Button type="submit" class="w-full">Send magic link</Button>
 				</Field>
 			</FieldGroup>
 		</form>

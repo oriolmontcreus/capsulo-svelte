@@ -1,16 +1,11 @@
 ---
-import { supabase } from '../db/supabase';
-
-const { data, error } = await supabase.from("user_profiles").select('*');
-console.log(data);
+import Layout from "$/layouts/Layout.astro";
+import UserProfilesList from "$lib/UserProfilesList.svelte";
 ---
 
-{
-  (
-    <ul>
-      {data?.map((entry) => (
-        <li>{entry.name}</li>
-      ))}
-    </ul>
-  )
-}
+<Layout>
+	<main class="mx-auto max-w-lg p-6">
+		<h1 class="mb-4 text-xl font-semibold">Profiles</h1>
+		<UserProfilesList client:load />
+	</main>
+</Layout>
