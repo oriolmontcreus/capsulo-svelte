@@ -1,46 +1,17 @@
-# Astro Starter Kit: Basics
+# Capsulo Svelte
 
-```sh
-pnpm create astro@latest -- --template basics
-```
+## Starting development (Astro + auth middleware)
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+To run **both** the Astro dev server and the Cloudflare Pages middleware locally—so routes such as `/admin` respect Supabase auth on the edge—use the **VS Code tasks** defined in [`.vscode/tasks.json`](.vscode/tasks.json):
 
-## 🚀 Project Structure
+1. Open the Command Palette and choose **Tasks: Run Task**.
+2. Select **`run dev`**.
 
-Inside of your Astro project, you'll see the following folders and files:
+That starts two terminals in parallel:
 
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
+- **Dev** — Astro with HMR on `127.0.0.1:4322` (upstream behind the proxy).
+- **Auth middleware** — `wrangler pages dev` on **`127.0.0.1:4321`**, proxying to Astro.
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Open the app at **`http://127.0.0.1:4321`** (not `:4322`). Magic Link redirects should use the same origin (add `http://127.0.0.1:4321/login` to Supabase redirect URLs).
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Ensure **`pnpm build`** has been run at least once so `dist/` exists before Wrangler starts. Astro-only development without the middleware remains **`pnpm dev`** (`localhost` default port); it does **not** execute Pages middleware.
