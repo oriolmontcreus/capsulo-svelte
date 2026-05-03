@@ -4,17 +4,13 @@ import { createServerClient } from "@supabase/ssr";
 import { parse, serialize } from "cookie";
 
 interface Env {
-	/** Preferidas en Pages → Settings → Variables (evitan confundir con el build de Astro). */
-	SUPABASE_URL?: string;
-	SUPABASE_ANON_KEY?: string;
-	/** Fallback: mismas claves que usa el cliente en `.env` local / algunos despliegues. */
 	PUBLIC_SUPABASE_URL?: string;
 	PUBLIC_SUPABASE_KEY?: string;
 }
 
 function getSupabaseBindings(env: Env): { url: string; anonKey: string } | null {
-	const url = env.SUPABASE_URL ?? env.PUBLIC_SUPABASE_URL;
-	const anonKey = env.SUPABASE_ANON_KEY ?? env.PUBLIC_SUPABASE_KEY;
+	const url = env.PUBLIC_SUPABASE_URL;
+	const anonKey = env.PUBLIC_SUPABASE_KEY;
 	if (!url || !anonKey) return null;
 	return { url, anonKey };
 }
@@ -35,7 +31,7 @@ export async function onRequest(
 	const bindings = getSupabaseBindings(context.env);
 	if (!bindings) {
 		return new Response(
-			"Missing Supabase bindings: set SUPABASE_URL + SUPABASE_ANON_KEY (or PUBLIC_SUPABASE_URL + PUBLIC_SUPABASE_KEY) for Pages Functions.",
+			"Missing Supabase bindings: set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_KEY for Pages Functions.",
 			{ status: 503 },
 		);
 	}
