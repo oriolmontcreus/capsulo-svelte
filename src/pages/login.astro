@@ -1,8 +1,32 @@
 ---
 import Layout from "$/layouts/Layout.astro";
 import LoginMagicLink from "$lib/LoginMagicLink.svelte";
+import GlitterCloth from "$lib/motion-core/glitter-cloth/GlitterCloth.svelte";
 ---
 
 <Layout>
-<LoginMagicLink client:load />
+	<style>
+		/*
+			Chrome sometimes leaves a subpixel gap above/beside `position: fixed; inset: 0`
+			elements; page background shows through. Darkened `--primary` avoids a harsh seam.
+		*/
+		html,
+		body {
+			background-color: color-mix(in oklch, var(--primary) 32%, black);
+		}
+	</style>
+	<div class="relative isolate min-h-dvh w-full">
+		<div
+			class="pointer-events-none fixed -inset-px z-0 min-h-dvh min-w-dvw"
+			aria-hidden="true"
+			style={{ backgroundColor: "color-mix(in oklch, var(--primary) 32%, black)" }}
+		>
+			<GlitterCloth client:load class="h-full min-h-dvh w-full" />
+		</div>
+		<div
+			class="relative z-10 flex min-h-dvh w-full items-center justify-center px-4 py-12"
+		>
+			<LoginMagicLink client:load />
+		</div>
+	</div>
 </Layout>
