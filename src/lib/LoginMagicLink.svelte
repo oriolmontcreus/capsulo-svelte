@@ -1,18 +1,12 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import { supabase } from "../db/supabase";
+	import { onMount } from "svelte";
+	import { session, syncSession } from "./stores/session";
 
 	let email = $state("");
 	let message = $state("");
 
-	onMount(async () => {
-		const {
-			data: { session },
-		} = await supabase.auth.getSession();
-		if (session?.user?.email) {
-			message = `Sesión iniciada como ${session.user.email}`;
-		}
-	});
+	onMount(() => syncSession());
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -33,6 +27,10 @@
 		message = error?.message ?? "Revisa tu correo para el enlace mágico.";
 	}
 </script>
+
+{#if $session?.user?.email}
+	<p>Sesión iniciada como {$session.user.email}</p>
+{/if}
 
 <form onsubmit={handleSubmit}>
 	<label>
