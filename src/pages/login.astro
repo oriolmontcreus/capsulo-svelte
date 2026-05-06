@@ -26,7 +26,12 @@ import LightSwitch from "$lib/components/LightSwitch.svelte";
 			aria-hidden="true"
 			style={{ backgroundColor: "color-mix(in oklch, var(--primary) 32%, black)" }}
 		>
-			<GlitterCloth client:media="(max-width: 767px)" class="h-full w-full" />
+			<GlitterCloth
+				client:media="(max-width: 767px)"
+				class="h-full w-full"
+				colorDark={("#222326" as any)}
+				colorLight={("#a6a6a6" as any)}
+			/>
 			<div class="absolute inset-0 bg-linear-to-b from-black/10 via-black/20 to-black/60" />
 		</div>
 
@@ -37,7 +42,12 @@ import LightSwitch from "$lib/components/LightSwitch.svelte";
 			style={{ backgroundColor: "color-mix(in oklch, var(--primary) 32%, black)" }}
 		>
 			<div class="pointer-events-none absolute inset-0">
-				<GlitterCloth client:media="(min-width: 768px)" class="h-full w-full" />
+				<GlitterCloth
+					client:media="(min-width: 768px)"
+					class="h-full w-full"
+					colorDark={("#222326" as any)}
+					colorLight={("#a6a6a6" as any)}
+				/>
 			</div>
 			<div class="pointer-events-none absolute inset-0 bg-linear-to-r from-black/10 via-black/20 to-black/55" />
 			<div class="relative z-10 h-3 w-24 rounded bg-white/10" />

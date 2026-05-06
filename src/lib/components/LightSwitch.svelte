@@ -3,20 +3,10 @@
   import MoonIcon from "@lucide/svelte/icons/moon";
 
   import { Button } from "$lib/components/ui/button";
-
-  function toggleTheme() {
-    if (typeof document === "undefined") return;
-
-    const root = document.documentElement;
-    const isDark = root.classList.toggle("dark");
-
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("theme", isDark ? "dark" : "light");
-    }
-  }
+  import { toggleMode } from "mode-watcher";
 </script>
 
-<Button onclick={toggleTheme} variant="outline" size="icon">
+<Button onclick={toggleMode} variant="outline" size="icon">
   <SunIcon
     class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all! dark:scale-0 dark:-rotate-90"
   />

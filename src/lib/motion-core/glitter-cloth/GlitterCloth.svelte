@@ -5,7 +5,7 @@
 
 	type SceneProps = ComponentProps<typeof Scene>;
 
-	interface Props {
+	export interface Props {
 		/**
 		 * Additional CSS classes for the container.
 		 */
@@ -15,6 +15,18 @@
 		 * @default "#FF6900"
 		 */
 		color?: SceneProps["color"];
+		/**
+		 * Primary color used in light mode (when `<html>` does NOT have `dark` class).
+		 * Ignored if `color` is explicitly provided.
+		 * @default "#a6a6a6"
+		 */
+		colorLight?: SceneProps["color"];
+		/**
+		 * Primary color used in dark mode (when `<html>` has `dark` class).
+		 * Ignored if `color` is explicitly provided.
+		 * @default "#222326"
+		 */
+		colorDark?: SceneProps["color"];
 		/**
 		 * Speed multiplier for the full shader animation timeline.
 		 * @default 1.0
@@ -58,7 +70,9 @@
 
 	let {
 		class: className = "",
-		color = "#222326",
+		color,
+		colorLight = "#a6a6a6",
+		colorDark = "#222326",
 		speed = 1.0,
 		brightness = 1.0,
 		blendStrength = 0.02,
@@ -68,12 +82,30 @@
 		vignetteOpacity = 1.0,
 		...rest
 	}: Props = $props();
+
+	let isDark = false;
+
+	$effect(() => {
+		if (typeof document === "undefined") return;
+
+		isDark = document.documentElement.classList.contains("dark");
+
+		const observer = new MutationObserver(() => {
+			isDark = document.documentElement.classList.contains("dark");
+		});
+
+		observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+		return () => observer.disconnect();
+	});
+
+	const sceneColor = $derived(color ?? (isDark ? colorDark : colorLight));
 </script>
 
 <div class={cn("relative h-full w-full overflow-hidden", className)} {...rest}>
 	<div class="absolute inset-0 z-0">
 		<Scene
-			{color}
+			color={sceneColor}
 			{speed}
 			{brightness}
 			{blendStrength}
