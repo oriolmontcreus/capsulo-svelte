@@ -58,7 +58,7 @@
 
 	let {
 		class: className = "",
-		color = "#FF6900",
+		color = "#222326",
 		speed = 1.0,
 		brightness = 1.0,
 		blendStrength = 0.02,

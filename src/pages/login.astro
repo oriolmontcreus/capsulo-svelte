@@ -12,21 +12,49 @@ import GlitterCloth from "$lib/motion-core/glitter-cloth/GlitterCloth.svelte";
 		*/
 		html,
 		body {
-			background-color: color-mix(in oklch, var(--primary) 32%, black);
+			background-color: color-mix(in oklch, var(--primary) 32%, var(--background) 100%);
 		}
 	</style>
-	<div class="relative isolate min-h-dvh w-full">
+	<div class="relative flex min-h-dvh w-full flex-col overflow-hidden md:flex-row dark">
+		<!-- Mobile background (GlitterCloth instead of photo) -->
 		<div
-			class="pointer-events-none fixed -inset-px z-0 min-h-dvh min-w-dvw"
+			class="pointer-events-none absolute inset-0 md:hidden"
 			aria-hidden="true"
 			style={{ backgroundColor: "color-mix(in oklch, var(--primary) 32%, black)" }}
 		>
-			<GlitterCloth client:idle class="h-full min-h-dvh w-full" />
+			<GlitterCloth client:idle class="h-full w-full" />
+			<div class="absolute inset-0 bg-linear-to-b from-black/10 via-black/20 to-black/60" />
 		</div>
+
+		<!-- Desktop left panel (30% GlitterCloth) -->
 		<div
-			class="relative z-10 flex min-h-dvh w-full items-center justify-center px-4 py-12"
+			class="relative hidden min-h-dvh overflow-hidden pt-5 pl-5 md:block md:w-[30%] md:max-w-[540px] md:flex-none"
+			aria-hidden="true"
+			style={{ backgroundColor: "color-mix(in oklch, var(--primary) 32%, black)" }}
 		>
-			<LoginMagicLink client:load />
+			<div class="pointer-events-none absolute inset-0">
+				<GlitterCloth client:idle class="h-full w-full" />
+			</div>
+			<div class="pointer-events-none absolute inset-0 bg-linear-to-r from-black/10 via-black/20 to-black/55" />
+			<div class="relative z-10 h-3 w-24 rounded bg-white/10" />
+		</div>
+
+		<!-- Mobile content (overlayed on full-screen GlitterCloth) -->
+		<div class="relative z-10 flex min-h-dvh w-full flex-col md:hidden">
+			<div class="flex-1" />
+			<div class="flex items-center justify-center pb-6">
+				<div class="h-[33px] w-[132px] rounded bg-white/10" aria-label="Logo placeholder" />
+			</div>
+			<div class="mt-auto rounded-t-2xl bg-background p-6">
+				<LoginMagicLink client:load />
+			</div>
+		</div>
+
+		<!-- Desktop form -->
+		<div class="relative z-10 hidden min-h-dvh grow items-center justify-center md:flex md:overflow-y-auto">
+			<div class="w-full max-w-[320px]">
+				<LoginMagicLink client:load />
+			</div>
 		</div>
 	</div>
 </Layout>
