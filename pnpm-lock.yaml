@@ -20,6 +20,9 @@ importers:
       cookie:
         specifier: ^1.1.1
         version: 1.1.1
+      mode-watcher:
+        specifier: 0.5.1
+        version: 0.5.1(svelte@5.55.5)
       ogl:
         specifier: ^1.0.11
         version: 1.0.11
@@ -1666,6 +1669,11 @@ packages:
     resolution: {integrity: sha512-MWvMm3Siho9Yj7lbJZidLs8hbrRvIcOrif2mnsHQZdvoKfedpea+GaN8XJxbpRcq0B2WzNI1BB1ihdnqes3/ZA==}
     engines: {node: '>=22.0.0'}
     hasBin: true
+
+  mode-watcher@0.5.1:
+    resolution: {integrity: sha512-adEC6T7TMX/kzQlaO/MtiQOSFekZfQu4MC+lXyoceQG+U5sKpJWZ4yKXqw846ExIuWJgedkOIPqAYYRk/xHm+w==}
+    peerDependencies:
+      svelte: ^4.0.0 || ^5.0.0-next.1
 
   mrmime@2.0.1:
     resolution: {integrity: sha512-Y3wQdFg2Va6etvQ5I82yUhGdsKrcYox6p7FfL1LbK2J4V01F9TGlepTIhnK24t7koZibmg82KGglhA1XK5IsLQ==}
@@ -3849,6 +3857,10 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  mode-watcher@0.5.1(svelte@5.55.5):
+    dependencies:
+      svelte: 5.55.5
 
   mrmime@2.0.1: {}
 

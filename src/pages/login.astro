@@ -2,6 +2,7 @@
 import Layout from "$/layouts/Layout.astro";
 import LoginMagicLink from "$lib/LoginMagicLink.svelte";
 import GlitterCloth from "$lib/motion-core/glitter-cloth/GlitterCloth.svelte";
+import LightSwitch from "$lib/components/LightSwitch.svelte";
 ---
 
 <Layout>
@@ -15,7 +16,10 @@ import GlitterCloth from "$lib/motion-core/glitter-cloth/GlitterCloth.svelte";
 			background-color: color-mix(in oklch, var(--primary) 32%, var(--background) 100%);
 		}
 	</style>
-	<div class="relative flex min-h-dvh w-full flex-col overflow-hidden md:flex-row dark">
+	<div class="relative flex min-h-dvh w-full flex-col overflow-hidden md:flex-row">
+		<div class="absolute right-4 top-4 z-20">
+			<LightSwitch client:load />
+		</div>
 		<!-- Mobile background (GlitterCloth instead of photo) -->
 		<div
 			class="pointer-events-none absolute inset-0 md:hidden"
