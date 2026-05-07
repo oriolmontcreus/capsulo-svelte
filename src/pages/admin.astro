@@ -1,7 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import PageEditor from "$lib/PageEditor.svelte";
 ---
 
 <Layout>
-	<p>Hola desde la zona de administración.</p>
+	<PageEditor client:load />
 </Layout>
