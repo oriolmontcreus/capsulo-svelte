@@ -16,14 +16,21 @@
 		internalName: BindableField;
 		pageName: BindableField;
 		slug: BindableField;
+		width?: number;
 	};
 
-	let { internalName = $bindable(), pageName = $bindable(), slug = $bindable() } = $props<Props>();
+	let {
+		internalName = $bindable(),
+		pageName = $bindable(),
+		slug = $bindable(),
+		width
+	} = $props() as Props;
 </script>
 
 <aside
-	class="border-border bg-background w-80 shrink-0 overflow-y-auto border-r"
+	class="border-border bg-background shrink-0 overflow-y-auto border-r"
 	aria-label="Page settings"
+	style:width={width ? `${width}px` : undefined}
 >
 	<div class="space-y-5 p-4">
 		<!-- Internal name -->

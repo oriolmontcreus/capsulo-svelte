@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # wrangler (Cloudflare Workers) folder
 .wrangler/
+
+# local developer utilities
+smart-commit.sh
