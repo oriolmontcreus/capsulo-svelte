@@ -6,6 +6,7 @@
   import Preview from "./PageEditor/Preview.svelte";
 
   type Viewport = "desktop" | "tablet" | "mobile";
+  type BindableField = { value: string };
 
   let viewport = $state<Viewport>("desktop");
   let locale = $state<string>("en-US");
@@ -23,9 +24,9 @@
 
   const previewWidth = $derived(viewportWidths[viewport]);
 
-  let internalName = $state({ value: "Homepage" });
-  let pageName = $state({ value: "The card you always wanted" });
-  let slug = $state({ value: "home" });
+  let internalName = $state<BindableField>({ value: "Homepage" });
+  let pageName = $state<BindableField>({ value: "The card you always wanted" });
+  let slug = $state<BindableField>({ value: "home" });
 
   function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
@@ -93,7 +94,6 @@
         aria-valuemin={sidebarMinWidth}
         aria-valuemax={sidebarMaxWidth}
         aria-valuenow={sidebarWidth}
-        tabindex="0"
         class="group relative w-2 shrink-0 cursor-col-resize touch-none bg-transparent"
         onpointerdown={sidebarPointerDown}
       >

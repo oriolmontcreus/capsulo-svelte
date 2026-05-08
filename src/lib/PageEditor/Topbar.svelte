@@ -26,10 +26,10 @@
 </script>
 
 <header
-  class="border-border flex h-14 shrink-0 items-center justify-between gap-3 border-b px-3"
+  class="border-border flex h-14 shrink-0 items-center gap-3 border-b px-3"
 >
   <!-- Left cluster -->
-  <div class="flex min-w-0 items-center gap-2">
+  <div class="flex items-center gap-2 justify-self-start min-w-76 border-r">
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
         {#snippet child({ props })}
@@ -63,7 +63,7 @@
   </div>
 
   <!-- Center cluster -->
-  <div class="flex items-center gap-1">
+  <div class="flex items-center gap-1 justify-self-center w-full">
     <Tabs.Root
       bind:value={() => viewport, (v) => (viewport = v as Viewport)}
       class="contents"
@@ -103,7 +103,7 @@
   </div>
 
   <!-- Right cluster -->
-  <div class="flex items-center gap-1">
+  <div class="flex items-center gap-1 justify-self-end">
     <Select.Root type="single" bind:value={locale}>
       <Select.Trigger size="sm" class="h-8 min-w-48 gap-1 text-xs">
         {locale === "en-US"

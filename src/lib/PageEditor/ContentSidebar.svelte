@@ -20,11 +20,11 @@
 	};
 
 	let {
-		internalName = $bindable(),
-		pageName = $bindable(),
-		slug = $bindable(),
-		width
-	} = $props() as Props;
+		internalName = $bindable<BindableField>(),
+		pageName = $bindable<BindableField>(),
+		slug = $bindable<BindableField>(),
+		width,
+	} = $props<Props>();
 </script>
 
 <aside
