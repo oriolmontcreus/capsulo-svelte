@@ -1,7 +1,6 @@
 <script lang="ts">
   import * as Tooltip from "$lib/components/ui/tooltip";
 
-  import Topbar from "./PageEditor/Topbar.svelte";
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
 
@@ -73,9 +72,6 @@
   <div
     class="bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >
-    <!-- Topbar -->
-    <Topbar bind:viewport bind:locale />
-
     <!-- Body -->
     <div class="flex min-h-0 flex-1" class:select-none={isResizingSidebar}>
       <!-- Sidebar -->
@@ -103,7 +99,7 @@
       </div>
 
       <!-- Preview pane -->
-      <Preview {previewWidth} />
+      <Preview {previewWidth} bind:viewport bind:locale />
     </div>
   </div>
 </Tooltip.Provider>
