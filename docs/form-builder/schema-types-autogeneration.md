@@ -58,6 +58,15 @@ Field builder TS type mapping is explicit and currently includes:
 
 Unknown builders fallback to `any`.
 
+## Optionality Rule
+
+Generated interface optionality follows `required` only:
+
+- `required()` -> property is required (no `?`)
+- field without `required()` (or `required(false)`) -> property is optional (`?`)
+
+`defaultValue(...)` does not force required properties in generated types.
+
 ## Important Maintenance Rules
 
 1. Keep watcher root aligned with capsule architecture (`src/components/capsules`).

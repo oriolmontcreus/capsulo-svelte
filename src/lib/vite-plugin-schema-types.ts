@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readdir } from "node:fs/promises";
-import { intro, log, outro, spinner } from "@clack/prompts";
+import { log } from "@clack/prompts";
 import type { Plugin, ViteDevServer } from "vite";
 import { processSchemaBatch } from "../../scripts/lib/schema-types/generate-dts";
 
@@ -41,27 +41,34 @@ function isCapsuleSchemaPath(filePath: string): boolean {
 	return normalized.includes("/src/components/capsules/") && normalized.endsWith(SCHEMA_SUFFIX);
 }
 
-function printSummary(context: string, summary: Awaited<ReturnType<typeof processSchemaBatch>>): void {
+function orange(text: string): string {
+	return `\x1b[38;5;208m${text}\x1b[0m`;
+}
+
+function gray(text: string): string {
+	return `\x1b[38;5;245m${text}\x1b[0m`;
+}
+
+function toCapsulesRelativePath(filePath: string): string {
+	const normalized = normalizeSlashes(path.relative(process.cwd(), filePath));
+	const marker = "src/";
+	const markerIndex = normalized.indexOf(marker);
+	return markerIndex >= 0 ? normalized.slice(markerIndex) : normalized;
+}
+
+function printConciseMessages(summary: Awaited<ReturnType<typeof processSchemaBatch>>): void {
 	for (const result of summary.results) {
-		const shortPath = normalizeSlashes(path.relative(process.cwd(), result.filePath));
+		const shortPath = toCapsulesRelativePath(result.filePath);
 		if (result.status === "error") {
-			log.error(`${context}: ${shortPath} failed - ${result.error.message}`);
+			log.error(`Schema types failed ${gray(shortPath)}`);
 			continue;
 		}
 
 		if (result.result === "written") {
-			log.success(
-				`${context}: ${shortPath} -> ${normalizeSlashes(path.relative(process.cwd(), result.outputPath))}`
-			);
-			continue;
+			const outputPath = toCapsulesRelativePath(result.outputPath);
+			log.message(`${orange("Regenerated")} ${gray(outputPath)}`);
 		}
-
-		log.info(`${context}: ${shortPath} unchanged`);
 	}
-
-	log.message(
-		`${context} summary: processed=${summary.processed}, written=${summary.written}, skipped=${summary.skipped}, failed=${summary.failed}`
-	);
 }
 
 export function schemaTypesPlugin(): Plugin {
@@ -70,7 +77,7 @@ export function schemaTypesPlugin(): Plugin {
 	let pendingSchemaPaths = new Set<string>();
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
-	async function flush(label: string, server?: ViteDevServer) {
+	async function flush(server?: ViteDevServer) {
 		const files = Array.from(pendingSchemaPaths);
 		pendingSchemaPaths = new Set<string>();
 
@@ -78,24 +85,21 @@ export function schemaTypesPlugin(): Plugin {
 			return;
 		}
 
-		const s = spinner();
-		s.start(`${label}: processing ${files.length} schema file(s)...`);
 		const summary = await processSchemaBatch(files);
-		s.stop(`${label}: done`);
-		printSummary(label, summary);
+		printConciseMessages(summary);
 
 		if (summary.written > 0 && server) {
 			server.ws.send({ type: "full-reload" });
 		}
 	}
 
-	function scheduleFlush(label: string, server?: ViteDevServer) {
+	function scheduleFlush(server?: ViteDevServer) {
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
 
 		debounceTimer = setTimeout(() => {
-			void flush(label, server);
+			void flush(server);
 		}, 500);
 	}
 
@@ -113,25 +117,24 @@ export function schemaTypesPlugin(): Plugin {
 
 			if (!hasInitialized) {
 				hasInitialized = true;
-				intro("Schema types watcher");
 				const initialFiles = await discoverSchemaFiles(projectRoot);
 				for (const file of initialFiles) {
 					pendingSchemaPaths.add(file);
 				}
-				await flush("Startup");
-				outro("Schema types watcher ready");
+				await flush();
+				log.message("Schema types watcher ready");
 			}
 
 			server.watcher.on("add", (filePath) => {
 				if (!isCapsuleSchemaPath(filePath)) return;
 				pendingSchemaPaths.add(filePath);
-				scheduleFlush("Watch", server);
+				scheduleFlush(server);
 			});
 
 			server.watcher.on("change", (filePath) => {
 				if (!isCapsuleSchemaPath(filePath)) return;
 				pendingSchemaPaths.add(filePath);
-				scheduleFlush("Watch", server);
+				scheduleFlush(server);
 			});
 		}
 	};

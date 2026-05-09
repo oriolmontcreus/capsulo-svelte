@@ -17,7 +17,7 @@ function renderInterface(schema: ParsedSchemaDefinition): string {
 	const interfaceName = getInterfaceName(schema);
 	const fields = schema.fields
 		.map((field) => {
-			const optionalFlag = field.required || field.hasDefaultValue ? "" : "?";
+			const optionalFlag = field.required ? "" : "?";
 			return `\t${field.name}${optionalFlag}: ${field.type};`;
 		})
 		.join("\n");

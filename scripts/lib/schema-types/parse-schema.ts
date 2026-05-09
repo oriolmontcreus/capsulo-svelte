@@ -7,26 +7,17 @@ const BUILDER_TS_TYPE_MAP: Record<string, string> = {
 };
 
 function getStringLiteralValue(node: ts.Expression | undefined): string | undefined {
-	if (!node) {
-		return undefined;
-	}
+	if (!node) return undefined;
 
-	if (ts.isStringLiteralLike(node)) {
-		return node.text;
-	}
-
-	if (ts.isNoSubstitutionTemplateLiteral(node)) {
-		return node.text;
-	}
+	if (ts.isStringLiteralLike(node)) return node.text;
+	if (ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
 
 	return undefined;
 }
 
 function normalizeInterfaceStem(input: string): string {
 	const cleaned = input.replace(/[^A-Za-z0-9]+/g, " ").trim();
-	if (!cleaned) {
-		return "Schema";
-	}
+	if (!cleaned) return "Schema";
 
 	return cleaned
 		.split(/\s+/)
@@ -64,10 +55,7 @@ function parseFieldFromObjectLiteral(node: ts.ObjectLiteralExpression): ParsedSc
 			values.hasDefaultValue = true;
 		}
 	}
-
-	if (!values.name) {
-		return undefined;
-	}
+	if (!values.name) return undefined;
 
 	return values as ParsedSchemaField;
 }
@@ -91,9 +79,7 @@ function parseFieldFromBuilderChain(node: ts.Expression): ParsedSchemaField | un
 
 	const builder = cursor.expression.text;
 	const fieldName = getStringLiteralValue(cursor.arguments[0]);
-	if (!fieldName) {
-		return undefined;
-	}
+	if (!fieldName) return undefined;
 
 	let required = false;
 	let hasDefaultValue = false;
