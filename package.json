@@ -25,7 +25,8 @@
     "ogl": "^1.0.11",
     "svelte": "^5.55.5",
     "tailwindcss": "^4.2.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@astrojs/svelte": "latest",
