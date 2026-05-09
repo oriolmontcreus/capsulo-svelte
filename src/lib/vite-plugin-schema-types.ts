@@ -3,6 +3,7 @@ import { readdir } from "node:fs/promises";
 import { log } from "@clack/prompts";
 import type { Plugin, ViteDevServer } from "vite";
 import { processSchemaBatch } from "../../scripts/lib/schema-types/generate-dts";
+import { terminalGray, terminalOrange } from "$lib/utils/terminal";
 
 const SCHEMA_SUFFIX = ".schema.ts";
 const CAPSULES_RELATIVE_ROOT = path.join("src", "components", "capsules");
@@ -41,14 +42,6 @@ function isCapsuleSchemaPath(filePath: string): boolean {
 	return normalized.includes("/src/components/capsules/") && normalized.endsWith(SCHEMA_SUFFIX);
 }
 
-function orange(text: string): string {
-	return `\x1b[38;5;208m${text}\x1b[0m`;
-}
-
-function gray(text: string): string {
-	return `\x1b[38;5;245m${text}\x1b[0m`;
-}
-
 function toCapsulesRelativePath(filePath: string): string {
 	const normalized = normalizeSlashes(path.relative(process.cwd(), filePath));
 	const marker = "src/";
@@ -60,13 +53,13 @@ function printConciseMessages(summary: Awaited<ReturnType<typeof processSchemaBa
 	for (const result of summary.results) {
 		const shortPath = toCapsulesRelativePath(result.filePath);
 		if (result.status === "error") {
-			log.error(`Schema types failed ${gray(shortPath)}`);
+			log.error(`Schema types failed ${terminalGray(shortPath)}`);
 			continue;
 		}
 
 		if (result.result === "written") {
 			const outputPath = toCapsulesRelativePath(result.outputPath);
-			log.message(`${orange("Regenerated")} ${gray(outputPath)}`);
+			log.message(`${terminalOrange("Regenerated")} ${terminalGray(outputPath)}`);
 		}
 	}
 }
