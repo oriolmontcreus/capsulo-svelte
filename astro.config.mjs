@@ -8,6 +8,7 @@ import svelte from '@astrojs/svelte';
 
 import tailwindcss from '@tailwindcss/vite';
 import { capsuleManifestPlugin } from './src/lib/vite-plugin-capsule-manifest.ts';
+import { schemaTypesPlugin } from './src/lib/vite-plugin-schema-types.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,7 +17,7 @@ export default defineConfig({
   integrations: [svelte()],
 
   vite: {
-    plugins: [capsuleManifestPlugin(), tailwindcss()],
+    plugins: [capsuleManifestPlugin(), schemaTypesPlugin(), tailwindcss()],
     resolve: {
       alias: {
         $lib: path.resolve(__dirname, 'src/lib'),

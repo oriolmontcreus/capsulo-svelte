@@ -191,6 +191,11 @@ export function capsuleManifestPlugin(): Plugin {
 			}
 		},
 		configureServer(server) {
+			const currentMaxListeners = server.watcher.getMaxListeners?.();
+			if (typeof currentMaxListeners === "number" && currentMaxListeners < 30) {
+				server.watcher.setMaxListeners(30);
+			}
+
 			server.watcher.on("change", (changedPath) => {
 				const normalized = normalizeSlashes(changedPath);
 				const relevantPage = normalized.includes("/src/pages/") && normalized.endsWith(".astro");
