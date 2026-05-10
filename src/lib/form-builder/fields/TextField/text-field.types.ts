@@ -8,4 +8,5 @@ export interface TextFieldBuilder extends FieldBuilder<TextFieldDefinition> {
 	placeholder(value: string): this;
 	required(value?: boolean): this;
 	defaultValue(value: string): this;
+	translatable(value?: boolean): this;
 }

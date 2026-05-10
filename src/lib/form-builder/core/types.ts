@@ -6,6 +6,7 @@ export interface BaseFieldDefinition {
 	label?: string;
 	description?: string;
 	required?: boolean;
+	translatable?: boolean;
 }
 
 export interface TextFieldDefinition extends BaseFieldDefinition {
@@ -31,4 +32,6 @@ export interface SchemaDefinition<TField extends FieldDefinition = FieldDefiniti
 	fields: TField[];
 }
 
-export type SchemaValues = Record<string, string>;
+export type LocalizedFieldValue<TValue = string> = Partial<Record<string, TValue>>;
+export type SchemaValues = Record<string, LocalizedFieldValue<unknown>>;
+export type ResolvedSchemaValues = Record<string, unknown | undefined>;

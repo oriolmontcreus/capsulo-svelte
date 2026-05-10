@@ -11,5 +11,6 @@ export const prototypeSchema = createSchema({
 			.description("The main title used by the prototype")
 			.placeholder("Write a title...")
 			.required()
+			.translatable()
 	]
 });
