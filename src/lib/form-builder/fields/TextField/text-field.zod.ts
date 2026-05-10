@@ -1,12 +1,20 @@
 import { z } from "zod";
 import type { TextFieldDefinition } from "./text-field.types";
 
-export function textFieldToZod(field: TextFieldDefinition) {
-	const base = z.string().trim();
+export function textFieldToZod(field: TextFieldDefinition, defaultLocale: string) {
+	const base = z.record(z.string(), z.string());
 
-	if (field.required) {
-		return base.min(1, `${field.label ?? field.name} is required`);
+	if (!field.required) {
+		return base;
 	}
 
-	return base.optional();
+	return base.refine(
+		(valueByLocale) => {
+			const defaultValue = valueByLocale[defaultLocale];
+			return typeof defaultValue === "string" && defaultValue.trim().length > 0;
+		},
+		{
+			message: `${field.label ?? field.name} is required in ${defaultLocale}`
+		}
+	);
 }

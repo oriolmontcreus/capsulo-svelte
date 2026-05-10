@@ -47,8 +47,9 @@ These rules should be preserved unless there is a deliberate architectural migra
    - Avoid mixing these layers in one file.
 
 5. **Predictable values shape**
-   - Runtime output is a plain object map keyed by field name.
-   - Consuming code should not need ad-hoc parsing.
+   - Runtime output is always a plain object map keyed by field name.
+   - Each field value is a locale map (`Record<locale, value>`), even when not translatable.
+   - Consuming code should not need ad-hoc parsing or legacy shape detection.
 
 ---
 
@@ -116,6 +117,33 @@ Key principle: rendering and validation are both derived from the same schema co
 
 ---
 
+## 4.1) i18n Data Contract (Canonical Shape)
+
+The form-builder i18n model is intentionally uniform and future-proof:
+
+- `capsulo.config.ts` is the source of truth for `i18n.locales` and `i18n.defaultLocale`.
+- Every field persists localized data as `{ [locale]: value }`.
+- `.translatable()` controls UI behavior, not storage format:
+  - `translatable: true` => editors can write multiple locales.
+  - `translatable: false` => renderer writes only `defaultLocale`, but still in locale-map shape.
+- Runtime resolution rule is deterministic: `targetLocale -> defaultLocale -> undefined`.
+
+This contract avoids brittle parser branches and makes future field types consistent.
+
+### Repeater readiness (arrays / nested objects)
+
+When `Repeater` is added, it must inherit the same rule set:
+
+- Repeater item fields still resolve using `targetLocale -> defaultLocale -> undefined`.
+- Translatable item fields store per-locale values.
+- Non-translatable item fields store only `defaultLocale`.
+- No alternate legacy payload shapes are allowed for repeater data.
+
+Utility note: locale resolution/writes are centralized in
+`src/lib/form-builder/core/translation-runtime.ts` so repeaters can reuse the same logic.
+
+---
+
 ## 5) Safe Change Checklist (When Updating Form Builder)
 
 Before merging any form-builder change, verify:
@@ -127,7 +155,7 @@ Before merging any form-builder change, verify:
 - **Validation path remains aligned**
   - New field type is mapped in `schema-to-zod`.
 - **Output shape remains consumer-friendly**
-  - Emitted values remain plain and predictable.
+  - Emitted values remain plain and predictable (`field -> locale -> value`).
 - **Backwards compatibility reviewed**
   - Existing schemas still render and validate as expected.
 - **Type autocomplete not degraded**

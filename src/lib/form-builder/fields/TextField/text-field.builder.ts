@@ -35,6 +35,11 @@ class TextFieldBuilderImpl implements TextFieldBuilder {
 		return this;
 	}
 
+	translatable(value = true): this {
+		this.field.translatable = value;
+		return this;
+	}
+
 	build(): TextFieldDefinition {
 		return { ...this.field };
 	}

@@ -14,14 +14,17 @@ export const testCapsuleSchema = createSchema({
 			.label("Title")
 			.placeholder("Autodetected capsule")
 			.required()
+			.translatable()
 			.defaultValue("Autodetected capsule"),
 		TextField("description")
 			.label("Description")
 			.placeholder("This content is editable from the prototype admin.")
+			.translatable()
 			.defaultValue("This content is editable from the prototype admin."),
 		TextField("ctaLabel")
 			.label("CTA label")
 			.placeholder("Read more")
+			.translatable()
 			.defaultValue("Read more")
 	]
 });
