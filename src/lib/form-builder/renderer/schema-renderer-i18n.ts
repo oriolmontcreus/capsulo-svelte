@@ -88,12 +88,10 @@ export function buildSchemaRenderItems(
 						? `${field.label ?? field.name} (${locale})`
 						: (field.label ?? field.name)
 			};
-			const resolvedValue = resolveFieldValue(
-				field,
-				values[field.name],
-				locale,
-				context.defaultLocale
-			);
+			const valueByLocale = values[field.name] ?? {};
+			const resolvedValue = field.translatable
+				? valueByLocale[locale]
+				: resolveFieldValue(field, valueByLocale, locale, context.defaultLocale);
 
 			renderItems.push({
 				sourceField: field,
@@ -120,7 +118,7 @@ export function applySchemaFieldUpdate(
 		return values;
 	}
 
-	return {
+	const nextValues = {
 		...values,
 		[fieldName]: setFieldValue(
 			field,
@@ -130,4 +128,6 @@ export function applySchemaFieldUpdate(
 			context.defaultLocale
 		)
 	};
+
+	return nextValues;
 }
