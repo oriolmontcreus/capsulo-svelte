@@ -1,9 +1,9 @@
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { log } from "@clack/prompts";
-import type { Plugin, ViteDevServer } from "vite";
+import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
 import { processSchemaBatch } from "../../scripts/lib/schema-types/generate-dts";
-import { terminalGray, terminalOrange } from "$lib/utils/terminal";
+import { terminalGray, terminalOrange } from "./utils/terminal";
 
 const SCHEMA_SUFFIX = ".schema.ts";
 const CAPSULES_RELATIVE_ROOT = path.join("src", "components", "capsules");
@@ -99,10 +99,10 @@ export function schemaTypesPlugin(): Plugin {
 	return {
 		name: "schema-types-plugin",
 		apply: "serve",
-		configResolved(config) {
+		configResolved(config: ResolvedConfig) {
 			projectRoot = config.root;
 		},
-		async configureServer(server) {
+		async configureServer(server: ViteDevServer) {
 			const currentMaxListeners = server.watcher.getMaxListeners?.();
 			if (typeof currentMaxListeners === "number" && currentMaxListeners < 30) {
 				server.watcher.setMaxListeners(30);
@@ -118,13 +118,13 @@ export function schemaTypesPlugin(): Plugin {
 				log.message("Schema types watcher ready");
 			}
 
-			server.watcher.on("add", (filePath) => {
+			server.watcher.on("add", (filePath: string) => {
 				if (!isCapsuleSchemaPath(filePath)) return;
 				pendingSchemaPaths.add(filePath);
 				scheduleFlush(server);
 			});
 
-			server.watcher.on("change", (filePath) => {
+			server.watcher.on("change", (filePath: string) => {
 				if (!isCapsuleSchemaPath(filePath)) return;
 				pendingSchemaPaths.add(filePath);
 				scheduleFlush(server);

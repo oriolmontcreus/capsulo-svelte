@@ -81,6 +81,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      vite:
+        specifier: ^7.3.2
+        version: 7.3.2(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)
       wrangler:
         specifier: ^4.87.0
         version: 4.87.0(@cloudflare/workers-types@4.20260503.1)
@@ -1774,6 +1777,10 @@ packages:
 
   postcss@8.5.13:
     resolution: {integrity: sha512-qif0+jGGZoLWdHey3UFHHWP0H7Gbmsk8T5VEqyYFbWqPr1XqvLGBbk/sl8V5exGmcYJklJOhOQq1pV9IcsiFag==}
+    engines: {node: ^10 || ^12 || >=14}
+
+  postcss@8.5.14:
+    resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
     engines: {node: ^10 || ^12 || >=14}
 
   prismjs@1.30.0:
@@ -3954,6 +3961,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  postcss@8.5.14:
+    dependencies:
+      nanoid: 3.3.12
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
+
   prismjs@1.30.0: {}
 
   property-information@7.1.0: {}
@@ -4365,7 +4378,7 @@ snapshots:
       esbuild: 0.27.7
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.13
+      postcss: 8.5.14
       rollup: 4.60.2
       tinyglobby: 0.2.16
     optionalDependencies:

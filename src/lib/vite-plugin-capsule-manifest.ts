@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Plugin } from "vite";
-import type { CapsuleManifest } from "$lib/capsules/core/types";
+import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
+import type { CapsuleManifest } from "./capsules/core/types";
 
 const VIRTUAL_MODULE_ID = "virtual:capsule-manifest";
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
@@ -173,30 +173,30 @@ export function capsuleManifestPlugin(): Plugin {
 	return {
 		name: "capsule-manifest-plugin",
 		enforce: "pre",
-		configResolved(config) {
+		configResolved(config: ResolvedConfig) {
 			projectRoot = config.root;
 			refreshManifest();
 		},
 		buildStart() {
 			refreshManifest();
 		},
-		resolveId(id) {
+		resolveId(id: string) {
 			if (id === VIRTUAL_MODULE_ID) {
 				return RESOLVED_VIRTUAL_MODULE_ID;
 			}
 		},
-		load(id) {
+		load(id: string) {
 			if (id === RESOLVED_VIRTUAL_MODULE_ID) {
 				return `export default ${JSON.stringify(manifestCache, null, 2)};`;
 			}
 		},
-		configureServer(server) {
+		configureServer(server: ViteDevServer) {
 			const currentMaxListeners = server.watcher.getMaxListeners?.();
 			if (typeof currentMaxListeners === "number" && currentMaxListeners < 30) {
 				server.watcher.setMaxListeners(30);
 			}
 
-			server.watcher.on("change", (changedPath) => {
+			server.watcher.on("change", (changedPath: string) => {
 				const normalized = normalizeSlashes(changedPath);
 				const relevantPage = normalized.includes("/src/pages/") && normalized.endsWith(".astro");
 				const relevantCapsuleDefinition = normalized.endsWith("/capsule.definition.ts");
