@@ -18,6 +18,8 @@ export interface SchemaRendererI18nContext {
 	editingLocale: string;
 }
 
+export type TranslatableLocaleMode = "all" | "active-only";
+
 export interface SchemaRenderItem {
 	sourceField: FieldDefinition;
 	localizedField: FieldDefinition;
@@ -68,7 +70,8 @@ export function createSchemaInitialValues(
 export function buildSchemaRenderItems(
 	schema: SchemaDefinition,
 	values: SchemaValues,
-	context: SchemaRendererI18nContext
+	context: SchemaRendererI18nContext,
+	translatableLocaleMode: TranslatableLocaleMode = "all"
 ): SchemaRenderItem[] {
 	const renderItems: SchemaRenderItem[] = [];
 
@@ -77,7 +80,11 @@ export function buildSchemaRenderItems(
 			continue;
 		}
 
-		const fieldLocales = field.translatable ? context.locales : [context.defaultLocale];
+		const fieldLocales = field.translatable
+			? (translatableLocaleMode === "active-only"
+					? [context.editingLocale]
+					: context.locales)
+			: [context.defaultLocale];
 
 		for (const locale of fieldLocales) {
 			const localizedField: FieldDefinition = {

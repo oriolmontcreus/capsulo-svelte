@@ -1,32 +1,69 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
   import { Badge } from "$lib/components/ui/badge";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+  import { getCapsuleByKey } from "$lib/capsules/core/registry";
+  import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
+  import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
+  import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
+  import type { SchemaValues } from "$lib/form-builder/core/types";
 
   import MoreHorizontal from "@lucide/svelte/icons/more-horizontal";
-  import Link from "@lucide/svelte/icons/link";
-  import GripVertical from "@lucide/svelte/icons/grip-vertical";
-  import FileText from "@lucide/svelte/icons/file-text";
-  import Sparkles from "@lucide/svelte/icons/sparkles";
-  import Layers from "@lucide/svelte/icons/layers";
-
-  type BindableField = { value: string };
 
   type Props = {
-    internalName: BindableField;
-    pageName: BindableField;
-    slug: BindableField;
+    pageId: string;
+    entries: CapsuleManifestEntry[];
+    locale: string;
     width?: number;
   };
 
   let {
-    internalName = $bindable<BindableField>(),
-    pageName = $bindable<BindableField>(),
-    slug = $bindable<BindableField>(),
+    pageId,
+    entries,
+    locale = $bindable<string>(DEFAULT_LOCALE),
     width,
   } = $props<Props>();
+
+  type GroupedEntry = {
+    capsuleKey: string;
+    entries: Array<{ entry: CapsuleManifestEntry; entryIndex: number }>;
+  };
+
+  const groupedEntries = $derived.by<GroupedEntry[]>(() => {
+    const grouped: Record<string, GroupedEntry> = {};
+
+    entries.forEach((entry, entryIndex) => {
+      const existing = grouped[entry.capsuleKey];
+      if (existing) {
+        existing.entries.push({ entry, entryIndex });
+        return;
+      }
+
+      grouped[entry.capsuleKey] = {
+        capsuleKey: entry.capsuleKey,
+        entries: [{ entry, entryIndex }],
+      };
+    });
+
+    return Object.values(grouped);
+  });
+
+  let valuesByInstance = $state<Record<string, SchemaValues>>({});
+
+  function handleInstanceValuesChange(instanceId: string, nextValues: SchemaValues) {
+    const nextValuesByInstance = {
+      ...valuesByInstance,
+      [instanceId]: nextValues,
+    };
+    valuesByInstance = nextValuesByInstance;
+
+    console.log("[PageEditor] Final JSON", JSON.stringify(nextValuesByInstance, null, 2));
+  }
+
+  function getCapsuleTitle(capsuleKey: string, componentName: string): string {
+    const capsule = getCapsuleByKey(capsuleKey);
+    return capsule?.meta?.displayName ?? componentName ?? capsuleKey;
+  }
 </script>
 
 <aside
@@ -60,7 +97,9 @@
         </DropdownMenu.Content>
       </DropdownMenu.Root>
 
-      <span class="truncate text-sm font-medium">{internalName.value}</span>
+      <span class="truncate text-sm font-medium">
+        {pageId.length > 0 ? pageId : "Untitled page"}
+      </span>
 
       <Button
         size="sm"
@@ -73,49 +112,69 @@
 
   <div class="min-h-0 flex-1 overflow-y-auto">
     <div class="space-y-5 p-4">
-      <!-- Internal name -->
-      <div class="space-y-1.5">
-        <Label for="internal-name" class="text-xs font-medium"
-          >Internal name</Label
-        >
-        <Input id="internal-name" bind:value={internalName.value} />
-        <div class="text-muted-foreground flex justify-between text-[11px]">
-          <span>{internalName.value.length} characters</span>
-          <span>Maximum 256 characters</span>
+      {#if entries.length === 0}
+        <div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
+          No capsule entries found for this page yet.
         </div>
-      </div>
+      {:else}
+        {#each groupedEntries as group (group.capsuleKey)}
+          {@const firstEntry = group.entries[0]?.entry}
+          {@const capsule = getCapsuleByKey(group.capsuleKey)}
+          {@const title = getCapsuleTitle(
+            group.capsuleKey,
+            firstEntry?.componentName ?? group.capsuleKey,
+          )}
+          {@const totalInstances = group.entries.reduce(
+            (sum, item) => sum + item.entry.occurrenceCount,
+            0,
+          )}
 
-      <!-- Page name -->
-      <div class="space-y-1.5">
-        <Label
-          for="page-name"
-          class="flex items-center gap-1.5 text-xs font-medium"
-        >
-          <span>Page name</span>
-          <span class="text-muted-foreground">|</span>
-          <span class="text-muted-foreground font-normal">
-            English (United States)
-          </span>
-        </Label>
-        <Input id="page-name" bind:value={pageName.value} />
-        <div class="text-muted-foreground flex justify-between text-[11px]">
-          <span>{pageName.value.length} characters</span>
-          <span>Maximum 256 characters</span>
-        </div>
-      </div>
+          <section class="space-y-3 rounded-md border p-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-medium">{title}</h3>
+                <Badge>{group.capsuleKey}</Badge>
+              </div>
+              <p class="text-muted-foreground text-xs">
+                {totalInstances} instance{totalInstances === 1 ? "" : "s"}
+              </p>
+            </div>
 
-      <!-- Slug -->
-      <div class="space-y-1.5">
-        <Label for="slug" class="text-xs font-medium">
-          Slug <span class="text-muted-foreground">(required)</span>
-        </Label>
-        <div class="relative">
-          <Link
-            class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2"
-          />
-          <Input id="slug" bind:value={slug.value} class="pl-8" />
-        </div>
-      </div>
+            {#if !capsule}
+              <p class="text-destructive text-xs">
+                Capsule key "{group.capsuleKey}" is not registered. Schema
+                renderer skipped for this group.
+              </p>
+            {:else}
+              {@const flatInstances = group.entries.flatMap((entryItem) =>
+                Array.from(
+                  { length: entryItem.entry.occurrenceCount },
+                  (_, occurrenceIndex) => ({
+                    key: `${entryItem.entryIndex}-${occurrenceIndex}`,
+                  }),
+                ),
+              )}
+              <div class="space-y-4">
+                {#each flatInstances as instance, instanceIndex (instance.key)}
+                  {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
+                  <div class="space-y-2 rounded-md border p-2">
+                    <div class="text-xs font-medium">{instanceId}</div>
+                    <SchemaRenderer
+                      schema={capsule.schema}
+                      locales={LOCALES}
+                      defaultLocale={DEFAULT_LOCALE}
+                      editingLocale={locale}
+                      translatableLocaleMode="active-only"
+                      onValuesChange={(nextValues) =>
+                        handleInstanceValuesChange(instanceId, nextValues)}
+                    />
+                  </div>
+                {/each}
+              </div>
+            {/if}
+          </section>
+        {/each}
+      {/if}
     </div>
   </div>
 </aside>

@@ -6,7 +6,8 @@
 		applySchemaFieldUpdate,
 		buildSchemaRenderItems,
 		createSchemaInitialValues,
-		resolveSchemaRendererI18nContext
+		resolveSchemaRendererI18nContext,
+		type TranslatableLocaleMode
 	} from "./schema-renderer-i18n";
 
 	interface Props {
@@ -14,6 +15,7 @@
 		locales?: string[];
 		defaultLocale?: string;
 		editingLocale?: string;
+		translatableLocaleMode?: TranslatableLocaleMode;
 		onValuesChange?: (values: SchemaValues) => void;
 	}
 
@@ -45,7 +47,9 @@
 			editingLocale: props.editingLocale
 		})
 	);
-	const renderItems = $derived(buildSchemaRenderItems(props.schema, values, i18nContext));
+	const renderItems = $derived(
+		buildSchemaRenderItems(props.schema, values, i18nContext, props.translatableLocaleMode ?? "all")
+	);
 
 	queueMicrotask(() => {
 		props.onValuesChange?.({ ...values });

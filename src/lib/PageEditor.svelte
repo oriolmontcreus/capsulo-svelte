@@ -1,14 +1,20 @@
 <script lang="ts">
   import * as Tooltip from "$lib/components/ui/tooltip";
+  import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
 
   type Viewport = "desktop" | "tablet" | "mobile";
-  type BindableField = { value: string };
+  type Props = {
+    pageId?: string;
+    entries?: import("$lib/capsules/core/types").CapsuleManifestEntry[];
+  };
+
+  let { pageId, entries = [] } = $props<Props>();
 
   let viewport = $state<Viewport>("desktop");
-  let locale = $state<string>("en-US");
+  let locale = $state<string>(DEFAULT_LOCALE);
 
   const sidebarMinWidth = 280;
   const sidebarMaxWidth = 520;
@@ -22,10 +28,6 @@
   };
 
   const previewWidth = $derived(viewportWidths[viewport]);
-
-  let internalName = $state<BindableField>({ value: "Homepage" });
-  let pageName = $state<BindableField>({ value: "The card you always wanted" });
-  let slug = $state<BindableField>({ value: "home" });
 
   function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
@@ -76,10 +78,10 @@
     <div class="flex min-h-0 flex-1" class:select-none={isResizingSidebar}>
       <!-- Sidebar -->
       <ContentSidebar
-        bind:internalName
-        bind:pageName
-        bind:slug
+        pageId={pageId ?? ""}
+        {entries}
         width={sidebarWidth}
+        bind:locale
       />
 
       <!-- Resizer -->

@@ -3,6 +3,7 @@
   import * as Tabs from "$lib/components/ui/tabs";
   import * as Select from "$lib/components/ui/select";
   import * as Tooltip from "$lib/components/ui/tooltip";
+  import { LOCALES, DEFAULT_LOCALE } from "$lib/config/i18n-config";
 
   import Monitor from "@lucide/svelte/icons/monitor";
   import Smartphone from "@lucide/svelte/icons/smartphone";
@@ -23,9 +24,9 @@
 
   let {
     previewWidth,
-    viewport = $bindable<Viewport>(),
-    locale = $bindable<string>(),
-  } = $props<Props>();
+    viewport = $bindable(),
+    locale = $bindable(),
+  }: Props = $props();
 </script>
 
 <main
@@ -90,16 +91,12 @@
     <div class="flex items-center justify-end gap-1 w-full">
       <Select.Root type="single" bind:value={locale}>
         <Select.Trigger size="sm" class="h-8 min-w-48 gap-1 text-xs">
-          {locale === "en-US"
-            ? "English (United States)"
-            : locale === "es-ES"
-              ? "Spanish (Spain)"
-              : "French (France)"}
+          {locale || DEFAULT_LOCALE}
         </Select.Trigger>
         <Select.Content align="end">
-          <Select.Item value="en-US">English (United States)</Select.Item>
-          <Select.Item value="es-ES">Spanish (Spain)</Select.Item>
-          <Select.Item value="fr-FR">French (France)</Select.Item>
+          {#each LOCALES as localeCode (localeCode)}
+            <Select.Item value={localeCode}>{localeCode}</Select.Item>
+          {/each}
         </Select.Content>
       </Select.Root>
 
