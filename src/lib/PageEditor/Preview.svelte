@@ -4,6 +4,7 @@
   import * as Select from "$lib/components/ui/select";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { LOCALES, DEFAULT_LOCALE } from "$lib/config/i18n-config";
+  import { formatLocaleLabel } from "$lib/utils/locale-label";
 
   import Monitor from "@lucide/svelte/icons/monitor";
   import Smartphone from "@lucide/svelte/icons/smartphone";
@@ -91,11 +92,11 @@
     <div class="flex items-center justify-end gap-1 w-full">
       <Select.Root type="single" bind:value={locale}>
         <Select.Trigger size="sm" class="h-8 min-w-48 gap-1 text-xs">
-          {locale || DEFAULT_LOCALE}
+          {formatLocaleLabel(locale || DEFAULT_LOCALE)}
         </Select.Trigger>
         <Select.Content align="end">
           {#each LOCALES as localeCode (localeCode)}
-            <Select.Item value={localeCode}>{localeCode}</Select.Item>
+            <Select.Item value={localeCode}>{formatLocaleLabel(localeCode)}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
