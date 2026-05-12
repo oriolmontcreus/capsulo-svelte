@@ -16,6 +16,7 @@
 		defaultLocale?: string;
 		editingLocale?: string;
 		translatableLocaleMode?: TranslatableLocaleMode;
+		initialValues?: SchemaValues;
 		onValuesChange?: (values: SchemaValues) => void;
 	}
 
@@ -28,7 +29,20 @@
 			editingLocale: componentProps.editingLocale
 		});
 
-		return createSchemaInitialValues(componentProps.schema, context.defaultLocale);
+		const schemaDefaults = createSchemaInitialValues(componentProps.schema, context.defaultLocale);
+		if (!componentProps.initialValues) {
+			return schemaDefaults;
+		}
+
+		const mergedValues: SchemaValues = { ...schemaDefaults };
+		for (const [fieldName, localizedValues] of Object.entries(componentProps.initialValues)) {
+			mergedValues[fieldName] = {
+				...(schemaDefaults[fieldName] ?? {}),
+				...(localizedValues ?? {})
+			};
+		}
+
+		return mergedValues;
 	}
 
 	const initialValues = untrack(() =>
@@ -36,7 +50,8 @@
 			schema: props.schema,
 			locales: props.locales,
 			defaultLocale: props.defaultLocale,
-			editingLocale: props.editingLocale
+			editingLocale: props.editingLocale,
+			initialValues: props.initialValues
 		})
 	);
 	let values = $state<SchemaValues>(initialValues);

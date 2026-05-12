@@ -1,10 +1,20 @@
 <script lang="ts">
+  import { get } from "svelte/store";
+  import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { getCapsuleByKey } from "$lib/capsules/core/registry";
   import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
   import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
+  import { session, syncSession } from "$lib/stores/session";
+  import {
+    type PageEditorValuesByInstance
+  } from "$lib/PageEditor/persistence";
+  import {
+    loadPageEditorDocumentFromDb,
+    savePageEditorDocumentToDb
+  } from "$lib/PageEditor/page-editor-documents";
   import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
   import type { SchemaValues } from "$lib/form-builder/core/types";
 
@@ -20,9 +30,9 @@
   let {
     pageId,
     entries,
-    locale = $bindable<string>(DEFAULT_LOCALE),
+    locale = $bindable(DEFAULT_LOCALE),
     width,
-  } = $props<Props>();
+  }: Props = $props();
 
   type GroupedEntry = {
     capsuleKey: string;
@@ -48,22 +58,86 @@
     return Object.values(grouped);
   });
 
-  let valuesByInstance = $state<Record<string, SchemaValues>>({});
+  let valuesByInstance = $state<PageEditorValuesByInstance>({});
+  let isLoading = $state(true);
+  let isSaving = $state(false);
+  let isAuthenticated = $state(false);
+  let currentUserId = $state<string | null>(null);
+  let hasExistingDocument = $state(false);
+  let loadError = $state<string | null>(null);
+  let saveError = $state<string | null>(null);
+  let saveSuccess = $state<string | null>(null);
 
   function handleInstanceValuesChange(instanceId: string, nextValues: SchemaValues) {
-    const nextValuesByInstance = {
+    valuesByInstance = {
       ...valuesByInstance,
       [instanceId]: nextValues,
     };
-    valuesByInstance = nextValuesByInstance;
-
-    console.log("[PageEditor] Final JSON", JSON.stringify(nextValuesByInstance, null, 2));
   }
 
   function getCapsuleTitle(capsuleKey: string, componentName: string): string {
     const capsule = getCapsuleByKey(capsuleKey);
     return capsule?.meta?.displayName ?? componentName ?? capsuleKey;
   }
+
+  async function loadPageEditorDocument(): Promise<void> {
+    isLoading = true;
+    loadError = null;
+    saveError = null;
+    saveSuccess = null;
+    hasExistingDocument = false;
+
+    await syncSession();
+    const nextSession = get(session);
+    const userId = nextSession?.user?.id ?? null;
+
+    isAuthenticated = Boolean(userId);
+    currentUserId = userId;
+
+    if (!userId) {
+      valuesByInstance = {};
+      isLoading = false;
+      return;
+    }
+
+    const loadResult = await loadPageEditorDocumentFromDb(pageId);
+    loadError = loadResult.errorMessage;
+    valuesByInstance = loadResult.valuesByInstance;
+    hasExistingDocument = loadResult.hasExistingDocument;
+
+    isLoading = false;
+  }
+
+  async function savePageEditorDocument(): Promise<void> {
+    if (!currentUserId || isSaving || !isAuthenticated) {
+      return;
+    }
+
+    isSaving = true;
+    saveError = null;
+    saveSuccess = null;
+
+    const saveResult = await savePageEditorDocumentToDb({
+      pageId,
+      userId: currentUserId,
+      valuesByInstance,
+      hasExistingDocument,
+    });
+
+    if (saveResult.errorMessage) {
+      saveError = saveResult.errorMessage;
+      isSaving = false;
+      return;
+    }
+
+    hasExistingDocument = true;
+    saveSuccess = "Saved";
+    isSaving = false;
+  }
+
+  onMount(() => {
+    void loadPageEditorDocument();
+  });
 </script>
 
 <aside
@@ -101,18 +175,51 @@
         {pageId.length > 0 ? pageId : "Untitled page"}
       </span>
 
+      {#if isLoading}
+        <span class="text-muted-foreground text-xs">Loading...</span>
+      {:else if isSaving}
+        <span class="text-muted-foreground text-xs">Saving...</span>
+      {:else if saveSuccess}
+        <span class="text-emerald-600 text-xs">{saveSuccess}</span>
+      {/if}
+
       <Button
         size="sm"
         class="ml-auto h-7 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
+        onclick={savePageEditorDocument}
+        disabled={!isAuthenticated || isLoading || isSaving}
       >
-        Publish
+        Save
       </Button>
     </div>
   </header>
 
   <div class="min-h-0 flex-1 overflow-y-auto">
     <div class="space-y-5 p-4">
-      {#if entries.length === 0}
+      {#if !isAuthenticated}
+        <div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
+          Sign in to load and save page editor content.
+          <a href="/login" class="underline">Go to login</a>.
+        </div>
+      {/if}
+
+      {#if loadError}
+        <div class="text-destructive rounded-md border p-3 text-xs">
+          Failed to load page content: {loadError}
+        </div>
+      {/if}
+
+      {#if saveError}
+        <div class="text-destructive rounded-md border p-3 text-xs">
+          Failed to save page content: {saveError}
+        </div>
+      {/if}
+
+      {#if isLoading}
+        <div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
+          Loading page editor content...
+        </div>
+      {:else if entries.length === 0}
         <div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
           No capsule entries found for this page yet.
         </div>
@@ -161,6 +268,7 @@
                     <div class="text-xs font-medium">{instanceId}</div>
                     <SchemaRenderer
                       schema={capsule.schema}
+                      initialValues={valuesByInstance[instanceId]}
                       locales={LOCALES}
                       defaultLocale={DEFAULT_LOCALE}
                       editingLocale={locale}
