@@ -9,6 +9,13 @@ import {
 export type LoadPageEditorDocumentResult = {
 	valuesByInstance: PageEditorValuesByInstance;
 	hasExistingDocument: boolean;
+	updatedAt: string | null;
+	errorMessage: string | null;
+};
+
+export type LoadPageEditorDocumentMetadataResult = {
+	updatedAt: string | null;
+	hasExistingDocument: boolean;
 	errorMessage: string | null;
 };
 
@@ -17,7 +24,7 @@ export async function loadPageEditorDocumentFromDb(
 ): Promise<LoadPageEditorDocumentResult> {
 	const { data, error } = await supabase
 		.from("pages")
-		.select("content")
+		.select("content, updated_at")
 		.eq("page_id", pageId)
 		.maybeSingle();
 
@@ -25,6 +32,7 @@ export async function loadPageEditorDocumentFromDb(
 		return {
 			valuesByInstance: {},
 			hasExistingDocument: false,
+			updatedAt: null,
 			errorMessage: error.message
 		};
 	}
@@ -33,6 +41,7 @@ export async function loadPageEditorDocumentFromDb(
 		return {
 			valuesByInstance: {},
 			hasExistingDocument: false,
+			updatedAt: data?.updated_at ?? null,
 			errorMessage: null
 		};
 	}
@@ -40,6 +49,31 @@ export async function loadPageEditorDocumentFromDb(
 	return {
 		valuesByInstance: deserializePageEditorValues(data.content),
 		hasExistingDocument: true,
+		updatedAt: data.updated_at ?? null,
+		errorMessage: null
+	};
+}
+
+export async function loadPageEditorDocumentMetadataFromDb(
+	pageId: string
+): Promise<LoadPageEditorDocumentMetadataResult> {
+	const { data, error } = await supabase
+		.from("pages")
+		.select("updated_at")
+		.eq("page_id", pageId)
+		.maybeSingle();
+
+	if (error) {
+		return {
+			updatedAt: null,
+			hasExistingDocument: false,
+			errorMessage: error.message
+		};
+	}
+
+	return {
+		updatedAt: data?.updated_at ?? null,
+		hasExistingDocument: Boolean(data),
 		errorMessage: null
 	};
 }
@@ -53,6 +87,7 @@ export type SavePageEditorDocumentInput = {
 
 export type SavePageEditorDocumentResult = {
 	errorMessage: string | null;
+	updatedAt: string | null;
 };
 
 export async function savePageEditorDocumentToDb(
@@ -76,12 +111,14 @@ export async function savePageEditorDocumentToDb(
 		documentPayload.created_by = input.userId;
 	}
 
-	const { error: upsertError } = await supabase
+	const { data: upsertedDocument, error: upsertError } = await supabase
 		.from("pages")
-		.upsert(documentPayload, { onConflict: "page_id" });
+		.upsert(documentPayload, { onConflict: "page_id" })
+		.select("updated_at")
+		.single();
 
 	if (upsertError) {
-		return { errorMessage: upsertError.message };
+		return { errorMessage: upsertError.message, updatedAt: null };
 	}
 
 	const { error: revisionError } = await supabase.from("pages-history").insert({
@@ -92,8 +129,8 @@ export async function savePageEditorDocumentToDb(
 	});
 
 	if (revisionError) {
-		return { errorMessage: revisionError.message };
+		return { errorMessage: revisionError.message, updatedAt: null };
 	}
 
-	return { errorMessage: null };
+	return { errorMessage: null, updatedAt: upsertedDocument?.updated_at ?? null };
 }

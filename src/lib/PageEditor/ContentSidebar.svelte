@@ -8,12 +8,15 @@
   import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
   import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
   import { session, syncSession } from "$lib/stores/session";
+  import { type PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
   import {
-    type PageEditorValuesByInstance
-  } from "$lib/PageEditor/persistence";
+    loadPageEditorDocumentFromCache,
+    savePageEditorDocumentToCache,
+  } from "$lib/PageEditor/page-editor-cache";
   import {
     loadPageEditorDocumentFromDb,
-    savePageEditorDocumentToDb
+    loadPageEditorDocumentMetadataFromDb,
+    savePageEditorDocumentToDb,
   } from "$lib/PageEditor/page-editor-documents";
   import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
   import type { SchemaValues } from "$lib/form-builder/core/types";
@@ -60,15 +63,35 @@
 
   let valuesByInstance = $state<PageEditorValuesByInstance>({});
   let isLoading = $state(true);
+  let isBlockingLoad = $state(false);
+  let isSyncing = $state(false);
   let isSaving = $state(false);
   let isAuthenticated = $state(false);
+  let hasCheckedAuth = $state(false);
   let currentUserId = $state<string | null>(null);
   let hasExistingDocument = $state(false);
   let loadError = $state<string | null>(null);
   let saveError = $state<string | null>(null);
   let saveSuccess = $state<string | null>(null);
+  let latestLoadRunId = 0;
 
-  function handleInstanceValuesChange(instanceId: string, nextValues: SchemaValues) {
+  function isRemoteTimestampNewer(
+    remoteUpdatedAt: string | null,
+    cacheUpdatedAt: string | null,
+  ): boolean {
+    if (!remoteUpdatedAt) return false;
+    if (!cacheUpdatedAt) return true;
+    const remoteMs = Date.parse(remoteUpdatedAt);
+    const cacheMs = Date.parse(cacheUpdatedAt);
+    if (Number.isNaN(remoteMs) || Number.isNaN(cacheMs))
+      return remoteUpdatedAt !== cacheUpdatedAt;
+    return remoteMs > cacheMs;
+  }
+
+  function handleInstanceValuesChange(
+    instanceId: string,
+    nextValues: SchemaValues,
+  ) {
     valuesByInstance = {
       ...valuesByInstance,
       [instanceId]: nextValues,
@@ -81,31 +104,125 @@
   }
 
   async function loadPageEditorDocument(): Promise<void> {
+    const loadRunId = ++latestLoadRunId;
+    const isCurrentRun = () => loadRunId === latestLoadRunId;
+
     isLoading = true;
+    isBlockingLoad = false;
+    isSyncing = false;
+    hasCheckedAuth = false;
     loadError = null;
     saveError = null;
     saveSuccess = null;
     hasExistingDocument = false;
 
-    await syncSession();
-    const nextSession = get(session);
-    const userId = nextSession?.user?.id ?? null;
+    const cachedDocument = await loadPageEditorDocumentFromCache(pageId);
+    if (!isCurrentRun()) {
+      return;
+    }
+
+    if (cachedDocument) {
+      valuesByInstance = cachedDocument.valuesByInstance;
+      hasExistingDocument =
+        Boolean(cachedDocument.updatedAt) ||
+        Object.keys(cachedDocument.valuesByInstance).length > 0;
+      isLoading = false;
+      isBlockingLoad = false;
+      isSyncing = true;
+
+      let userId = get(session)?.user?.id ?? null;
+      if (!userId) {
+        await syncSession();
+        userId = get(session)?.user?.id ?? null;
+      }
+
+      isAuthenticated = Boolean(userId);
+      currentUserId = userId;
+      hasCheckedAuth = true;
+      if (!userId) {
+        isSyncing = false;
+        return;
+      }
+
+      const metadataResult = await loadPageEditorDocumentMetadataFromDb(pageId);
+      if (!isCurrentRun()) {
+        return;
+      }
+
+      if (metadataResult.errorMessage) {
+        loadError = metadataResult.errorMessage;
+        isSyncing = false;
+        return;
+      }
+
+      hasExistingDocument = metadataResult.hasExistingDocument;
+      const remoteIsNewer = isRemoteTimestampNewer(
+        metadataResult.updatedAt,
+        cachedDocument.updatedAt,
+      );
+
+      if (!remoteIsNewer) {
+        isSyncing = false;
+        return;
+      }
+
+      const remoteLoadResult = await loadPageEditorDocumentFromDb(pageId);
+      if (!isCurrentRun()) {
+        return;
+      }
+
+      if (remoteLoadResult.errorMessage) {
+        loadError = remoteLoadResult.errorMessage;
+        isSyncing = false;
+        return;
+      }
+
+      loadError = null;
+      valuesByInstance = remoteLoadResult.valuesByInstance;
+      hasExistingDocument = remoteLoadResult.hasExistingDocument;
+      await savePageEditorDocumentToCache({
+        pageId,
+        valuesByInstance: remoteLoadResult.valuesByInstance,
+        updatedAt: remoteLoadResult.updatedAt,
+      });
+      isSyncing = false;
+      return;
+    }
+
+    isBlockingLoad = true;
+    let userId = get(session)?.user?.id ?? null;
+    if (!userId) {
+      await syncSession();
+      userId = get(session)?.user?.id ?? null;
+    }
 
     isAuthenticated = Boolean(userId);
     currentUserId = userId;
+    hasCheckedAuth = true;
 
     if (!userId) {
       valuesByInstance = {};
       isLoading = false;
+      isBlockingLoad = false;
       return;
     }
 
     const loadResult = await loadPageEditorDocumentFromDb(pageId);
+    if (!isCurrentRun()) return;
+
     loadError = loadResult.errorMessage;
     valuesByInstance = loadResult.valuesByInstance;
     hasExistingDocument = loadResult.hasExistingDocument;
+    if (!loadResult.errorMessage) {
+      await savePageEditorDocumentToCache({
+        pageId,
+        valuesByInstance: loadResult.valuesByInstance,
+        updatedAt: loadResult.updatedAt,
+      });
+    }
 
     isLoading = false;
+    isBlockingLoad = false;
   }
 
   async function savePageEditorDocument(): Promise<void> {
@@ -131,6 +248,11 @@
     }
 
     hasExistingDocument = true;
+    await savePageEditorDocumentToCache({
+      pageId,
+      valuesByInstance,
+      updatedAt: saveResult.updatedAt,
+    });
     saveSuccess = "Saved";
     isSaving = false;
   }
@@ -175,10 +297,12 @@
         {pageId.length > 0 ? pageId : "Untitled page"}
       </span>
 
-      {#if isLoading}
+      {#if isBlockingLoad}
         <span class="text-muted-foreground text-xs">Loading...</span>
       {:else if isSaving}
         <span class="text-muted-foreground text-xs">Saving...</span>
+      {:else if isSyncing}
+        <span class="text-muted-foreground text-xs">Syncing...</span>
       {:else if saveSuccess}
         <span class="text-emerald-600 text-xs">{saveSuccess}</span>
       {/if}
@@ -187,7 +311,7 @@
         size="sm"
         class="ml-auto h-7 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
         onclick={savePageEditorDocument}
-        disabled={!isAuthenticated || isLoading || isSaving}
+        disabled={!isAuthenticated || isBlockingLoad || isSaving}
       >
         Save
       </Button>
@@ -196,8 +320,10 @@
 
   <div class="min-h-0 flex-1 overflow-y-auto">
     <div class="space-y-5 p-4">
-      {#if !isAuthenticated}
-        <div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
+      {#if hasCheckedAuth && !isAuthenticated}
+        <div
+          class="text-muted-foreground rounded-md border border-dashed p-3 text-xs"
+        >
           Sign in to load and save page editor content.
           <a href="/login" class="underline">Go to login</a>.
         </div>
@@ -215,12 +341,16 @@
         </div>
       {/if}
 
-      {#if isLoading}
-        <div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
+      {#if isBlockingLoad}
+        <div
+          class="text-muted-foreground rounded-md border border-dashed p-4 text-xs"
+        >
           Loading page editor content...
         </div>
       {:else if entries.length === 0}
-        <div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
+        <div
+          class="text-muted-foreground rounded-md border border-dashed p-4 text-xs"
+        >
           No capsule entries found for this page yet.
         </div>
       {:else}

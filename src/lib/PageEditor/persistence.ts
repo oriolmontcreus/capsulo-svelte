@@ -26,6 +26,13 @@ export type PageEditorDocumentRow = {
 	updated_at: string;
 };
 
+export type PageEditorCachedDocument = {
+	pageId: string;
+	valuesByInstance: PageEditorValuesByInstance;
+	updatedAt: string | null;
+	cachedAt: string;
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
