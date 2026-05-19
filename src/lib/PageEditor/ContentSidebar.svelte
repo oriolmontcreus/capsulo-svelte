@@ -74,6 +74,7 @@
   let saveError = $state<string | null>(null);
   let saveSuccess = $state<string | null>(null);
   let latestLoadRunId = 0;
+  let schemaHydrationVersion = $state(0);
 
   function isRemoteTimestampNewer(
     remoteUpdatedAt: string | null,
@@ -103,6 +104,18 @@
     return capsule?.meta?.displayName ?? componentName ?? capsuleKey;
   }
 
+  function applyHydratedValues(
+    nextValuesByInstance: PageEditorValuesByInstance,
+    _source:
+      | "cache-initial"
+      | "remote-fallback"
+      | "remote-refresh"
+      | "unauthenticated-reset",
+  ): void {
+    valuesByInstance = nextValuesByInstance;
+    schemaHydrationVersion += 1;
+  }
+
   async function loadPageEditorDocument(): Promise<void> {
     const loadRunId = ++latestLoadRunId;
     const isCurrentRun = () => loadRunId === latestLoadRunId;
@@ -122,7 +135,7 @@
     }
 
     if (cachedDocument) {
-      valuesByInstance = cachedDocument.valuesByInstance;
+      applyHydratedValues(cachedDocument.valuesByInstance, "cache-initial");
       hasExistingDocument =
         Boolean(cachedDocument.updatedAt) ||
         Object.keys(cachedDocument.valuesByInstance).length > 0;
@@ -178,7 +191,7 @@
       }
 
       loadError = null;
-      valuesByInstance = remoteLoadResult.valuesByInstance;
+      applyHydratedValues(remoteLoadResult.valuesByInstance, "remote-refresh");
       hasExistingDocument = remoteLoadResult.hasExistingDocument;
       await savePageEditorDocumentToCache({
         pageId,
@@ -201,7 +214,7 @@
     hasCheckedAuth = true;
 
     if (!userId) {
-      valuesByInstance = {};
+      applyHydratedValues({}, "unauthenticated-reset");
       isLoading = false;
       isBlockingLoad = false;
       return;
@@ -211,7 +224,7 @@
     if (!isCurrentRun()) return;
 
     loadError = loadResult.errorMessage;
-    valuesByInstance = loadResult.valuesByInstance;
+    applyHydratedValues(loadResult.valuesByInstance, "remote-fallback");
     hasExistingDocument = loadResult.hasExistingDocument;
     if (!loadResult.errorMessage) {
       await savePageEditorDocumentToCache({
@@ -396,16 +409,18 @@
                   {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
                   <div class="space-y-2 rounded-md border p-2">
                     <div class="text-xs font-medium">{instanceId}</div>
-                    <SchemaRenderer
-                      schema={capsule.schema}
-                      initialValues={valuesByInstance[instanceId]}
-                      locales={LOCALES}
-                      defaultLocale={DEFAULT_LOCALE}
-                      editingLocale={locale}
-                      translatableLocaleMode="active-only"
-                      onValuesChange={(nextValues) =>
-                        handleInstanceValuesChange(instanceId, nextValues)}
-                    />
+                    {#key `${instanceId}-${schemaHydrationVersion}`}
+                      <SchemaRenderer
+                        schema={capsule.schema}
+                        initialValues={valuesByInstance[instanceId]}
+                        locales={LOCALES}
+                        defaultLocale={DEFAULT_LOCALE}
+                        editingLocale={locale}
+                        translatableLocaleMode="active-only"
+                        onValuesChange={(nextValues) =>
+                          handleInstanceValuesChange(instanceId, nextValues)}
+                      />
+                    {/key}
                   </div>
                 {/each}
               </div>

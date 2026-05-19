@@ -60,24 +60,6 @@
     }),
   );
   let values = $state<SchemaValues>(initialValues);
-
-  $effect(() => {
-    console.log("createInitialValues");
-    const nextValues = createInitialValues({
-      schema: props.schema,
-      locales: props.locales,
-      defaultLocale: props.defaultLocale,
-      editingLocale: props.editingLocale,
-      initialValues: props.initialValues,
-    });
-    const nextValuesJson = JSON.stringify(nextValues);
-    const currentValuesJson = JSON.stringify(values);
-    if (nextValuesJson === currentValuesJson) {
-      return;
-    }
-
-    values = nextValues;
-  });
   const i18nContext = $derived(
     resolveSchemaRendererI18nContext({
       locales: props.locales,
