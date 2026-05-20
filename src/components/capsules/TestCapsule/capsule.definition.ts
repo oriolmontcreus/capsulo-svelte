@@ -1,5 +1,5 @@
 import { defineCapsule } from "$lib/capsules/core/define-capsule";
-import TestCapsule from "./TestCapsule.astro";
+import TestCapsule from "./TestCapsule.svelte";
 import { testCapsuleSchema } from "./test-capsule.schema";
 
 const capsule = defineCapsule({
