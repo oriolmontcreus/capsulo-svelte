@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+  import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
@@ -15,6 +16,7 @@
 
   let viewport = $state<Viewport>("desktop");
   let locale = $state<string>(DEFAULT_LOCALE);
+  let valuesByInstance = $state<PageEditorValuesByInstance>({});
 
   const sidebarMinWidth = 280;
   const sidebarMaxWidth = 520;
@@ -82,6 +84,7 @@
         {entries}
         width={sidebarWidth}
         bind:locale
+        bind:valuesByInstance
       />
 
       <!-- Resizer -->
@@ -101,7 +104,13 @@
       </div>
 
       <!-- Preview pane -->
-      <Preview {previewWidth} bind:viewport bind:locale />
+      <Preview
+        pageId={pageId ?? ""}
+        valuesByInstance={valuesByInstance}
+        {previewWidth}
+        bind:viewport
+        bind:locale
+      />
     </div>
   </div>
 </Tooltip.Provider>

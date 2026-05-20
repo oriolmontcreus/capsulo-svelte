@@ -18,6 +18,45 @@ import { ClientRouter } from "astro:transitions";
 	<body>
 		<slot />
 		<ModeWatcherClient client:load />
+		<script>
+			import {
+				initPagePreviewBridge,
+				teardownPagePreviewBridge
+			} from "$lib/PageEditor/page-preview-bridge";
+			import { PAGE_EDITOR_PREVIEW_PARAM } from "$lib/PageEditor/preview-channel";
+
+			function pathnameToPageId(pathname: string) {
+				const clean = pathname.replace(/\/+$/, "");
+				if (!clean || clean === "/") return "index";
+				return clean
+					.split("/")
+					.filter(Boolean)
+					.map((segment: string) => decodeURIComponent(segment))
+					.join("/");
+			}
+
+			async function bootPagePreviewBridge() {
+				const params = new URLSearchParams(window.location.search);
+				const isPreview = params.get(PAGE_EDITOR_PREVIEW_PARAM) === "1";
+				if (!isPreview) {
+					teardownPagePreviewBridge();
+					return;
+				}
+				const pageId = pathnameToPageId(window.location.pathname);
+				await initPagePreviewBridge(pageId);
+			}
+
+			const windowWithBridge = window as Window & {
+				__pagePreviewBridgeBootstrapped?: boolean;
+			};
+			if (!windowWithBridge.__pagePreviewBridgeBootstrapped) {
+				windowWithBridge.__pagePreviewBridgeBootstrapped = true;
+				document.addEventListener("astro:page-load", () => {
+					void bootPagePreviewBridge();
+				});
+			}
+			void bootPagePreviewBridge();
+		</script>
 	</body>
 </html>
 

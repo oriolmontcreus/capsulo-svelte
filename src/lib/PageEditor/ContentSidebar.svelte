@@ -27,6 +27,7 @@
     pageId: string;
     entries: CapsuleManifestEntry[];
     locale: string;
+    valuesByInstance: PageEditorValuesByInstance;
     width?: number;
   };
 
@@ -34,6 +35,7 @@
     pageId,
     entries,
     locale = $bindable(DEFAULT_LOCALE),
+    valuesByInstance = $bindable({} as PageEditorValuesByInstance),
     width,
   }: Props = $props();
 
@@ -61,7 +63,6 @@
     return Object.values(grouped);
   });
 
-  let valuesByInstance = $state<PageEditorValuesByInstance>({});
   let isLoading = $state(true);
   let isBlockingLoad = $state(false);
   let isSyncing = $state(false);
@@ -75,6 +76,7 @@
   let saveSuccess = $state<string | null>(null);
   let latestLoadRunId = 0;
   let schemaHydrationVersion = $state(0);
+  const cachePersistDebounceMs = 250;
 
   function isRemoteTimestampNewer(
     remoteUpdatedAt: string | null,
@@ -272,6 +274,23 @@
 
   onMount(() => {
     void loadPageEditorDocument();
+  });
+
+  $effect(() => {
+    if (!pageId || isLoading) return;
+    valuesByInstance;
+
+    const timeoutId = window.setTimeout(() => {
+      void savePageEditorDocumentToCache({
+        pageId,
+        valuesByInstance,
+        updatedAt: null,
+      });
+    }, cachePersistDebounceMs);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   });
 </script>
 
