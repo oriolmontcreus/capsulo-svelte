@@ -34,7 +34,7 @@
     "@cloudflare/workers-types": "^4.20260503.1",
     "@fontsource-variable/inter": "^5.2.8",
     "@internationalized/date": "^3.12.1",
-    "@lucide/svelte": "^1.14.0",
+    "@lucide/svelte": "^1.16.0",
     "@tailwindcss/vite": "latest",
     "@types/gsap": "^3.0.0",
     "bits-ui": "^2.18.1",

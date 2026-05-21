@@ -1,13 +1,14 @@
 ---
 import Layout from "$/layouts/Layout.astro";
+import PageEditorIndex from "$lib/PageEditor/PageEditorIndex.svelte";
 import capsuleManifest from "virtual:capsule-manifest";
 
-type PageCard = {
+interface PageCard {
 	pageId: string;
 	capsuleCount: number;
 	instanceCount: number;
 	href: string;
-};
+}
 
 function pageIdToHref(pageId: string): string {
 	const path = pageId
@@ -28,47 +29,8 @@ const pageCards: PageCard[] = Object.entries(capsuleManifest)
 ---
 
 <Layout>
-	<main class="mx-auto max-w-6xl space-y-6 p-6">
-		<header class="space-y-1">
-			<h1 class="text-2xl font-semibold">Page Editor</h1>
-			<p class="text-muted-foreground text-sm">
-				Select a page to edit capsule schemas.
-			</p>
-		</header>
-
-		{
-			pageCards.length === 0 ? (
-				<section class="border-border bg-background rounded-lg border p-6">
-					<h2 class="text-lg font-medium">No detected pages</h2>
-					<p class="text-muted-foreground mt-2 text-sm">
-						The capsule manifest is empty. Add capsule usage in a public page and refresh.
-					</p>
-				</section>
-			) : (
-				<section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-					{
-						pageCards.map((card) => (
-							<a
-								href={card.href}
-								data-page-editor-link
-								data-page-id={card.pageId}
-								data-astro-prefetch="hover"
-								class="border-border bg-background hover:bg-muted/40 focus-visible:ring-ring rounded-lg border p-4 transition-colors focus-visible:ring-2 focus-visible:outline-none"
-							>
-								<div class="space-y-2">
-									<p class="text-xs font-medium tracking-wide uppercase">Page</p>
-									<p class="font-mono text-sm">{card.pageId}</p>
-									<div class="text-muted-foreground flex items-center gap-3 text-xs">
-										<span>{card.capsuleCount} capsules</span>
-										<span>{card.instanceCount} instances</span>
-									</div>
-								</div>
-							</a>
-						))
-					}
-				</section>
-			)
-		}
+	<main class="mx-auto max-w-6xl p-6">
+		<PageEditorIndex {pageCards} client:load />
 	</main>
 </Layout>
 
