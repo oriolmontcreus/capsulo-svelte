@@ -27,6 +27,7 @@
 		value={value}
 		placeholder={field.placeholder}
 		required={field.required}
+		autocomplete="off"
 		aria-invalid={error ? "true" : undefined}
 		oninput={(event) => onValueChange((event.currentTarget as HTMLInputElement).value)}
 	/>

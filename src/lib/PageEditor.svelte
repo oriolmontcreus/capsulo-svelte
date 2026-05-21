@@ -12,7 +12,7 @@
     entries?: import("$lib/capsules/core/types").CapsuleManifestEntry[];
   };
 
-  let { pageId, entries = [] } = $props<Props>();
+  let { pageId, entries = [] }: Props = $props();
 
   let viewport = $state<Viewport>("desktop");
   let locale = $state<string>(DEFAULT_LOCALE);
@@ -106,7 +106,7 @@
       <!-- Preview pane -->
       <Preview
         pageId={pageId ?? ""}
-        valuesByInstance={valuesByInstance}
+        {valuesByInstance}
         {previewWidth}
         bind:viewport
         bind:locale
