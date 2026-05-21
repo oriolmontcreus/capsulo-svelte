@@ -80,3 +80,19 @@ export function resolveSchemaValues(
 
 	return resolved;
 }
+
+export function getSchemaDefaultValues(
+	schema: SchemaDefinition,
+	locale: string,
+	defaultLocale: string
+): ResolvedSchemaValues {
+	const resolved: ResolvedSchemaValues = {};
+
+	for (const field of schema.fields) {
+		const defaultValue =
+			field.type === "text" ? (field.defaultValue ?? "") : "";
+		resolved[field.name] = defaultValue;
+	}
+
+	return resolved;
+}
