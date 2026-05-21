@@ -8,23 +8,42 @@ export const testCapsuleSchema = createSchema({
 	fields: [
 		TextField("eyebrow")
 			.label("Eyebrow")
-			.placeholder("Capsulo prototype")
-			.defaultValue("Capsulo prototype"),
+			.placeholder("Introducing Mist Agents")
+			.translatable()
+			.defaultValue("Introducing Mist Agents"),
+		TextField("eyebrowHref")
+			.label("Eyebrow link")
+			.placeholder("/")
+			.defaultValue("/"),
 		TextField("title")
 			.label("Title")
-			.placeholder("Autodetected capsule")
+			.placeholder("Build 10x Faster with Mist")
 			.required()
 			.translatable()
-			.defaultValue("Autodetected capsule"),
+			.defaultValue("Build 10x Faster with Mist"),
 		TextField("description")
 			.label("Description")
-			.placeholder("This content is editable from the prototype admin.")
+			.placeholder("Craft. Build. Ship Modern Websites With AI Support.")
 			.translatable()
-			.defaultValue("This content is editable from the prototype admin."),
-		TextField("ctaLabel")
-			.label("CTA label")
-			.placeholder("Read more")
+			.defaultValue("Craft. Build. Ship Modern Websites With AI Support."),
+		TextField("primaryCtaLabel")
+			.label("Primary CTA label")
+			.placeholder("Start Building")
 			.translatable()
-			.defaultValue("Read more")
+			.defaultValue("Start Building"),
+		TextField("secondaryCtaLabel")
+			.label("Secondary CTA label")
+			.placeholder("Watch Video")
+			.translatable()
+			.defaultValue("Watch Video"),
+		TextField("imageSrc")
+			.label("Image URL")
+			.placeholder("https://sv-blocks.vercel.app/mist/tailark-2.png")
+			.defaultValue("https://sv-blocks.vercel.app/mist/tailark-2.png"),
+		TextField("imageAlt")
+			.label("Image alt text")
+			.placeholder("app screen")
+			.translatable()
+			.defaultValue("app screen")
 	]
 });

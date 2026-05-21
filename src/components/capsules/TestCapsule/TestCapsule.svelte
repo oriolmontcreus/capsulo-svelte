@@ -1,31 +1,88 @@
 <script lang="ts">
-	import { getCmsData } from "$lib/cms/get-cms-data";
-	import { testCapsuleSchema } from "./test-capsule.schema";
-	import type { TestCapsuleData } from "./test-capsule.schema.d";
+  import { getCmsData } from "$lib/cms/get-cms-data";
+  import Button from "$lib/components/ui/button/button.svelte";
+  import Sparkle from "@lucide/svelte/icons/sparkle";
 
-	interface Props {
-		instanceId: string;
-	}
+  import { testCapsuleSchema } from "./test-capsule.schema";
+  import type { TestCapsuleData } from "./test-capsule.schema.d";
 
-	let { instanceId }: Props = $props();
+  interface Props {
+    instanceId: string;
+  }
 
-	const data = $derived(getCmsData<TestCapsuleData>(instanceId, testCapsuleSchema));
+  let { instanceId }: Props = $props();
+
+  const data = $derived(
+    getCmsData<TestCapsuleData & Record<string, unknown>>(instanceId, testCapsuleSchema),
+  );
 </script>
 
-<section class="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-	<p class="text-xs font-semibold tracking-wide text-blue-600 uppercase dark:text-blue-400">
-		{data?.eyebrow ?? ""}
-	</p>
-	<h2 class="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-		{data?.title ?? ""}
-	</h2>
-	<p class="mt-3 text-sm text-zinc-600 dark:text-zinc-300">
-		{data?.description ?? ""}
-	</p>
-	<button
-		type="button"
-		class="mt-4 inline-flex h-9 items-center rounded-md bg-zinc-900 px-4 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-	>
-		{data?.ctaLabel ?? ""}
-	</button>
-</section>
+<div class="relative">
+  <main class="[--color-primary:var(--color-indigo-500)]">
+    <section
+      class="relative overflow-hidden border-e-foreground before:absolute before:inset-1 before:h-[calc(100%-8rem)] before:rounded-2xl before:bg-muted sm:before:inset-2 md:before:rounded-[2rem] lg:before:h-[calc(100%-14rem)]"
+    >
+      <div class="py-20 md:py-36">
+        <div class="relative z-10 mx-auto max-w-5xl px-6 text-center">
+          <div>
+            <a
+              href={data.eyebrowHref ?? "/"}
+              class="mx-auto flex w-fit items-center justify-center gap-2 rounded-md py-0.5 pr-3 pl-1 transition-colors duration-150 hover:bg-foreground/5"
+            >
+              <div
+                aria-hidden="true"
+                class="relative flex size-5 items-center justify-center rounded border border-background bg-linear-to-b from-primary to-foreground shadow-md ring-1 shadow-black/20 ring-black/10 dark:inset-shadow-2xs"
+              >
+                <div
+                  class="absolute inset-x-0 inset-y-1.5 border-y border-dotted border-white/25"
+                ></div>
+                <div
+                  class="absolute inset-x-1.5 inset-y-0 border-x border-dotted border-white/25"
+                ></div>
+                <Sparkle class="size-3 fill-white stroke-white drop-shadow" />
+              </div>
+              <span class="font-medium">{data.eyebrow ?? ""}</span>
+            </a>
+            <h1
+              class="mx-auto mt-8 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+            >
+              {data.title}
+            </h1>
+            <p
+              class="mx-auto my-6 max-w-xl text-xl text-balance text-muted-foreground"
+            >
+              {data.description ?? ""}
+            </p>
+
+            <div class="flex items-center justify-center gap-3">
+              <Button variant="default" size="lg">
+                <span class="text-nowrap">{data.primaryCtaLabel ?? ""}</span>
+              </Button>
+              <Button size="lg" variant="outline">
+                <span class="text-nowrap">{data.secondaryCtaLabel ?? ""}</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div class="relative">
+          <div class="relative z-10 mx-auto max-w-5xl px-6">
+            <div class="mt-12 md:mt-16">
+              <div
+                class="relative mx-auto overflow-hidden rounded-(--radius) border border-transparent bg-background shadow-lg ring-1 shadow-black/10 ring-black/10"
+              >
+                {#if data.imageSrc}
+                  <img
+                    src={data.imageSrc}
+                    alt={data.imageAlt ?? ""}
+                    width="2880"
+                    height="1842"
+                  />
+                {/if}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

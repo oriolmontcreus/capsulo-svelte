@@ -2,7 +2,11 @@
 
 export interface TestCapsuleData {
 	eyebrow?: string;
+	eyebrowHref?: string;
 	title: string;
 	description?: string;
-	ctaLabel?: string;
+	primaryCtaLabel?: string;
+	secondaryCtaLabel?: string;
+	imageSrc?: string;
+	imageAlt?: string;
 }
