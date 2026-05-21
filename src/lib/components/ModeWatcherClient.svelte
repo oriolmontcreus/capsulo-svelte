@@ -2,5 +2,5 @@
 	import { ModeWatcher } from "mode-watcher";
 </script>
 
-<ModeWatcher />
+<ModeWatcher disableHeadScriptInjection={true} />
 

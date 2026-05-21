@@ -15,11 +15,30 @@ import { ClientRouter } from "astro:transitions";
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro Basics</title>
 		<ClientRouter fallback="swap" />
+		<script is:inline>
+			(function() {
+				function applyMode() {
+					try {
+						const mode = localStorage.getItem("mode-watcher-mode") || "system";
+						const light = mode === "light" || (mode === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
+						const rootEl = document.documentElement;
+						if (light) {
+							rootEl.classList.remove("dark");
+						} else {
+							rootEl.classList.add("dark");
+						}
+						rootEl.style.colorScheme = light ? "light" : "dark";
+					} catch (e) {}
+				}
+				applyMode();
+				document.addEventListener("astro:after-swap", applyMode);
+			})();
+		</script>
 	</head>
 	<body>
 		<slot />
 		<CmsPump client:load />
-		<ModeWatcherClient client:load />
+		<ModeWatcherClient client:load transition:persist="mode-watcher" />
 	</body>
 </html>
 
