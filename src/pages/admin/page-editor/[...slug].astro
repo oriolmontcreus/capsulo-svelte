@@ -20,7 +20,7 @@ const { pageId = "", entries = [] } = Astro.props as Partial<StaticPathProps>;
 const hasPage = pageId.length > 0;
 ---
 
-<Layout>
+<Layout fontFamily="geist">
 	{
 		hasPage ? (
 			<PageEditor pageId={pageId} entries={entries} client:load />

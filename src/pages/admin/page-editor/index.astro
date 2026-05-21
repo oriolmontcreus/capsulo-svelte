@@ -28,7 +28,7 @@ const pageCards: PageCard[] = Object.entries(capsuleManifest)
 	.sort((a, b) => a.pageId.localeCompare(b.pageId));
 ---
 
-<Layout>
+<Layout fontFamily="geist">
 	<main class="mx-auto max-w-6xl p-6">
 		<PageEditorIndex {pageCards} client:load />
 	</main>

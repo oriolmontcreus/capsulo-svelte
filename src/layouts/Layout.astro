@@ -3,10 +3,16 @@ import "../styles/global.css";
 import CmsPump from "$lib/cms/CmsPump.svelte";
 import ModeWatcherClient from "$lib/components/ModeWatcherClient.svelte";
 import { ClientRouter } from "astro:transitions";
+
+interface Props {
+	fontFamily?: "sans" | "geist";
+}
+
+const { fontFamily = "sans" } = Astro.props as Props;
 ---
 
 <!doctype html>
-<html lang="en" transition:animate="none">
+<html lang="en" class={fontFamily === "geist" ? "font-geist" : "font-sans"} transition:animate="none">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />

@@ -351,7 +351,7 @@
   </header>
 
   <div class="min-h-0 flex-1 overflow-y-auto">
-    <div class="space-y-5 p-4">
+    <div class="space-y-6 p-5">
       {#if hasCheckedAuth && !isAuthenticated}
         <div
           class="text-muted-foreground rounded-md border border-dashed p-3 text-xs"
@@ -398,7 +398,7 @@
             0,
           )}
 
-          <section class="space-y-3 rounded-md border p-3">
+          <section class="space-y-4 rounded-md border p-4">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <h3 class="text-sm font-medium">{title}</h3>
@@ -423,10 +423,10 @@
                   }),
                 ),
               )}
-              <div class="space-y-4">
+              <div class="space-y-5">
                 {#each flatInstances as instance, instanceIndex (instance.key)}
                   {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
-                  <div class="space-y-2 rounded-md border p-2">
+                  <div class="space-y-3 rounded-md border p-3">
                     <div class="text-xs font-medium">{instanceId}</div>
                     {#key `${instanceId}-${schemaHydrationVersion}`}
                       <SchemaRenderer
