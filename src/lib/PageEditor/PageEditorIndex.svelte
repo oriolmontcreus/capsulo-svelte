@@ -175,7 +175,7 @@
         <button
           type="button"
           onclick={() => enterFolder(folder.name)}
-          class="group border-border bg-background hover:bg-muted/40 focus-visible:ring-ring cursor-pointer rounded-xl border p-6 shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none text-left"
+          class="group border-border bg-background hover:bg-primary/10 focus-visible:ring-ring cursor-pointer rounded-xl border p-6 shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none text-left"
         >
           <div class="flex flex-col gap-4">
             <div
