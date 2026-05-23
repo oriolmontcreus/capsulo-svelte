@@ -3,6 +3,15 @@
   import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 
+  import {
+    Breadcrumb,
+    BreadcrumbList,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbSeparator,
+    BreadcrumbPage,
+  } from "$lib/components/ui/breadcrumb";
+
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
 
@@ -70,12 +79,54 @@
     window.addEventListener("pointerup", cleanup);
     window.addEventListener("pointercancel", cleanup);
   }
+
+  const breadcrumbSegments = $derived(
+    pageId ? pageId.split("/") : [],
+  );
+
+  function displayName(name: string): string {
+    return name
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
 </script>
 
 <Tooltip.Provider delayDuration={150}>
   <div
     class="bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >
+    <!-- Navbar -->
+    <nav
+      class="border-border flex h-11 shrink-0 items-center border-b px-4"
+    >
+      <Breadcrumb>
+        <BreadcrumbList class="text-xs">
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin/page-editor">
+              Pages
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+
+          {#each breadcrumbSegments as segment, i}
+            <BreadcrumbSeparator>/</BreadcrumbSeparator>
+            <BreadcrumbItem>
+              {#if i < breadcrumbSegments.length - 1}
+                {@const segmentPath = breadcrumbSegments.slice(0, i + 1).join("/")}
+                <BreadcrumbLink href="/admin/page-editor/{segmentPath}">
+                  {displayName(segment)}
+                </BreadcrumbLink>
+              {:else}
+                <BreadcrumbPage>
+                  {displayName(segment)}
+                </BreadcrumbPage>
+              {/if}
+            </BreadcrumbItem>
+          {/each}
+        </BreadcrumbList>
+      </Breadcrumb>
+    </nav>
+
     <!-- Body -->
     <div class="flex min-h-0 flex-1" class:select-none={isResizingSidebar}>
       <!-- Sidebar -->

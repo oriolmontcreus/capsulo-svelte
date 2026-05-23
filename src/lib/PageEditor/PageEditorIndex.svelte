@@ -128,7 +128,7 @@
               Pages
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
+          <BreadcrumbSeparator>/</BreadcrumbSeparator>
 
           {#each currentPath as segment, i}
             {#if i < currentPath.length - 1}
@@ -143,7 +143,7 @@
                   {displayName(segment)}
                 </BreadcrumbLink>
               </BreadcrumbItem>
-              <BreadcrumbSeparator />
+              <BreadcrumbSeparator>/</BreadcrumbSeparator>
             {:else}
               <BreadcrumbItem>
                 <BreadcrumbPage>{displayName(segment)}</BreadcrumbPage>
