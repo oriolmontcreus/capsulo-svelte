@@ -14,6 +14,7 @@
 
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
+  import { Button } from "$lib/components/ui/button";
 
   type Viewport = "desktop" | "tablet" | "mobile";
   type Props = {
@@ -83,6 +84,12 @@
   const breadcrumbSegments = $derived(
     pageId ? pageId.split("/") : [],
   );
+
+  let saveControls = $state({
+    save: async () => {},
+    disabled: true,
+    isSaving: false,
+  });
 </script>
 
 <Tooltip.Provider delayDuration={150}>
@@ -91,7 +98,7 @@
   >
     <!-- Navbar -->
     <nav
-      class="border-border flex h-11 shrink-0 items-center border-b px-4"
+      class="border-border flex h-11 shrink-0 items-center justify-between border-b px-4"
     >
       <Breadcrumb>
         <BreadcrumbList class="text-xs">
@@ -118,6 +125,15 @@
           {/each}
         </BreadcrumbList>
       </Breadcrumb>
+
+      <Button
+        size="sm"
+        class="h-7 px-3 text-white rounded-full border border-card"
+        onclick={() => saveControls.save()}
+        disabled={saveControls.disabled}
+      >
+        {saveControls.isSaving ? "Saving..." : "Save"}
+      </Button>
     </nav>
 
     <!-- Body -->
@@ -129,6 +145,7 @@
         width={sidebarWidth}
         bind:locale
         bind:valuesByInstance
+        bind:saveControls
       />
 
       <!-- Resizer -->

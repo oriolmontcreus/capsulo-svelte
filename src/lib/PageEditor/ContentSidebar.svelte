@@ -1,9 +1,7 @@
 <script lang="ts">
   import { get } from "svelte/store";
   import { onMount } from "svelte";
-  import { Button } from "$lib/components/ui/button";
   import { Badge } from "$lib/components/ui/badge";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { getCapsuleByKey } from "$lib/capsules/core/registry";
   import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
   import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
@@ -21,7 +19,11 @@
   import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
   import type { SchemaValues } from "$lib/form-builder/core/types";
 
-  import MoreHorizontal from "@lucide/svelte/icons/more-horizontal";
+  export type PageEditorSaveControls = {
+    save: () => Promise<void>;
+    disabled: boolean;
+    isSaving: boolean;
+  };
 
   type Props = {
     pageId: string;
@@ -29,6 +31,7 @@
     locale: string;
     valuesByInstance: PageEditorValuesByInstance;
     width?: number;
+    saveControls: PageEditorSaveControls;
   };
 
   let {
@@ -37,6 +40,11 @@
     locale = $bindable(DEFAULT_LOCALE),
     valuesByInstance = $bindable({} as PageEditorValuesByInstance),
     width,
+    saveControls = $bindable({
+      save: async () => {},
+      disabled: true,
+      isSaving: false,
+    }),
   }: Props = $props();
 
   type GroupedEntry = {
@@ -73,7 +81,6 @@
   let hasExistingDocument = $state(false);
   let loadError = $state<string | null>(null);
   let saveError = $state<string | null>(null);
-  let saveSuccess = $state<string | null>(null);
   let latestLoadRunId = 0;
   let schemaHydrationVersion = $state(0);
   const cachePersistDebounceMs = 250;
@@ -128,7 +135,6 @@
     hasCheckedAuth = false;
     loadError = null;
     saveError = null;
-    saveSuccess = null;
     hasExistingDocument = false;
 
     const cachedDocument = await loadPageEditorDocumentFromCache(pageId);
@@ -247,7 +253,6 @@
 
     isSaving = true;
     saveError = null;
-    saveSuccess = null;
 
     const saveResult = await savePageEditorDocumentToDb({
       pageId,
@@ -259,6 +264,7 @@
     if (saveResult.errorMessage) {
       saveError = saveResult.errorMessage;
       isSaving = false;
+      syncSaveControls();
       return;
     }
 
@@ -268,12 +274,28 @@
       valuesByInstance,
       updatedAt: saveResult.updatedAt,
     });
-    saveSuccess = "Saved";
     isSaving = false;
+    syncSaveControls();
+  }
+
+  function syncSaveControls(): void {
+    saveControls = {
+      save: savePageEditorDocument,
+      disabled: !isAuthenticated || isBlockingLoad || isSaving,
+      isSaving,
+    };
   }
 
   onMount(() => {
+    syncSaveControls();
     void loadPageEditorDocument();
+  });
+
+  $effect(() => {
+    isAuthenticated;
+    isBlockingLoad;
+    isSaving;
+    syncSaveControls();
   });
 
   $effect(() => {
@@ -299,57 +321,6 @@
   aria-label="Page settings"
   style:width={width ? `${width}px` : undefined}
 >
-  <header
-    class="border-border flex h-14 shrink-0 items-center gap-3 border-b px-3"
-  >
-    <div class="flex min-w-0 flex-1 items-center gap-2">
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          {#snippet child({ props })}
-            <Button
-              {...props}
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Page options"
-            >
-              <MoreHorizontal />
-            </Button>
-          {/snippet}
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="start" class="w-44">
-          <DropdownMenu.Item>Duplicate</DropdownMenu.Item>
-          <DropdownMenu.Item>Rename</DropdownMenu.Item>
-          <DropdownMenu.Item>Move to folder</DropdownMenu.Item>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item class="text-destructive">Delete</DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
-
-      <span class="truncate text-sm font-medium">
-        {pageId.length > 0 ? pageId : "Untitled page"}
-      </span>
-
-      {#if isBlockingLoad}
-        <span class="text-muted-foreground text-xs">Loading...</span>
-      {:else if isSaving}
-        <span class="text-muted-foreground text-xs">Saving...</span>
-      {:else if isSyncing}
-        <span class="text-muted-foreground text-xs">Syncing...</span>
-      {:else if saveSuccess}
-        <span class="text-emerald-600 text-xs">{saveSuccess}</span>
-      {/if}
-
-      <Button
-        size="sm"
-        class="ml-auto h-7 bg-emerald-500 px-3 text-white hover:bg-emerald-600"
-        onclick={savePageEditorDocument}
-        disabled={!isAuthenticated || isBlockingLoad || isSaving}
-      >
-        Save
-      </Button>
-    </div>
-  </header>
-
   <div class="min-h-0 flex-1 overflow-y-auto">
     <div class="space-y-6 p-5">
       {#if hasCheckedAuth && !isAuthenticated}
