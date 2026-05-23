@@ -14,9 +14,11 @@
 
   import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
   import Preview from "./PageEditor/Preview.svelte";
+  import {
+    DEFAULT_PREVIEW_DEVICE,
+    type PreviewDeviceId,
+  } from "$lib/PageEditor/preview-devices";
   import { Button } from "$lib/components/ui/button";
-
-  type Viewport = "desktop" | "tablet" | "mobile";
   type Props = {
     pageId?: string;
     entries?: import("$lib/capsules/core/types").CapsuleManifestEntry[];
@@ -24,7 +26,9 @@
 
   let { pageId, entries = [] }: Props = $props();
 
-  let viewport = $state<Viewport>("desktop");
+  let previewDevice = $state<PreviewDeviceId>(DEFAULT_PREVIEW_DEVICE);
+  let previewWidthPx = $state(390);
+  let previewHeightPx = $state(844);
   let locale = $state<string>(DEFAULT_LOCALE);
   let valuesByInstance = $state<PageEditorValuesByInstance>({});
 
@@ -32,14 +36,6 @@
   const sidebarMaxWidth = 520;
   let sidebarWidth = $state<number>(320);
   let isResizingSidebar = $state(false);
-
-  const viewportWidths: Record<Viewport, string> = {
-    desktop: "100%",
-    tablet: "820px",
-    mobile: "390px",
-  };
-
-  const previewWidth = $derived(viewportWidths[viewport]);
 
   function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
@@ -168,8 +164,9 @@
       <Preview
         pageId={pageId ?? ""}
         {valuesByInstance}
-        {previewWidth}
-        bind:viewport
+        bind:previewDevice
+        bind:previewWidthPx
+        bind:previewHeightPx
         bind:locale
       />
     </div>

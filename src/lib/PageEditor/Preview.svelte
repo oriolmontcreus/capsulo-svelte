@@ -13,33 +13,45 @@
     type PageEditorPreviewSyncMessage,
   } from "$lib/PageEditor/preview-channel";
   import { formatLocaleLabel } from "$lib/utils/locale-label";
+  import {
+    clampPreviewDimension,
+    DEFAULT_PREVIEW_DEVICE,
+    getPreviewDeviceDimensions,
+    getPreviewDeviceLabel,
+    PREVIEW_DIMENSION_MAX,
+    PREVIEW_DIMENSION_MIN,
+    getPreviewDevicesByCategory,
+    PREVIEW_DEVICE_GROUPS,
+    resolvePreviewDevice,
+    type PreviewDeviceId,
+  } from "$lib/PageEditor/preview-devices";
 
-  import Monitor from "@lucide/svelte/icons/monitor";
-  import Smartphone from "@lucide/svelte/icons/smartphone";
-  import Tablet from "@lucide/svelte/icons/tablet";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
   import Copy from "@lucide/svelte/icons/copy";
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import Maximize2 from "@lucide/svelte/icons/maximize-2";
   import Minimize2 from "@lucide/svelte/icons/minimize-2";
 
-  type Viewport = "desktop" | "tablet" | "mobile";
-
   type Props = {
     pageId: string;
     valuesByInstance: PageEditorValuesByInstance;
-    previewWidth: string;
-    viewport: Viewport;
+    previewDevice: PreviewDeviceId;
+    previewWidthPx: number;
+    previewHeightPx: number;
     locale: string;
   };
 
   let {
     pageId,
     valuesByInstance,
-    previewWidth,
-    viewport = $bindable(),
+    previewDevice = $bindable(),
+    previewWidthPx = $bindable(),
+    previewHeightPx = $bindable(),
     locale = $bindable(),
   }: Props = $props();
+
+  const ghostDimensionInputClass =
+    "h-7 [appearance:textfield] border-0 bg-transparent px-0 text-center text-xs shadow-none tabular-nums outline-none focus-visible:ring-1 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
   let iframeEl = $state<HTMLIFrameElement | null>(null);
   let previewRootEl = $state<HTMLElement | null>(null);
@@ -188,8 +200,27 @@
     }
   }
 
+  function syncDimensionsFromViewport(): void {
+    if (!previewViewportEl) return;
+    const width = Math.round(previewViewportEl.clientWidth);
+    const height = Math.round(previewViewportEl.clientHeight);
+    if (width > 0) previewWidthPx = clampPreviewDimension(width);
+    if (height > 0) previewHeightPx = clampPreviewDimension(height);
+  }
+
+  function syncDeviceFromDimensions(): void {
+    previewWidthPx = clampPreviewDimension(previewWidthPx);
+    previewHeightPx = clampPreviewDimension(previewHeightPx);
+    previewDevice = resolvePreviewDevice(
+      previewWidthPx,
+      previewHeightPx,
+      previewDevice,
+    );
+  }
+
   function resetPreview(): void {
-    viewport = "desktop";
+    previewDevice = DEFAULT_PREVIEW_DEVICE;
+    syncDimensionsFromViewport();
 
     const iframeDoc = getIframeDocument();
     if (iframeDoc) {
@@ -230,8 +261,17 @@
   });
 
   $effect(() => {
-    viewport;
-    previewWidth;
+    previewDevice;
+    previewWidthPx;
+    previewHeightPx;
+  });
+
+  $effect(() => {
+    const device = previewDevice;
+    const dims = getPreviewDeviceDimensions(device);
+    if (!dims) return;
+    previewWidthPx = dims.widthPx;
+    previewHeightPx = dims.heightPx;
   });
 
   onMount(() => {
@@ -268,6 +308,9 @@
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     window.addEventListener("resize", handleWindowResize);
     syncFullscreenState();
+    requestAnimationFrame(() => {
+      syncDimensionsFromViewport();
+    });
 
     return () => {
       window.removeEventListener("message", handleMessage);
@@ -286,49 +329,58 @@
   aria-label="Preview"
 >
   <header
-    class="border-border flex h-14 shrink-0 justify-between items-center gap-3 border-b px-3"
+    class="border-border flex h-fit shrink-0 justify-between items-center gap-3 border-b px-3"
   >
     <!-- Left cluster (intentionally empty in preview pane) -->
     <div class="min-w-0"></div>
 
     <!-- Center cluster -->
-    <div class="flex items-center justify-start gap-1">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Desktop preview"
-        aria-pressed={viewport === "desktop"}
-        class={viewport === "desktop" ? "bg-accent text-accent-foreground" : ""}
-        onclick={() => {
-          viewport = "desktop";
-        }}
-      >
-        <Monitor />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Mobile preview"
-        aria-pressed={viewport === "mobile"}
-        class={viewport === "mobile" ? "bg-accent text-accent-foreground" : ""}
-        onclick={() => {
-          viewport = "mobile";
-        }}
-      >
-        <Smartphone />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Tablet preview"
-        aria-pressed={viewport === "tablet"}
-        class={viewport === "tablet" ? "bg-accent text-accent-foreground" : ""}
-        onclick={() => {
-          viewport = "tablet";
-        }}
-      >
-        <Tablet />
-      </Button>
+    <div class="flex items-center gap-0.5">
+      <Select.Root type="single" bind:value={previewDevice}>
+        <Select.Trigger
+          size="sm"
+          aria-label="Preview dimensions"
+          class="text-muted-foreground hover:text-foreground h-7 min-w-0 gap-0.5 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-transparent focus-visible:ring-1 dark:bg-transparent dark:hover:bg-transparent [&_svg]:size-3"
+        >
+          {getPreviewDeviceLabel(previewDevice)}
+        </Select.Trigger>
+        <Select.Content class="max-h-72 min-w-44">
+          <Select.Item value="responsive" class="text-xs">Responsive</Select.Item>
+          {#each PREVIEW_DEVICE_GROUPS as group (group.category)}
+            {@const devices = getPreviewDevicesByCategory(group.category)}
+            {#if devices.length > 0}
+              <Select.Group>
+                <Select.GroupHeading>{group.label}</Select.GroupHeading>
+                {#each devices as device (device.id)}
+                  <Select.Item value={device.id} class="text-xs">{device.label}</Select.Item>
+                {/each}
+              </Select.Group>
+            {/if}
+          {/each}
+        </Select.Content>
+      </Select.Root>
+
+      <div class="flex items-center gap-0.5" aria-label="Preview size">
+        <input
+          type="number"
+          aria-label="Preview width"
+          min={PREVIEW_DIMENSION_MIN}
+          max={PREVIEW_DIMENSION_MAX}
+          bind:value={previewWidthPx}
+          onchange={syncDeviceFromDimensions}
+          class="{ghostDimensionInputClass} text-foreground w-11"
+        />
+        <span class="text-muted-foreground/60 select-none text-xs" aria-hidden="true">×</span>
+        <input
+          type="number"
+          aria-label="Preview height"
+          min={PREVIEW_DIMENSION_MIN}
+          max={PREVIEW_DIMENSION_MAX}
+          bind:value={previewHeightPx}
+          onchange={syncDeviceFromDimensions}
+          class="{ghostDimensionInputClass} text-muted-foreground w-11"
+        />
+      </div>
 
       <Tooltip.Root>
         <Tooltip.Trigger>
@@ -426,9 +478,11 @@
   >
     <div
       bind:this={iframeWrapperEl}
-      class="bg-background border-border flex min-h-full w-full flex-col overflow-hidden rounded-md border shadow-sm transition-[width] duration-200"
-      style:width={previewWidth}
+      class="bg-background border-border flex shrink-0 flex-col overflow-auto rounded-md border shadow-sm transition-[width,height] duration-200"
+      style:width="{previewWidthPx}px"
+      style:height="{previewHeightPx}px"
       style:max-width="100%"
+      style:max-height="100%"
     >
       <iframe
         bind:this={iframeEl}

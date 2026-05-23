@@ -15,6 +15,7 @@
   } from "$lib/components/ui/card";
   import FolderIcon from "@lucide/svelte/icons/folder";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
+  import LightSwitch from "$lib/components/LightSwitch.svelte";
   import { onMount } from "svelte";
 
   interface PageCard {
@@ -117,7 +118,10 @@
   });
 </script>
 
-<div class="flex flex-col gap-6">
+<div class="relative flex flex-col gap-6">
+  <div class="absolute right-4 top-4 z-20">
+    <LightSwitch />
+  </div>
   <!-- Header + Breadcrumb -->
   <div class="flex flex-col gap-2 mt-20">
     <div class="flex flex-col gap-2">
