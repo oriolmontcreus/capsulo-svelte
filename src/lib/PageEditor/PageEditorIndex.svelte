@@ -15,6 +15,7 @@
   } from "$lib/components/ui/card";
   import FolderIcon from "@lucide/svelte/icons/folder";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
+  import { onMount } from "svelte";
 
   interface PageCard {
     pageId: string;
@@ -102,6 +103,18 @@
   function formatFolderDisplayName(name: string): string {
     return displayName(name);
   }
+
+  onMount(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const pathParam = params.get("path");
+
+    if (pathParam) {
+      currentPath = pathParam.split("/").filter(Boolean);
+      history.replaceState({}, "", window.location.pathname);
+    }
+  });
 </script>
 
 <div class="flex flex-col gap-6">

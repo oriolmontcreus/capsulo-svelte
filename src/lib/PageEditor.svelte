@@ -113,7 +113,7 @@
             <BreadcrumbItem>
               {#if i < breadcrumbSegments.length - 1}
                 {@const segmentPath = breadcrumbSegments.slice(0, i + 1).join("/")}
-                <BreadcrumbLink href="/admin/page-editor/{segmentPath}">
+                <BreadcrumbLink href="/admin/page-editor?path={segmentPath}">
                   {displayName(segment)}
                 </BreadcrumbLink>
               {:else}
