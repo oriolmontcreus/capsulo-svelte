@@ -83,13 +83,6 @@
   const breadcrumbSegments = $derived(
     pageId ? pageId.split("/") : [],
   );
-
-  function displayName(name: string): string {
-    return name
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  }
 </script>
 
 <Tooltip.Provider delayDuration={150}>
@@ -114,11 +107,11 @@
               {#if i < breadcrumbSegments.length - 1}
                 {@const segmentPath = breadcrumbSegments.slice(0, i + 1).join("/")}
                 <BreadcrumbLink href="/admin/page-editor?path={segmentPath}">
-                  {displayName(segment)}
+                  {segment}
                 </BreadcrumbLink>
               {:else}
                 <BreadcrumbPage>
-                  {displayName(segment)}
+                  {segment}
                 </BreadcrumbPage>
               {/if}
             </BreadcrumbItem>
