@@ -26,5 +26,12 @@ export default defineConfig({
         $lib: path.resolve(__dirname, 'src/lib'),
       },
     },
+    // Workaround para el bug de Astro 6.x donde el client environment
+    // no incluye .astro en optimizeDeps.entries, causando re-optimizaciones
+    // tardías que invalidan el hash del dev toolbar (504 Outdated Optimize Dep).
+    // Seguir de cerca: https://github.com/withastro/astro/issues/16630
+    optimizeDeps: {
+      entries: ['src/**/*.{jsx,tsx,vue,svelte,html,astro}'],
+    },
   },
 });
