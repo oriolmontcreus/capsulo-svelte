@@ -50,6 +50,9 @@
     locale = $bindable(),
   }: Props = $props();
 
+  const ghostSelectTriggerClass =
+    "text-muted-foreground hover:text-foreground h-7 min-w-0 gap-0.5 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-transparent focus-visible:ring-1 dark:bg-transparent dark:hover:bg-transparent [&_svg]:size-3";
+
   const ghostDimensionInputClass =
     "h-7 [appearance:textfield] border-0 bg-transparent px-0 text-center text-xs shadow-none tabular-nums outline-none focus-visible:ring-1 focus-visible:ring-ring [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
@@ -340,7 +343,7 @@
         <Select.Trigger
           size="sm"
           aria-label="Preview dimensions"
-          class="text-muted-foreground hover:text-foreground h-7 min-w-0 gap-0.5 border-0 bg-transparent px-1 text-xs shadow-none hover:bg-transparent focus-visible:ring-1 dark:bg-transparent dark:hover:bg-transparent [&_svg]:size-3"
+          class={ghostSelectTriggerClass}
         >
           {getPreviewDeviceLabel(previewDevice)}
         </Select.Trigger>
@@ -403,12 +406,18 @@
     <!-- Right cluster -->
     <div class="flex items-center justify-end gap-1 w-full">
       <Select.Root type="single" bind:value={locale}>
-        <Select.Trigger size="sm" class="h-8 min-w-48 gap-1 text-xs">
+        <Select.Trigger
+          size="sm"
+          aria-label="Preview locale"
+          class={ghostSelectTriggerClass}
+        >
           {formatLocaleLabel(locale || DEFAULT_LOCALE)}
         </Select.Trigger>
-        <Select.Content align="end">
+        <Select.Content align="end" class="min-w-44">
           {#each LOCALES as localeCode (localeCode)}
-            <Select.Item value={localeCode}>{formatLocaleLabel(localeCode)}</Select.Item>
+            <Select.Item value={localeCode} class="text-xs">
+              {formatLocaleLabel(localeCode)}
+            </Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
