@@ -1,7 +1,9 @@
 <script lang="ts">
   import { get } from "svelte/store";
   import { onMount } from "svelte";
-  import { Badge } from "$lib/components/ui/badge";
+  import * as Tooltip from "$lib/components/ui/tooltip";
+  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import MoreHorizontalIcon from "@lucide/svelte/icons/more-horizontal";
   import { getCapsuleByKey } from "$lib/capsules/core/registry";
   import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
   import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
@@ -83,7 +85,22 @@
   let saveError = $state<string | null>(null);
   let latestLoadRunId = 0;
   let schemaHydrationVersion = $state(0);
+  let collapsedCapsuleKeys = $state(new Set<string>());
   const cachePersistDebounceMs = 250;
+
+  function isCapsuleExpanded(capsuleKey: string): boolean {
+    return !collapsedCapsuleKeys.has(capsuleKey);
+  }
+
+  function toggleCapsuleExpanded(capsuleKey: string): void {
+    const next = new Set(collapsedCapsuleKeys);
+    if (next.has(capsuleKey)) {
+      next.delete(capsuleKey);
+    } else {
+      next.add(capsuleKey);
+    }
+    collapsedCapsuleKeys = next;
+  }
 
   function isRemoteTimestampNewer(
     remoteUpdatedAt: string | null,
@@ -364,69 +381,109 @@
             group.capsuleKey,
             firstEntry?.componentName ?? group.capsuleKey,
           )}
-          {@const totalInstances = group.entries.reduce(
-            (sum, item) => sum + item.entry.occurrenceCount,
-            0,
+          {@const flatInstanceKeys = group.entries.flatMap((entryItem) =>
+            Array.from(
+              { length: entryItem.entry.occurrenceCount },
+              (_, occurrenceIndex) =>
+                `${entryItem.entryIndex}-${occurrenceIndex}`,
+            ),
+          )}
+          {@const instanceIds = flatInstanceKeys.map(
+            (_, instanceIndex) =>
+              `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`,
           )}
 
-          {@const flatInstances = capsule
-            ? group.entries.flatMap((entryItem) =>
-                Array.from(
-                  { length: entryItem.entry.occurrenceCount },
-                  (_, occurrenceIndex) => ({
-                    key: `${entryItem.entryIndex}-${occurrenceIndex}`,
-                  }),
-                ),
-              )
-            : []}
-          {@const hasMultipleInstances = flatInstances.length > 1}
+          {@const isExpanded = isCapsuleExpanded(group.capsuleKey)}
+          {@const panelId = `capsule-panel-${group.capsuleKey}`}
 
           <section class="border-border overflow-hidden rounded-md border">
-            <header class="px-3 pt-3 pb-1">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-medium">{title}</h3>
-                <Badge variant="outline" class="text-xs">{group.capsuleKey}</Badge>
-              </div>
-              <p class="text-muted-foreground mt-0.5 text-xs">
-                {totalInstances} instance{totalInstances === 1 ? "" : "s"}
-              </p>
-            </header>
-
-            {#if !capsule}
-              <p class="text-destructive px-3 py-2.5 text-xs">
-                Capsule key "{group.capsuleKey}" is not registered. Schema
-                renderer skipped for this group.
-              </p>
-            {:else}
-              {#each flatInstances as instance, instanceIndex (instance.key)}
-                {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
-                {#if instanceIndex > 0}
-                  <div
-                    class="border-border border-t"
-                    role="separator"
-                    aria-hidden="true"
-                  ></div>
-                {/if}
-                <div class="px-3 py-3">
-                  {#if hasMultipleInstances}
-                    <p class="text-muted-foreground mb-2 text-xs font-medium">
-                      {instanceId}
-                    </p>
+            <div class="hover:bg-muted/50 flex w-full items-stretch">
+              <button
+                type="button"
+                class="flex min-w-0 flex-1 cursor-pointer items-center gap-1 bg-transparent px-2 py-1.5 text-left hover:bg-transparent"
+                aria-expanded={isExpanded}
+                aria-controls={panelId}
+                onclick={() => toggleCapsuleExpanded(group.capsuleKey)}
+              >
+                <ChevronRightIcon
+                  class="text-muted-foreground size-3.5 shrink-0 {isExpanded
+                    ? 'rotate-90'
+                    : ''}"
+                  aria-hidden="true"
+                />
+                <span class="truncate text-sm font-medium">{title}</span>
+              </button>
+              <Tooltip.Root>
+                <Tooltip.Trigger>
+                  {#snippet child({ props })}
+                    <button
+                      type="button"
+                      {...props}
+                      class="text-muted-foreground hover:bg-transparent focus-visible:ring-ring inline-flex shrink-0 cursor-pointer items-center bg-transparent px-2 py-1.5 outline-none focus-visible:ring-2"
+                      aria-label={`Capsule info: key ${group.capsuleKey}, ${instanceIds.length} instance${instanceIds.length === 1 ? "" : "s"}`}
+                    >
+                      <MoreHorizontalIcon class="size-3.5" aria-hidden="true" />
+                    </button>
+                  {/snippet}
+                </Tooltip.Trigger>
+                <Tooltip.Content side="bottom" class="flex flex-col gap-2 py-2">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-background/60">Key</span>
+                    <span class="font-mono">{group.capsuleKey}</span>
+                  </div>
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-background/60">Instances</span>
+                    <span>
+                      {instanceIds.length} instance{instanceIds.length === 1
+                        ? ""
+                        : "s"}
+                    </span>
+                  </div>
+                  {#if instanceIds.length > 0}
+                    <ul class="flex flex-col gap-0.5 font-mono">
+                      {#each instanceIds as instanceId (instanceId)}
+                        <li>{instanceId}</li>
+                      {/each}
+                    </ul>
                   {/if}
-                  {#key `${instanceId}-${schemaHydrationVersion}`}
-                    <SchemaRenderer
-                      schema={capsule.schema}
-                      initialValues={valuesByInstance[instanceId]}
-                      locales={LOCALES}
-                      defaultLocale={DEFAULT_LOCALE}
-                      editingLocale={locale}
-                      translatableLocaleMode="active-only"
-                      onValuesChange={(nextValues) =>
-                        handleInstanceValuesChange(instanceId, nextValues)}
-                    />
-                  {/key}
-                </div>
-              {/each}
+                </Tooltip.Content>
+              </Tooltip.Root>
+            </div>
+
+            {#if isExpanded}
+              <div id={panelId}>
+                {#if !capsule}
+                  <p class="text-destructive px-3 py-2.5 text-xs">
+                    Capsule key "{group.capsuleKey}" is not registered. Schema
+                    renderer skipped for this group.
+                  </p>
+                {:else}
+                  {#each flatInstanceKeys as instanceKey, instanceIndex (instanceKey)}
+                    {@const instanceId = instanceIds[instanceIndex]}
+                    {#if instanceIndex > 0}
+                      <div
+                        class="border-border border-t"
+                        role="separator"
+                        aria-hidden="true"
+                      ></div>
+                    {/if}
+                    <div class="px-3 py-3">
+                      {#key `${instanceId}-${schemaHydrationVersion}`}
+                        <SchemaRenderer
+                          schema={capsule.schema}
+                          initialValues={valuesByInstance[instanceId]}
+                          locales={LOCALES}
+                          defaultLocale={DEFAULT_LOCALE}
+                          editingLocale={locale}
+                          translatableLocaleMode="active-only"
+                          onValuesChange={(nextValues) =>
+                            handleInstanceValuesChange(instanceId, nextValues)}
+                        />
+                      {/key}
+                    </div>
+                  {/each}
+                {/if}
+              </div>
             {/if}
           </section>
         {/each}
