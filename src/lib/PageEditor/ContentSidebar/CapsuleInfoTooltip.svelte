@@ -1,5 +1,7 @@
 <script lang="ts">
 	import * as Tooltip from "$lib/components/ui/tooltip";
+	import KeyIcon from "@lucide/svelte/icons/key";
+	import LayersIcon from "@lucide/svelte/icons/layers";
 	import MoreHorizontalIcon from "@lucide/svelte/icons/more-horizontal";
 
 	type Props = {
@@ -14,6 +16,13 @@
 	);
 </script>
 
+{#snippet infoLabel(Icon: typeof KeyIcon, label: string)}
+	<div class="text-background/70 flex items-center gap-1.5">
+		<Icon class="size-3.5 shrink-0 opacity-80" aria-hidden="true" />
+		<span class="text-[11px] font-medium tracking-wide">{label}</span>
+	</div>
+{/snippet}
+
 <Tooltip.Root>
 	<Tooltip.Trigger>
 		{#snippet child({ props })}
@@ -27,21 +36,30 @@
 			</button>
 		{/snippet}
 	</Tooltip.Trigger>
-	<Tooltip.Content side="bottom" class="flex flex-col gap-2 py-2">
-		<div class="flex flex-col gap-0.5">
-			<span class="text-background/60">Key</span>
-			<span class="font-mono">{capsuleKey}</span>
+	<Tooltip.Content
+		side="bottom"
+		class="flex min-w-48 flex-col items-stretch gap-3 px-3 py-2.5 text-left"
+	>
+		<div class="flex flex-col gap-1">
+			{@render infoLabel(KeyIcon, "Key")}
+			<div class="pl-5">
+				<p class="font-mono text-xs leading-snug break-all">{capsuleKey}</p>
+			</div>
 		</div>
-		<div class="flex flex-col gap-0.5">
-			<span class="text-background/60">Instances</span>
-			<span>{instanceCountLabel}</span>
+
+		<div class="flex flex-col gap-1">
+			{@render infoLabel(LayersIcon, "Instances")}
+			<div class="pl-5">
+				{#if instanceIds.length > 0}
+					<ul class="flex flex-col gap-1">
+						{#each instanceIds as instanceId (instanceId)}
+							<li class="font-mono text-xs leading-snug break-all">{instanceId}</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-background/60 text-xs">No instances</p>
+				{/if}
+			</div>
 		</div>
-		{#if instanceIds.length > 0}
-			<ul class="flex flex-col gap-0.5 font-mono">
-				{#each instanceIds as instanceId (instanceId)}
-					<li>{instanceId}</li>
-				{/each}
-			</ul>
-		{/if}
 	</Tooltip.Content>
 </Tooltip.Root>
