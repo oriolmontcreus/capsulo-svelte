@@ -322,7 +322,7 @@
   style:width={width ? `${width}px` : undefined}
 >
   <div class="min-h-0 flex-1 overflow-y-auto">
-    <div class="space-y-6 p-5">
+    <div class="space-y-4 p-4">
       {#if hasCheckedAuth && !isAuthenticated}
         <div
           class="text-muted-foreground rounded-md border border-dashed p-3 text-xs"
@@ -369,51 +369,64 @@
             0,
           )}
 
-          <section class="space-y-4 rounded-md border p-4">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-medium">{title}</h3>
-                <Badge>{group.capsuleKey}</Badge>
-              </div>
-              <p class="text-muted-foreground text-xs">
-                {totalInstances} instance{totalInstances === 1 ? "" : "s"}
-              </p>
-            </div>
-
-            {#if !capsule}
-              <p class="text-destructive text-xs">
-                Capsule key "{group.capsuleKey}" is not registered. Schema
-                renderer skipped for this group.
-              </p>
-            {:else}
-              {@const flatInstances = group.entries.flatMap((entryItem) =>
+          {@const flatInstances = capsule
+            ? group.entries.flatMap((entryItem) =>
                 Array.from(
                   { length: entryItem.entry.occurrenceCount },
                   (_, occurrenceIndex) => ({
                     key: `${entryItem.entryIndex}-${occurrenceIndex}`,
                   }),
                 ),
-              )}
-              <div class="space-y-5">
-                {#each flatInstances as instance, instanceIndex (instance.key)}
-                  {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
-                  <div class="space-y-3 rounded-md border p-3">
-                    <div class="text-xs font-medium">{instanceId}</div>
-                    {#key `${instanceId}-${schemaHydrationVersion}`}
-                      <SchemaRenderer
-                        schema={capsule.schema}
-                        initialValues={valuesByInstance[instanceId]}
-                        locales={LOCALES}
-                        defaultLocale={DEFAULT_LOCALE}
-                        editingLocale={locale}
-                        translatableLocaleMode="active-only"
-                        onValuesChange={(nextValues) =>
-                          handleInstanceValuesChange(instanceId, nextValues)}
-                      />
-                    {/key}
-                  </div>
-                {/each}
+              )
+            : []}
+          {@const hasMultipleInstances = flatInstances.length > 1}
+
+          <section class="border-border overflow-hidden rounded-md border">
+            <header class="px-3 pt-3 pb-1">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-medium">{title}</h3>
+                <Badge variant="outline" class="text-xs">{group.capsuleKey}</Badge>
               </div>
+              <p class="text-muted-foreground mt-0.5 text-xs">
+                {totalInstances} instance{totalInstances === 1 ? "" : "s"}
+              </p>
+            </header>
+
+            {#if !capsule}
+              <p class="text-destructive px-3 py-2.5 text-xs">
+                Capsule key "{group.capsuleKey}" is not registered. Schema
+                renderer skipped for this group.
+              </p>
+            {:else}
+              {#each flatInstances as instance, instanceIndex (instance.key)}
+                {@const instanceId = `${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`}
+                {#if instanceIndex > 0}
+                  <div
+                    class="border-border border-t"
+                    role="separator"
+                    aria-hidden="true"
+                  ></div>
+                {/if}
+                <div class="px-3 py-3">
+                  {#if hasMultipleInstances}
+                    <p class="text-muted-foreground mb-2 text-xs font-medium">
+                      {instanceId}
+                    </p>
+                  {/if}
+                  {#key `${instanceId}-${schemaHydrationVersion}`}
+                    <SchemaRenderer
+                      schema={capsule.schema}
+                      initialValues={valuesByInstance[instanceId]}
+                      locales={LOCALES}
+                      defaultLocale={DEFAULT_LOCALE}
+                      editingLocale={locale}
+                      translatableLocaleMode="active-only"
+                      onValuesChange={(nextValues) =>
+                        handleInstanceValuesChange(instanceId, nextValues)}
+                    />
+                  {/key}
+                </div>
+              {/each}
             {/if}
           </section>
         {/each}
