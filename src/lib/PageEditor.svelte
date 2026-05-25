@@ -12,7 +12,7 @@
     BreadcrumbPage,
   } from "$lib/components/ui/breadcrumb";
 
-  import ContentSidebar from "./PageEditor/ContentSidebar.svelte";
+  import ContentSidebar from "./PageEditor/ContentSidebar";
   import Preview from "./PageEditor/Preview.svelte";
   import {
     DEFAULT_PREVIEW_DEVICE,
