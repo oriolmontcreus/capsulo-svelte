@@ -204,9 +204,16 @@
   }
 
   function syncDimensionsFromViewport(): void {
-    if (!previewViewportEl) return;
-    const width = Math.round(previewViewportEl.clientWidth);
-    const height = Math.round(previewViewportEl.clientHeight);
+    if (!previewViewportEl || previewDevice !== "responsive") return;
+
+    const styles = getComputedStyle(previewViewportEl);
+    const paddingX =
+      (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+    const paddingY =
+      (parseFloat(styles.paddingTop) || 0) + (parseFloat(styles.paddingBottom) || 0);
+    const width = Math.round(previewViewportEl.clientWidth - paddingX);
+    const height = Math.round(previewViewportEl.clientHeight - paddingY);
+
     if (width > 0) previewWidthPx = clampPreviewDimension(width);
     if (height > 0) previewHeightPx = clampPreviewDimension(height);
   }
@@ -272,7 +279,10 @@
   $effect(() => {
     const device = previewDevice;
     const dims = getPreviewDeviceDimensions(device);
-    if (!dims) return;
+    if (!dims) {
+      syncDimensionsFromViewport();
+      return;
+    }
     previewWidthPx = dims.widthPx;
     previewHeightPx = dims.heightPx;
   });
@@ -289,15 +299,18 @@
 
     const handleFullscreenChange = () => {
       syncFullscreenState();
+      syncDimensionsFromViewport();
     };
 
     const handleWindowResize = () => {
       updateIframeHeight();
+      syncDimensionsFromViewport();
     };
 
     if (typeof ResizeObserver !== "undefined") {
       viewportResizeObserver = new ResizeObserver(() => {
         updateIframeHeight();
+        syncDimensionsFromViewport();
       });
       if (previewViewportEl) {
         viewportResizeObserver.observe(previewViewportEl);
