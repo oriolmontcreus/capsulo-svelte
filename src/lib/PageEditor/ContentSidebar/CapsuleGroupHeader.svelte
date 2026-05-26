@@ -15,7 +15,7 @@
     $props();
 </script>
 
-<div class="hover:bg-card/80 bg-card flex w-full items-stretch">
+<div class="capsule-group__header flex w-full items-stretch">
   <button
     type="button"
     class="flex min-w-0 flex-1 cursor-pointer items-center gap-1 bg-transparent px-2 py-1.5 text-left hover:bg-transparent"

@@ -13,6 +13,7 @@
   } from "$lib/components/ui/breadcrumb";
 
   import ContentSidebar from "./PageEditor/ContentSidebar";
+  import "./PageEditor/ContentSidebar/capsule-group-colors.css";
   import Preview from "./PageEditor/Preview.svelte";
   import {
     DEFAULT_PREVIEW_DEVICE,
@@ -90,7 +91,7 @@
 
 <Tooltip.Provider delayDuration={150}>
   <div
-    class="bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
+    class="page-editor bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >
     <!-- Navbar -->
     <nav

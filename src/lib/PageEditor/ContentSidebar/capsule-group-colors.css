@@ -1,0 +1,163 @@
+/**
+ * Capsule group tints (page-editor only; imported from PageEditor.svelte).
+ * Scoped under .page-editor — edit opacities here.
+ * Light: default · Dark: html.dark (mode-watcher)
+ */
+.page-editor .capsule-group {
+  border-color: var(--capsule-border);
+}
+
+.page-editor .capsule-group__header {
+  background-color: var(--capsule-header-bg);
+  transition: background-color 150ms ease;
+}
+
+.page-editor .capsule-group__header:hover {
+  background-color: var(--capsule-header-bg-hover);
+}
+
+/* header + border only · values = color-mix opacity % */
+
+.page-editor .capsule-group[data-capsule-theme="violet"] {
+  --capsule-header-bg: color-mix(in srgb, #ede9fe 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #ddd6fe 30%, transparent);
+  --capsule-border: color-mix(in srgb, #c4b5fd 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="violet"] {
+  --capsule-header-bg: color-mix(in srgb, #5b04fc 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #4c1d95 20%, transparent);
+  --capsule-border: color-mix(in srgb, #5b21b6 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="indigo"] {
+  --capsule-header-bg: color-mix(in srgb, #e0e7ff 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #c7d2fe 30%, transparent);
+  --capsule-border: color-mix(in srgb, #a5b4fc 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="indigo"] {
+  --capsule-header-bg: color-mix(in srgb, #1e1b4b 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #312e81 20%, transparent);
+  --capsule-border: color-mix(in srgb, #3730a3 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="blue"] {
+  --capsule-header-bg: color-mix(in srgb, #dbeafe 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #bfdbfe 30%, transparent);
+  --capsule-border: color-mix(in srgb, #93c5fd 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="blue"] {
+  --capsule-header-bg: color-mix(in srgb, #172554 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #1e3a8a 20%, transparent);
+  --capsule-border: color-mix(in srgb, #1e40af 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="sky"] {
+  --capsule-header-bg: color-mix(in srgb, #e0f2fe 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #bae6fd 30%, transparent);
+  --capsule-border: color-mix(in srgb, #7dd3fc 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="sky"] {
+  --capsule-header-bg: color-mix(in srgb, #082f49 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #0c4a6e 20%, transparent);
+  --capsule-border: color-mix(in srgb, #075985 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="teal"] {
+  --capsule-header-bg: color-mix(in srgb, #ccfbf1 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #99f6e4 30%, transparent);
+  --capsule-border: color-mix(in srgb, #5eead4 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="teal"] {
+  --capsule-header-bg: color-mix(in srgb, #042f2e 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #134e4a 20%, transparent);
+  --capsule-border: color-mix(in srgb, #115e59 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="emerald"] {
+  --capsule-header-bg: color-mix(in srgb, #d1fae5 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #a7f3d0 30%, transparent);
+  --capsule-border: color-mix(in srgb, #6ee7b7 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="emerald"] {
+  --capsule-header-bg: color-mix(in srgb, #022c22 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #064e3b 20%, transparent);
+  --capsule-border: color-mix(in srgb, #065f46 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="lime"] {
+  --capsule-header-bg: color-mix(in srgb, #ecfccb 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #d9f99d 30%, transparent);
+  --capsule-border: color-mix(in srgb, #bef264 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="lime"] {
+  --capsule-header-bg: color-mix(in srgb, #1a2e05 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #365314 20%, transparent);
+  --capsule-border: color-mix(in srgb, #3f6212 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="amber"] {
+  --capsule-header-bg: color-mix(in srgb, #fef3c7 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #fde68a 30%, transparent);
+  --capsule-border: color-mix(in srgb, #fcd34d 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="amber"] {
+  --capsule-header-bg: color-mix(in srgb, #451a03 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #78350f 20%, transparent);
+  --capsule-border: color-mix(in srgb, #92400e 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="orange"] {
+  --capsule-header-bg: color-mix(in srgb, #ffedd5 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #fed7aa 30%, transparent);
+  --capsule-border: color-mix(in srgb, #fdba74 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="orange"] {
+  --capsule-header-bg: color-mix(in srgb, #431407 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #7c2d12 20%, transparent);
+  --capsule-border: color-mix(in srgb, #9a3412 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="rose"] {
+  --capsule-header-bg: color-mix(in srgb, #ffe4e6 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #fecdd3 30%, transparent);
+  --capsule-border: color-mix(in srgb, #fda4af 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="rose"] {
+  --capsule-header-bg: color-mix(in srgb, #4c0519 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #881337 20%, transparent);
+  --capsule-border: color-mix(in srgb, #9f1239 15%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="fuchsia"] {
+  --capsule-header-bg: color-mix(in srgb, #b73dd9 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #7f3f8f 30%, transparent);
+  --capsule-border: color-mix(in srgb, #f0abfc 50%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="fuchsia"] {
+  --capsule-header-bg: color-mix(in srgb, #e700f3 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #701a75 20%, transparent);
+  --capsule-border: color-mix(in srgb, #86198f 30%, transparent);
+}
+
+.page-editor .capsule-group[data-capsule-theme="pink"] {
+  --capsule-header-bg: color-mix(in srgb, #fce7f3 20%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #fbcfe8 30%, transparent);
+  --capsule-border: color-mix(in srgb, #f9a8d4 22%, transparent);
+}
+
+html.dark .page-editor .capsule-group[data-capsule-theme="pink"] {
+  --capsule-header-bg: color-mix(in srgb, #500724 15%, transparent);
+  --capsule-header-bg-hover: color-mix(in srgb, #831843 20%, transparent);
+  --capsule-border: color-mix(in srgb, #9d174d 15%, transparent);
+}
