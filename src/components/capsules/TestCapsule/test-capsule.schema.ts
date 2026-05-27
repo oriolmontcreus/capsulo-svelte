@@ -1,7 +1,9 @@
 import { createSchema } from "$lib/form-builder/core/create-schema";
+import type { FieldDefinition } from "$lib/form-builder/core/types";
 import { TextField } from "$lib/form-builder/fields/TextField/text-field.builder";
+import { TextareaField } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
 
-export const testCapsuleSchema = createSchema({
+export const testCapsuleSchema = createSchema<FieldDefinition>({
 	name: "Test Capsule",
 	key: "test-capsule",
 	description: "Schema used to validate and render TestCapsule fields.",
@@ -44,6 +46,18 @@ export const testCapsuleSchema = createSchema({
 			.label("Image alt text")
 			.placeholder("app screen")
 			.translatable()
-			.defaultValue("app screen")
+			.defaultValue("app screen"),
+		TextareaField("longDescription")
+			.label("Long Description")
+			.placeholder("Write a detailed description here...")
+			.rows(5)
+			.autoresize()
+			.translatable()
+			.defaultValue("This is a longer text that works well with a textarea field."),
+		TextareaField("bio")
+			.label("Bio")
+			.placeholder("Tell us about yourself...")
+			.rows(3)
+			.maxLength(500)
 	]
 });

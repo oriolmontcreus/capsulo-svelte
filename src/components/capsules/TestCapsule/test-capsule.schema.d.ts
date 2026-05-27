@@ -9,4 +9,6 @@ export interface TestCapsuleData {
 	secondaryCtaLabel?: string;
 	imageSrc?: string;
 	imageAlt?: string;
+	longDescription?: string;
+	bio?: string;
 }

@@ -15,7 +15,7 @@ export function createInitialFieldValue(
 	defaultLocale: string
 ): LocalizedFieldValue<unknown> {
 	const normalizedDefaultLocale = normalizeLocale(defaultLocale);
-	const seedValue = field.type === "text" ? (field.defaultValue ?? "") : "";
+	const seedValue = field.type === "text" || field.type === "textarea" ? (field.defaultValue ?? "") : "";
 
 	return {
 		[normalizedDefaultLocale]: seedValue
@@ -90,7 +90,7 @@ export function getSchemaDefaultValues(
 
 	for (const field of schema.fields) {
 		const defaultValue =
-			field.type === "text" ? (field.defaultValue ?? "") : "";
+			field.type === "text" || field.type === "textarea" ? (field.defaultValue ?? "") : "";
 		resolved[field.name] = defaultValue;
 	}
 

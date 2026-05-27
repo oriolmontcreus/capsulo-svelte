@@ -1,4 +1,4 @@
-export type FieldType = "text";
+export type FieldType = "text" | "textarea";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -15,7 +15,16 @@ export interface TextFieldDefinition extends BaseFieldDefinition {
 	defaultValue?: string;
 }
 
-export type FieldDefinition = TextFieldDefinition;
+export interface TextareaFieldDefinition extends BaseFieldDefinition {
+	type: "textarea";
+	placeholder?: string;
+	defaultValue?: string;
+	rows?: number;
+	autoresize?: boolean;
+	maxLength?: number;
+}
+
+export type FieldDefinition = TextFieldDefinition | TextareaFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;
