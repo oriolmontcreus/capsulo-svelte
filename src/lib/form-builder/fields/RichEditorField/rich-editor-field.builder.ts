@@ -48,6 +48,6 @@ class RichEditorFieldBuilderImpl implements RichEditorFieldBuilder {
 	}
 }
 
-export const RichEditorField = (name: string): RichEditorFieldBuilder =>
+export const RichEditor = (name: string): RichEditorFieldBuilder =>
 	new RichEditorFieldBuilderImpl(name);
 

@@ -60,5 +60,5 @@ class TextareaFieldBuilderImpl implements TextareaFieldBuilder {
 	}
 }
 
-export const TextareaField = (name: string): TextareaFieldBuilder =>
+export const Textarea = (name: string): TextareaFieldBuilder =>
 	new TextareaFieldBuilderImpl(name);

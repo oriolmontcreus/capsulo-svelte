@@ -45,5 +45,5 @@ class TextFieldBuilderImpl implements TextFieldBuilder {
 	}
 }
 
-export const TextField = (name: string): TextFieldBuilder =>
+export const Text = (name: string): TextFieldBuilder =>
 	new TextFieldBuilderImpl(name);

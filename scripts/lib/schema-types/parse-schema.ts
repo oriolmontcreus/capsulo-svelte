@@ -3,9 +3,9 @@ import ts from "typescript";
 import type { ParsedSchemaDefinition, ParsedSchemaField, ParsedSchemaFile } from "./types";
 
 const BUILDER_TS_TYPE_MAP: Record<string, string> = {
-	TextField: "string",
-	TextareaField: "string",
-	RichEditorField: "string",
+	Text: "string",
+	Textarea: "string",
+	RichEditor: "string",
 };
 
 function getStringLiteralValue(node: ts.Expression | undefined): string | undefined {
