@@ -5,6 +5,7 @@ export interface TestCapsuleData {
 	eyebrowHref?: string;
 	title: string;
 	description?: string;
+	richDescription?: string;
 	primaryCtaLabel?: string;
 	secondaryCtaLabel?: string;
 	imageSrc?: string;

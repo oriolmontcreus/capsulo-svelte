@@ -2,6 +2,7 @@ import { createSchema } from "$lib/form-builder/core/create-schema";
 import type { FieldDefinition } from "$lib/form-builder/core/types";
 import { TextField } from "$lib/form-builder/fields/TextField/text-field.builder";
 import { TextareaField } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
+import { RichEditorField } from "$lib/form-builder/fields/RichEditorField/rich-editor-field.builder";
 
 export const testCapsuleSchema = createSchema<FieldDefinition>({
 	name: "Test Capsule",
@@ -28,6 +29,12 @@ export const testCapsuleSchema = createSchema<FieldDefinition>({
 			.placeholder("Craft. Build. Ship Modern Websites With AI Support.")
 			.translatable()
 			.defaultValue("Craft. Build. Ship Modern Websites With AI Support."),
+		RichEditorField("richDescription")
+			.label("Rich Description")
+			.description("Rich text (TipTap): bold/italic/underline")
+			.placeholder("Write a rich description (TipTap)...")
+			.translatable()
+			.defaultValue("<p>Craft. <strong>Build</strong>. <u>Ship</u> Modern Websites With <em>AI</em> Support.</p>"),
 		TextField("primaryCtaLabel")
 			.label("Primary CTA label")
 			.placeholder("Start Building")

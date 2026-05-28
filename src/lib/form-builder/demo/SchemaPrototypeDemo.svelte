@@ -68,6 +68,10 @@
 			<span class="font-medium">title:</span>
 			{typeof resolvedValues.title === "string" ? resolvedValues.title : ""}
 		</p>
+		<p class="text-sm">
+			<span class="font-medium">description (html):</span>
+			{typeof resolvedValues.description === "string" ? resolvedValues.description : ""}
+		</p>
 		<pre class="bg-muted overflow-x-auto rounded-md p-3 text-xs">{JSON.stringify(values, null, 2)}</pre>
 	</div>
 </div>

@@ -88,7 +88,11 @@ export function buildSchemaRenderItems(
 
   for (const field of schema.fields) {
     //TODO: This might be garbage
-    if (field.type !== "text" && field.type !== "textarea") {
+    if (
+      field.type !== "text" &&
+      field.type !== "textarea" &&
+      field.type !== "rich-editor"
+    ) {
       continue;
     }
 

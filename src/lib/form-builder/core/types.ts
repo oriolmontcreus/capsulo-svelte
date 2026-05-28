@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea";
+export type FieldType = "text" | "textarea" | "rich-editor";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -24,7 +24,16 @@ export interface TextareaFieldDefinition extends BaseFieldDefinition {
 	maxLength?: number;
 }
 
-export type FieldDefinition = TextFieldDefinition | TextareaFieldDefinition;
+export interface RichEditorFieldDefinition extends BaseFieldDefinition {
+	type: "rich-editor";
+	placeholder?: string;
+	defaultValue?: string;
+}
+
+export type FieldDefinition =
+	| TextFieldDefinition
+	| TextareaFieldDefinition
+	| RichEditorFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;
