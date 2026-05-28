@@ -219,3 +219,81 @@
     @apply font-sans;
   }
 }
+
+/* VoidZero landing helpers (for pixel-perfect clone of the OSS section) */
+.bg-primary {
+  background-color: #08060d;
+}
+.bg-slate {
+  background-color: #14121a;
+}
+.border-nickel {
+  border-color: rgb(59 52 64);
+}
+.divide-nickel > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgb(59 52 64);
+}
+.text-grey {
+  color: rgb(147 140 156);
+}
+.text-electric {
+  color: #6d5efc;
+}
+.text-nickel {
+  color: rgb(59 52 64);
+}
+.wrapper {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+.wrapper--ticks {
+  position: relative;
+}
+.wrapper--ticks::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(to right, rgba(59, 52, 64, 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59, 52, 64, 0.18) 1px, transparent 1px);
+  background-size:
+    120px 100%,
+    100% 120px;
+  background-position: 0 0;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black 10%,
+    black 85%,
+    transparent
+  );
+}
+
+.bg-viteplus {
+  background-image: url("https://voidzero.dev/assets/viteplus.QG_kyPcM.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.bg-vite {
+  background-image: url("https://voidzero.dev/assets/vite.DJccTzmn.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.bg-vitest {
+  background-image: url("https://voidzero.dev/assets/vitest.Ct_DRQC5.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.bg-rolldown {
+  background-image: url("https://voidzero.dev/assets/rolldown.CyuqNomQ.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.bg-oxc {
+  background-image: url("https://voidzero.dev/assets/oxc.BLpAMw8X.jpg");
+  background-size: cover;
+  background-position: center;
+}

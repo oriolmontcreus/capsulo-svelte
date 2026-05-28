@@ -1,11 +1,576 @@
 ---
 import Layout from "$/layouts/Layout.astro";
-import UserProfilesList from "$lib/UserProfilesList.svelte";
 ---
 
-<Layout>
-	<main class="mx-auto max-w-lg p-6">
-		<h1 class="mb-4 text-xl font-semibold">Profiles</h1>
-		<UserProfilesList client:load />
-	</main>
+<Layout fontFamily="geist">
+	<div class="min-h-dvh bg-[#fbfbfb] text-[#0a0a0a]">
+		<a
+			id="vz-banner"
+			href="/"
+			class="relative block border-b border-black/5 bg-[url('/capsulo/footer-background.jpg')] bg-cover bg-center px-4 py-2 text-[11px] font-medium tracking-[0.08em] text-white"
+		>
+			<div class="mx-auto flex max-w-[1200px] items-center justify-between gap-3">
+				<div class="flex min-w-0 items-center gap-2">
+					<span class="inline-flex size-5 items-center justify-center rounded-md bg-white/15">
+						<span class="text-[10px] font-semibold">V+</span>
+					</span>
+					<span class="truncate uppercase">Introducing Capsulo: Schema-first. Repo-native. Static by default.</span>
+				</div>
+				<button
+					id="vz-banner-close"
+					type="button"
+					class="grid size-7 place-items-center rounded-md text-white/90 hover:bg-white/10"
+					aria-label="Close banner"
+				>
+					<span class="text-base leading-none">×</span>
+				</button>
+			</div>
+		</a>
+
+		<header class="px-6">
+			<div class="mx-auto flex h-[74px] max-w-[1200px] items-center justify-between">
+				<a href="/" class="flex items-center gap-2">
+					<span class="text-[22px] font-semibold tracking-[-0.04em]">CAPSULO</span>
+					<span class="text-[14px] font-medium tracking-[-0.02em] text-black/70">(Ø)</span>
+				</a>
+
+				<nav class="hidden items-center gap-8 text-[16px] font-normal text-[#16171d] md:flex">
+					<a class="hover:text-black" href="/">Docs</a>
+					<a class="hover:text-black" href="/">Architecture</a>
+					<a class="hover:text-black" href="/">Admin</a>
+					<a class="flex items-center gap-2 hover:text-black" href="/">
+						<span>GitHub</span>
+						<span class="text-black/50">↗</span>
+					</a>
+				</nav>
+
+				<div class="flex items-center gap-4 text-black/55">
+					<a href="/" aria-label="GitHub" class="hover:text-black">
+						<svg viewBox="0 0 24 24" class="size-[18px]" fill="currentColor" aria-hidden="true">
+							<path
+								d="M12 2c5.52 0 10 4.59 10 10.25 0 4.52-2.87 8.36-6.85 9.72-.5.1-.69-.22-.69-.49 0-.34.01-1.46.01-2.65 0-.9-.3-1.49-.63-1.79 2.07-.24 4.25-1.05 4.25-4.73 0-1.05-.36-1.91-.95-2.58.1-.24.41-1.22-.09-2.55 0 0-.78-.26-2.55.99-.74-.21-1.53-.32-2.31-.32s-1.58.11-2.31.32c-1.77-1.25-2.55-.99-2.55-.99-.5 1.33-.19 2.31-.09 2.55-.59.67-.95 1.53-.95 2.58 0 3.67 2.17 4.5 4.23 4.73-.27.25-.52.69-.6 1.34-.54.26-1.93.72-2.78-.86 0 0-.5-.93-1.46-1 0 0-.93-.01-.06.59 0 0 .62.3 1.05 1.42 0 0 .56 1.75 3.21 1.16 0 .82.01 1.59.01 1.83 0 .27-.18.59-.69.49C4.87 20.61 2 16.77 2 12.25 2 6.59 6.48 2 12 2Z"
+							/>
+						</svg>
+					</a>
+					<a href="/" aria-label="X" class="hover:text-black">
+						<svg viewBox="0 0 24 24" class="size-[18px]" fill="currentColor" aria-hidden="true">
+							<path
+								d="M18.9 2H22l-6.8 7.78L23 22h-6.6l-5.2-6.6L5.6 22H2.5l7.3-8.36L1 2h6.7l4.7 6.02L18.9 2Zm-1.1 18h1.7L6.8 3.9H5L17.8 20Z"
+							/>
+						</svg>
+					</a>
+					<a href="/" aria-label="Discord" class="hover:text-black">
+						<svg viewBox="0 0 24 24" class="size-[18px]" fill="currentColor" aria-hidden="true">
+							<path
+								d="M20.3 4.3A16.1 16.1 0 0 0 16.2 3l-.2.4a13.2 13.2 0 0 1 3.1 1.5 11.7 11.7 0 0 0-4.5-1.4c-1.7-.2-3.5-.2-5.2 0a11.7 11.7 0 0 0-4.5 1.4A13.2 13.2 0 0 1 8 3.4L7.8 3a16.1 16.1 0 0 0-4.1 1.3C1.6 7.5.9 10.6 1.2 13.7a16.4 16.4 0 0 0 5 2.9l.6-.8a10.5 10.5 0 0 1-1.6-.8l.4-.3a11.8 11.8 0 0 0 12.8 0l.4.3a10.5 10.5 0 0 1-1.6.8l.6.8a16.4 16.4 0 0 0 5-2.9c.4-3.1-.4-6.2-2.5-9.4ZM8.7 12.9c-.7 0-1.3-.7-1.3-1.6s.6-1.6 1.3-1.6c.7 0 1.3.7 1.3 1.6s-.6 1.6-1.3 1.6Zm6.6 0c-.7 0-1.3-.7-1.3-1.6s.6-1.6 1.3-1.6c.7 0 1.3.7 1.3 1.6s-.6 1.6-1.3 1.6Z"
+							/>
+						</svg>
+					</a>
+					<a href="/" aria-label="Bluesky" class="hover:text-black">
+						<svg viewBox="0 0 24 24" class="size-[18px]" fill="currentColor" aria-hidden="true">
+							<path
+								d="M12 12.9c.9-1.3 3.3-4.7 5.4-6.2 2-1.4 5.2-2.5 5.2.9 0 .7-.4 5.8-2.5 6.6-.7.3-1.7.1-2.4 0 1.2.2 2.5.8 1.8 2.1-.7 1.3-3.2 1.7-4.6 1.5-1.9-.3-2.7-1.7-2.9-2.5-.2.8-1 2.2-2.9 2.5-1.4.2-3.9-.2-4.6-1.5-.7-1.3.6-1.9 1.8-2.1-.7.1-1.7.3-2.4 0C1.8 13.4 1.4 8.3 1.4 7.6c0-3.4 3.2-2.3 5.2-.9 2.1 1.5 4.5 4.9 5.4 6.2Z"
+							/>
+						</svg>
+					</a>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<section class="px-6 pt-[66px]">
+				<div class="mx-auto max-w-[1200px] text-center">
+					<div class="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-1 text-[12px] text-black/65">
+						<span class="size-2 rounded-full bg-emerald-500"></span>
+						<span class="font-mono text-[11px] tracking-[-0.01em]">static-first / running</span>
+					</div>
+
+					<h1 class="mx-auto mt-10 max-w-[720px] text-[44px] font-medium leading-[1.12] tracking-[-3px] text-[#16171d] sm:text-[54px] md:text-[60px]">
+						<span class="block">The CMS Framework</span>
+						<span class="block">
+							for <span class="text-[#4f46e5]">Developers</span>
+						</span>
+					</h1>
+
+					<p class="mx-auto mt-6 max-w-[560px] text-[18px] font-normal leading-7 text-[#3b3440]">
+						Define content structures as code. Get a beautiful admin UI, TypeScript types, and validation automatically.
+					</p>
+
+					<div class="mt-10 grid place-items-center">
+						<div class="relative h-[320px] w-full max-w-[820px]">
+							<div class="pointer-events-none absolute inset-x-0 bottom-0 top-8 bg-[radial-gradient(closest-side,rgba(79,70,229,0.18),transparent_70%)]" />
+							<div class="absolute inset-x-0 top-0 flex items-center justify-center">
+								<div class="rounded-xl border border-black/10 bg-white/90 px-3 py-2 text-[12px] text-black/55 shadow-sm">
+									/ admin
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="px-6 pb-10 pt-4">
+				<div class="mx-auto max-w-[1200px] text-center">
+					<p class="text-[14px] font-medium text-black/55">Built for teams who want control without the overhead</p>
+					<div class="mx-auto mt-7 flex max-w-[880px] flex-wrap items-center justify-center gap-x-8 gap-y-6 opacity-60">
+						<img src="/capsulo/shopify.svg" alt="Shopify" class="h-4 w-auto" loading="lazy" />
+						<img src="/capsulo/openai.svg" alt="OpenAI" class="h-4 w-auto" loading="lazy" />
+						<img src="/capsulo/framer.svg" alt="Framer" class="h-4 w-auto" loading="lazy" />
+						<img src="/capsulo/linear.svg" alt="Linear" class="h-4 w-auto" loading="lazy" />
+						<img src="/capsulo/hugging-face.svg" alt="Hugging Face" class="h-5 w-auto" loading="lazy" />
+						<img src="/capsulo/mercedes.svg" alt="Mercedes" class="h-4 w-auto" loading="lazy" />
+					</div>
+				</div>
+			</section>
+
+			<section data-theme="dark" class="bg-primary text-white">
+				<section class="wrapper border-t border-nickel p-5 md:pl-10">
+					<span class="text-nickel dark:text-white text-xs font-medium font-mono uppercase tracking-wide">SYSTEMS</span>
+				</section>
+				<section class="wrapper wrapper--ticks border-t border-nickel px-10 h-48 sm:h-90 flex flex-col justify-center gap-5">
+					<h2 class="text-start text-white text-[48px] font-medium leading-none tracking-[-1.2px]">Capsulo architecture</h2>
+					<p class="max-w-md text-balance text-white/70 text-[18px] leading-7">
+						Schema-first content components (“Capsules”), auto-discovery, type generation, translations, and a Git-based content workflow.
+					</p>
+				</section>
+
+				<section class="wrapper wrapper--ticks border-t border-nickel flex" id="vz-oss" data-oss>
+					<div class="w-72 p-10 sticky top-0 self-start hidden md:flex flex-col">
+						<ul class="flex flex-col gap-4">
+							<li class="transition-all duration-500 ease-out" data-project-nav="0">
+								<button type="button" class="flex gap-4 text-base cursor-pointer bg-transparent border-none p-0 text-white">
+									<img src="https://voidzero.dev/assets/viteplus-light.CYpc0gnV.svg" alt="Vite+" class="size-6" />
+									Capsules
+								</button>
+							</li>
+							<li class="transition-all duration-500 ease-out opacity-40 grayscale" data-project-nav="1">
+								<button type="button" class="flex gap-4 text-base cursor-pointer bg-transparent border-none p-0 text-white">
+									<img src="https://voidzero.dev/assets/vite-light.MG8M2jAW.svg" alt="Vite" class="size-6" />
+									Schema
+								</button>
+							</li>
+							<li class="transition-all duration-500 ease-out opacity-40 grayscale" data-project-nav="2">
+								<button type="button" class="flex gap-4 text-base cursor-pointer bg-transparent border-none p-0 text-white">
+									<img src="https://voidzero.dev/assets/vitest-light.BeSPX0d3.svg" alt="Vitest" class="size-6" />
+									Translations
+								</button>
+							</li>
+							<li class="transition-all duration-500 ease-out opacity-40 grayscale" data-project-nav="3">
+								<button type="button" class="flex gap-4 text-base cursor-pointer bg-transparent border-none p-0 text-white">
+									<img src="https://voidzero.dev/assets/rolldown-light.Su7w3UUn.svg" alt="Rolldown" class="size-6" />
+									Storage
+								</button>
+							</li>
+							<li class="transition-all duration-500 ease-out opacity-40 grayscale" data-project-nav="4">
+								<button type="button" class="flex gap-4 text-base cursor-pointer bg-transparent border-none p-0 text-white">
+									<img src="https://voidzero.dev/assets/oxc-light.BlLWBvd-.svg" alt="Oxc" class="size-6" />
+									Admin
+								</button>
+							</li>
+						</ul>
+					</div>
+
+					<div class="w-full md:border-l border-nickel">
+						<!-- Project 0 -->
+						<div class="grid lg:grid-cols-2 w-full" data-project="0">
+							<div class="flex flex-col p-10 justify-between gap-10 lg:gap-20">
+								<div class="flex flex-col gap-5 max-w-[20rem]">
+									<span class="text-grey text-xs font-mono uppercase tracking-wide">Capsules</span>
+									<h4 class="text-white text-pretty text-[40px] leading-[1.05] font-medium tracking-[-1.2px]">Self-contained content components</h4>
+									<p class="text-white/70 text-base max-w-100 text-pretty leading-7">
+										A Capsule bundles schema, UI component, and auto-generated TypeScript types. Use Astro, React, Vue, or Svelte—anything Astro supports.
+									</p>
+									<a href="https://viteplus.dev" target="_blank" rel="noopener noreferrer" class="inline-block w-fit mt-5 bg-slate px-4 py-2 rounded-sm text-white text-sm">
+										Read Capsule basics
+									</a>
+								</div>
+								<div class="flex gap-4 divide-nickel items-center bg-slate px-3 py-1 w-fit rounded-sm">
+									<a href="https://github.com/voidzero-dev/vite-plus" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+										<svg viewBox="0 0 24 24" class="size-5 text-white" fill="currentColor" aria-hidden="true">
+											<path
+												d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+											/>
+										</svg>
+									</a>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-electric text-base tracking-tight">core</span>
+									</div>
+								</div>
+							</div>
+							<div class="flex flex-col min-h-64 sm:min-h-120">
+								<div class="relative pl-10 h-full flex flex-col justify-center overflow-clip">
+									<div class="absolute inset-0 bg-viteplus transition-opacity duration-700 ease-out opacity-100"></div>
+									<div class="block p-2 relative bg-slate rounded-tl rounded-bl outline-1 outline-offset-2 outline-white/20 transition-transform duration-700 ease-out z-10 translate-x-0">
+										<img loading="lazy" src="https://voidzero.dev/assets/viteplus.DWFNSSex.png" alt="terminal" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Project 1 -->
+						<div class="grid lg:grid-cols-2 w-full border-t border-nickel" data-project="1">
+							<div class="flex flex-col p-10 justify-between gap-10 lg:gap-20">
+								<div class="flex flex-col gap-5 max-w-[20rem]">
+									<span class="text-grey text-xs font-mono uppercase tracking-wide">Schema</span>
+									<h4 class="text-white text-pretty text-[40px] leading-[1.05] font-medium tracking-[-1.2px]">Schema-as-code with a fluent API</h4>
+									<p class="text-white/70 text-base max-w-100 text-pretty leading-7">
+										Define fields in TypeScript and Capsulo generates the admin UI, inferred types, and runtime validation (Zod) automatically.
+									</p>
+									<a href="https://vite.dev" target="_blank" rel="noopener noreferrer" class="inline-block w-fit mt-5 bg-slate px-4 py-2 rounded-sm text-white text-sm">
+										See schema examples
+									</a>
+								</div>
+								<div class="flex gap-4 divide-nickel items-center bg-slate px-3 py-1 w-fit rounded-sm">
+									<a href="https://github.com/vitejs/vite" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+										<svg viewBox="0 0 24 24" class="size-5 text-white" fill="currentColor" aria-hidden="true">
+											<path
+												d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+											/>
+										</svg>
+									</a>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">80.8k</span><span class="text-grey text-base tracking-tight">stars</span>
+									</div>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">1,282</span><span class="text-grey text-base tracking-tight">contributors</span>
+									</div>
+								</div>
+							</div>
+							<div class="flex flex-col min-h-64 sm:min-h-120">
+								<div class="relative pl-10 h-full flex flex-col justify-center overflow-clip">
+									<div class="absolute inset-0 bg-vite transition-opacity duration-700 ease-out opacity-100"></div>
+									<div class="block p-2 relative bg-slate rounded-tl rounded-bl outline-1 outline-offset-2 outline-white/20 transition-transform duration-700 ease-out z-10 translate-x-0">
+										<img loading="lazy" src="https://voidzero.dev/assets/vite.5rp3iChU.svg" alt="terminal" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Project 2 -->
+						<div class="grid lg:grid-cols-2 w-full border-t border-nickel" data-project="2">
+							<div class="flex flex-col p-10 justify-between gap-10 lg:gap-20">
+								<div class="flex flex-col gap-5 max-w-[20rem]">
+									<span class="text-grey text-xs font-mono uppercase tracking-wide">Translations</span>
+									<h4 class="text-white text-pretty text-[40px] leading-[1.05] font-medium tracking-[-1.2px]">Built-in i18n for content fields</h4>
+									<p class="text-white/70 text-base max-w-100 text-pretty leading-7">
+										Mark text fields as translatable and get a translation sidebar, locale storage, and automatic locale resolution in your frontend.
+									</p>
+									<a
+										href="https://vitest.dev"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="inline-block w-fit mt-5 bg-slate px-4 py-2 rounded-sm text-white text-sm"
+									>
+										Learn about i18n
+									</a>
+								</div>
+								<div class="flex gap-4 divide-nickel items-center bg-slate px-3 py-1 w-fit rounded-sm">
+									<a href="https://github.com/vitest-dev/vitest" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+										<svg viewBox="0 0 24 24" class="size-5 text-white" fill="currentColor" aria-hidden="true">
+											<path
+												d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+											/>
+										</svg>
+									</a>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">16.6k</span><span class="text-grey text-base tracking-tight">stars</span>
+									</div>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">755</span><span class="text-grey text-base tracking-tight">contributors</span>
+									</div>
+								</div>
+							</div>
+							<div class="flex flex-col min-h-72 sm:min-h-120">
+								<div class="relative pl-10 h-full flex flex-col justify-end overflow-clip pt-10 sm:pt-0">
+									<div class="absolute inset-0 bg-vitest transition-opacity duration-700 ease-out opacity-100"></div>
+									<div class="block p-2 relative bg-slate rounded-tl outline-1 outline-offset-2 outline-white/20 transition-transform duration-700 ease-out z-10 translate-x-0">
+										<img loading="lazy" src="https://voidzero.dev/assets/vitest.C33Vbobj.png" alt="terminal" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Project 3 -->
+						<div class="grid lg:grid-cols-2 w-full border-t border-nickel" data-project="3">
+							<div class="flex flex-col p-10 justify-between gap-10 lg:gap-20">
+								<div class="flex flex-col gap-5 max-w-[20rem]">
+									<span class="text-grey text-xs font-mono uppercase tracking-wide">Storage</span>
+									<h4 class="text-white text-pretty text-[40px] leading-[1.05] font-medium tracking-[-1.2px]">Dual storage with a Git workflow</h4>
+									<p class="text-white/70 text-base max-w-100 text-pretty leading-7">
+										Develop locally with filesystem saves. In production, store content via the GitHub API with draft branches, diffs, and publish workflows.
+									</p>
+									<a
+										href="https://rolldown.rs"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="inline-block w-fit mt-5 bg-slate px-4 py-2 rounded-sm text-white text-sm"
+									>
+										See data flow
+									</a>
+								</div>
+								<div class="flex gap-4 divide-nickel items-center bg-slate px-3 py-1 w-fit rounded-sm">
+									<a href="https://github.com/rolldown/rolldown" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+										<svg viewBox="0 0 24 24" class="size-5 text-white" fill="currentColor" aria-hidden="true">
+											<path
+												d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+											/>
+										</svg>
+									</a>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">13.5k</span><span class="text-grey text-base tracking-tight">stars</span>
+									</div>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">182</span><span class="text-grey text-base tracking-tight">contributors</span>
+									</div>
+								</div>
+							</div>
+							<div class="flex flex-col min-h-88 sm:min-h-120">
+								<div class="relative pl-10 h-full flex flex-col justify-center overflow-clip py-10 sm:py-0">
+									<div class="absolute inset-0 bg-rolldown transition-opacity duration-700 ease-out opacity-100"></div>
+									<div class="block p-2 relative bg-slate rounded-tl rounded-bl outline-1 outline-offset-2 outline-white/20 transition-transform duration-700 ease-out z-10 translate-x-0">
+										<img loading="lazy" src="https://voidzero.dev/assets/rolldown.CauT8S1f.svg" alt="terminal" />
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<!-- Project 4 -->
+						<div class="grid lg:grid-cols-2 w-full border-t border-nickel" data-project="4">
+							<div class="flex flex-col p-10 justify-between gap-10 lg:gap-20">
+								<div class="flex flex-col gap-5 max-w-[20rem]">
+									<span class="text-grey text-xs font-mono uppercase tracking-wide">Admin</span>
+									<h4 class="text-white text-pretty text-[40px] leading-[1.05] font-medium tracking-[-1.2px]">A beautiful CMS at /admin</h4>
+									<p class="text-white/70 text-base max-w-100 text-pretty leading-7">
+										Auto-generated forms, autosave, page-scoped editing, translations UI, and collaboration-ready workflows—without building a custom CMS.
+									</p>
+									<a href="https://oxc.rs" target="_blank" rel="noopener noreferrer" class="inline-block w-fit mt-5 bg-slate px-4 py-2 rounded-sm text-white text-sm">
+										Preview the UI
+									</a>
+								</div>
+								<div class="flex gap-4 divide-nickel items-center bg-slate px-3 py-1 w-fit rounded-sm">
+									<a href="https://github.com/oxc-project/oxc" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+										<svg viewBox="0 0 24 24" class="size-5 text-white" fill="currentColor" aria-hidden="true">
+											<path
+												d="M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
+											/>
+										</svg>
+									</a>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">21.3k</span><span class="text-grey text-base tracking-tight">stars</span>
+									</div>
+									<div class="flex gap-1 items-baseline">
+										<span class="text-white font-medium tracking-tight">392</span><span class="text-grey text-base tracking-tight">contributors</span>
+									</div>
+								</div>
+							</div>
+							<div class="flex flex-col min-h-88 sm:min-h-120">
+								<div class="relative pl-10 h-full flex flex-col justify-center overflow-clip">
+									<div class="absolute inset-0 bg-oxc transition-opacity duration-700 ease-out opacity-100"></div>
+									<div class="block p-2 relative bg-slate rounded-tl rounded-bl outline-1 outline-offset-2 outline-white/20 transition-transform duration-700 ease-out z-10 translate-x-0">
+										<div class="h-[240px] w-[240px] rounded-sm bg-white/5" aria-hidden="true"></div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			</section>
+
+			<section class="bg-[#f3f3f3] px-6 py-20">
+				<div class="mx-auto max-w-[1200px] text-center">
+					<h2 class="mx-auto max-w-[900px] text-[30px] font-semibold leading-[1.1] tracking-[-0.04em] text-[#0b0b0f] sm:text-[38px] md:text-[44px]">
+						Our mission is to make content-driven websites faster to build, easier to manage, and safer to evolve.
+					</h2>
+					<a href="/" class="mt-8 inline-flex h-9 items-center rounded-md border border-black/10 bg-white px-4 text-[13px] font-medium text-black/80">
+						Why Capsulo
+					</a>
+				</div>
+			</section>
+
+			<section class="px-6 py-20">
+				<div class="mx-auto grid max-w-[1200px] gap-10 md:grid-cols-[320px_1fr]">
+					<div>
+						<h2 class="text-[34px] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[40px] md:text-[44px]">
+							Featured resources<br />& guides
+						</h2>
+						<a href="/" class="mt-8 inline-flex h-9 items-center rounded-md border border-black/10 bg-white px-4 text-[13px] font-medium text-black/80">
+							All guides
+						</a>
+						<div class="mt-10 font-mono text-[11px] leading-5 text-black/45">
+							<div>js</div>
+							<div class="mt-2">resources</div>
+							<div>.filter(i =&gt; i.collection === "featured")</div>
+							<div>.filter(i =&gt; i.postedBy === "Capsulo")</div>
+							<div>.filter(i =&gt; i.articles.length === 8)</div>
+						</div>
+					</div>
+
+					<div class="grid gap-6 md:grid-cols-3">
+						<a class="rounded-[14px] border border-black/10 bg-white p-4 hover:border-black/20" href="/">
+							<div class="text-[11px] font-semibold tracking-[0.18em] text-black/45">// ECOSYSTEM</div>
+							<div class="mt-3 text-[16px] font-semibold leading-6">Capsules: content components as a system</div>
+						</a>
+						<a class="rounded-[14px] border border-black/10 bg-white p-4 hover:border-black/20" href="/">
+							<div class="text-[11px] font-semibold tracking-[0.18em] text-black/45">// UPDATES</div>
+							<div class="mt-3 text-[16px] font-semibold leading-6">Schema-first CMS: why code beats config</div>
+						</a>
+						<a class="overflow-hidden rounded-[14px] border border-black/10 bg-white hover:border-black/20" href="/">
+							<img src="/capsulo/cover-rolldown-1-0.jpg" alt="Announcing Rolldown 1.0" class="h-[120px] w-full object-cover" loading="lazy" />
+							<div class="p-4">
+								<div class="text-[11px] font-semibold tracking-[0.18em] text-black/45">// ANNOUNCEMENTS</div>
+								<div class="mt-3 text-[16px] font-semibold leading-6">Static-first CMS, hosted anywhere</div>
+							</div>
+						</a>
+					</div>
+				</div>
+			</section>
+
+			<section class="bg-[#0a0a0f] px-6 py-16 text-white">
+				<div class="mx-auto grid max-w-[1200px] gap-10 md:grid-cols-[1fr_520px] md:items-center">
+					<h2 class="text-[30px] font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[38px] md:text-[44px]">
+						Interested in the future<br />of content management?
+					</h2>
+					<div class="md:justify-self-end">
+						<div class="text-[14px] font-medium text-white/80">Get Capsulo updates and release notes</div>
+						<div class="mt-4 flex max-w-[420px] overflow-hidden rounded-md border border-white/15 bg-white/5">
+							<input
+								class="h-10 w-full bg-transparent px-3 text-[13px] text-white placeholder:text-white/45 focus:outline-none"
+								placeholder="Your email address"
+								type="email"
+							/>
+							<button class="h-10 bg-white px-4 text-[13px] font-medium text-black">Join</button>
+						</div>
+					</div>
+				</div>
+				<div class="mt-14 h-[170px] w-full overflow-hidden rounded-[18px] bg-[url('/capsulo/footer.jpg')] bg-cover bg-center">
+					<div class="grid h-full place-items-center">
+						<div class="grid size-[74px] place-items-center rounded-[16px] bg-[#08060d] text-white">
+							<span class="text-[24px] font-semibold">(Ø)</span>
+						</div>
+					</div>
+				</div>
+
+				<footer class="mx-auto mt-10 max-w-[1200px] border-t border-white/10 pt-10 text-white/70">
+					<div class="grid gap-10 md:grid-cols-[1fr_1fr_1fr_1fr]">
+						<div class="text-[11px] font-semibold tracking-[0.18em] text-white/40">CAPSULO</div>
+						<div>
+							<div class="text-[11px] font-semibold tracking-[0.18em] text-white/40">FEATURES</div>
+							<ul class="mt-3 space-y-2 text-[13px] text-white/70">
+								<li><a href="/" class="hover:text-white">Capsules</a></li>
+								<li><a href="/" class="hover:text-white">Schema</a></li>
+								<li><a href="/" class="hover:text-white">Translations</a></li>
+								<li><a href="/" class="hover:text-white">Storage</a></li>
+								<li><a href="/" class="hover:text-white">Admin UI</a></li>
+							</ul>
+						</div>
+						<div>
+							<div class="text-[11px] font-semibold tracking-[0.18em] text-white/40">LEARN</div>
+							<ul class="mt-3 space-y-2 text-[13px] text-white/70">
+								<li><a href="/" class="hover:text-white">Overview</a></li>
+								<li><a href="/" class="hover:text-white">Systems & Architecture</a></li>
+								<li><a href="/" class="hover:text-white">Quick start</a></li>
+								<li><a href="/" class="hover:text-white">Schema reference</a></li>
+								<li><a href="/" class="hover:text-white">i18n guide</a></li>
+								<li><a href="/" class="hover:text-white">Storage guide</a></li>
+							</ul>
+						</div>
+						<div class="md:justify-self-end">
+							<div class="text-[11px] font-semibold tracking-[0.18em] text-white/40">SOCIAL</div>
+							<ul class="mt-3 space-y-2 text-[13px] text-white/70">
+								<li><a href="/" class="hover:text-white">GitHub</a></li>
+								<li><a href="/" class="hover:text-white">X.com</a></li>
+								<li><a href="/" class="hover:text-white">Discord</a></li>
+								<li><a href="/" class="hover:text-white">YouTube</a></li>
+								<li><a href="/" class="hover:text-white">Bluesky</a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="mt-10 border-t border-white/10 py-6 text-[12px] text-white/45">© 2026 Capsulo. All Rights Reserved.</div>
+				</footer>
+			</section>
+		</main>
+	</div>
+
+	<script is:inline>
+		(function () {
+			try {
+				const banner = document.getElementById("vz-banner");
+				const closeBtn = document.getElementById("vz-banner-close");
+				const key = "vz-banner-closed";
+				if (banner && localStorage.getItem(key) === "1") banner.style.display = "none";
+				closeBtn?.addEventListener("click", (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					localStorage.setItem(key, "1");
+					if (banner) banner.style.display = "none";
+				});
+			} catch {}
+
+			(function ossNav() {
+				const root = document.querySelector("[data-oss]");
+				if (!root) return;
+
+				const navItems = [...root.querySelectorAll("[data-project-nav]")];
+				const projects = [...root.querySelectorAll("[data-project]")];
+				if (!navItems.length || !projects.length) return;
+
+				const setActive = (idx) => {
+					navItems.forEach((li) => {
+						const active = Number(li.getAttribute("data-project-nav")) === idx;
+						li.classList.toggle("opacity-40", !active);
+						li.classList.toggle("grayscale", !active);
+					});
+				};
+
+				const computeActiveFromScroll = () => {
+					let bestIdx = 0;
+					let bestDist = Infinity;
+					const targetY = window.innerHeight * 0.35;
+					for (const p of projects) {
+						const idx = Number(p.getAttribute("data-project"));
+						if (!Number.isFinite(idx)) continue;
+						const r = p.getBoundingClientRect();
+						const d = Math.abs(r.top - targetY);
+						if (d < bestDist) {
+							bestDist = d;
+							bestIdx = idx;
+						}
+					}
+					setActive(bestIdx);
+				};
+
+				navItems.forEach((li) => {
+					const idx = Number(li.getAttribute("data-project-nav"));
+					li.querySelector("button")?.addEventListener("click", () => {
+						const el = projects.find((p) => Number(p.getAttribute("data-project")) === idx);
+						el?.scrollIntoView({ behavior: "smooth", block: "start" });
+						setActive(idx);
+					});
+				});
+
+				const io = new IntersectionObserver(
+					(entries) => {
+						const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+						const idx = visible && Number(visible.target.getAttribute("data-project"));
+						if (Number.isFinite(idx)) setActive(idx);
+					},
+					{ root: null, threshold: [0.25, 0.5, 0.75], rootMargin: "-25% 0px -65% 0px" },
+				);
+				projects.forEach((p) => io.observe(p));
+				setActive(0);
+
+				let raf = 0;
+				const onScroll = () => {
+					if (raf) return;
+					raf = requestAnimationFrame(() => {
+						raf = 0;
+						computeActiveFromScroll();
+					});
+				};
+				window.addEventListener("scroll", onScroll, { passive: true });
+				window.addEventListener("resize", onScroll, { passive: true });
+				computeActiveFromScroll();
+			})();
+		})();
+	</script>
 </Layout>
