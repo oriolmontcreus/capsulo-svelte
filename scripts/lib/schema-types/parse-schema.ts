@@ -6,6 +6,7 @@ const BUILDER_TS_TYPE_MAP: Record<string, string> = {
 	Text: "string",
 	Textarea: "string",
 	RichEditor: "string",
+	Toggle: "boolean",
 };
 
 function getStringLiteralValue(node: ts.Expression | undefined): string | undefined {

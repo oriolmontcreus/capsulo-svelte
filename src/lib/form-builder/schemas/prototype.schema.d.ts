@@ -3,4 +3,5 @@
 export interface PrototypeSchemaData {
 	title: string;
 	description?: string;
+	published: boolean;
 }

@@ -28,7 +28,7 @@ export interface SchemaRenderItem {
   sourceField: FieldDefinition;
   localizedField: FieldDefinition;
   locale: string;
-  value: string;
+  value: string | boolean;
 }
 
 function normalizeLocales(locales: string[] | undefined): string[] {
@@ -91,12 +91,13 @@ export function buildSchemaRenderItems(
     if (
       field.type !== "text" &&
       field.type !== "textarea" &&
-      field.type !== "rich-editor"
+      field.type !== "rich-editor" &&
+      field.type !== "toggle"
     ) {
       continue;
     }
 
-    const fieldLocales = field.translatable
+    const fieldLocales = field.translatable && field.type !== "toggle"
       ? translatableLocaleMode === "active-only"
         ? [context.editingLocale]
         : context.locales
@@ -112,7 +113,7 @@ export function buildSchemaRenderItems(
             : (field.label ?? field.name),
       };
       const valueByLocale = values[field.name] ?? {};
-      const resolvedValue = field.translatable
+      const resolvedValue = field.translatable && field.type !== "toggle"
         ? valueByLocale[locale]
         : resolveFieldValue(
             field,
@@ -125,7 +126,9 @@ export function buildSchemaRenderItems(
         sourceField: field,
         localizedField,
         locale,
-        value: typeof resolvedValue === "string" ? resolvedValue : "",
+        value: field.type === "toggle"
+          ? typeof resolvedValue === "boolean" ? resolvedValue : false
+          : typeof resolvedValue === "string" ? resolvedValue : "",
       });
     }
   }
@@ -138,7 +141,7 @@ export function applySchemaFieldUpdate(
   values: SchemaValues,
   fieldName: string,
   fieldLocale: string,
-  nextValue: string,
+  nextValue: string | boolean,
   context: SchemaRendererI18nContext,
 ): SchemaValues {
   const field = schema.fields.find((item) => item.name === fieldName);

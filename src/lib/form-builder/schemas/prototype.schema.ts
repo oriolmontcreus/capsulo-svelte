@@ -2,6 +2,7 @@ import { createSchema } from "../core/create-schema";
 import type { FieldDefinition } from "../core/types";
 import { Text } from "../fields/TextField/text-field.builder";
 import { RichEditor } from "../fields/RichEditorField/rich-editor-field.builder";
+import { Toggle } from "../fields/ToggleField/toggle-field.builder";
 
 export const prototypeSchema = createSchema<FieldDefinition>({
 	name: "Prototype Schema",
@@ -18,6 +19,10 @@ export const prototypeSchema = createSchema<FieldDefinition>({
 			.label("Description")
 			.description("Rich text description (bold/italic/underline)")
 			.placeholder("Write a description...")
-			.translatable()
+			.translatable(),
+		Toggle("published")
+			.label("Published")
+			.description("Whether the content is published")
+			.defaultValue(false)
 	]
 });

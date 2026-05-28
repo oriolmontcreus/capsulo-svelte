@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea" | "rich-editor";
+export type FieldType = "text" | "textarea" | "rich-editor" | "toggle";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -30,10 +30,16 @@ export interface RichEditorFieldDefinition extends BaseFieldDefinition {
 	defaultValue?: string;
 }
 
+export interface ToggleFieldDefinition extends BaseFieldDefinition {
+	type: "toggle";
+	defaultValue?: boolean;
+}
+
 export type FieldDefinition =
 	| TextFieldDefinition
 	| TextareaFieldDefinition
-	| RichEditorFieldDefinition;
+	| RichEditorFieldDefinition
+	| ToggleFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;

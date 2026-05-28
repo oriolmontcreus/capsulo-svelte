@@ -18,7 +18,9 @@ export function createInitialFieldValue(
 	const seedValue =
 		field.type === "text" || field.type === "textarea" || field.type === "rich-editor"
 			? (field.defaultValue ?? "")
-			: "";
+			: field.type === "toggle"
+				? (field.defaultValue ?? false)
+				: "";
 
 	return {
 		[normalizedDefaultLocale]: seedValue

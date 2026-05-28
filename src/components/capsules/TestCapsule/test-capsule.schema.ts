@@ -3,6 +3,7 @@ import type { FieldDefinition } from "$lib/form-builder/core/types";
 import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
 import { Textarea } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
 import { RichEditor } from "$lib/form-builder/fields/RichEditorField/rich-editor-field.builder";
+import { Toggle } from "$lib/form-builder/fields/ToggleField/toggle-field.builder";
 
 export const testCapsuleSchema = createSchema<FieldDefinition>({
   name: "Test Capsule",
@@ -24,6 +25,7 @@ export const testCapsuleSchema = createSchema<FieldDefinition>({
       .required()
       .translatable()
       .defaultValue("Build 10x Faster with Mist"),
+    Toggle("showDescription").label("Show Description").defaultValue(false),
     Text("description")
       .label("Description")
       .placeholder("Craft. Build. Ship Modern Websites With AI Support.")
@@ -70,5 +72,14 @@ export const testCapsuleSchema = createSchema<FieldDefinition>({
       .placeholder("Tell us about yourself...")
       .rows(3)
       .maxLength(500),
+    Toggle("featured")
+      .label("Featured")
+      .description("Mark this content as featured")
+      .defaultValue(false),
+    Toggle("active")
+      .label("Active")
+      .description("Whether the capsule is currently active")
+      .required()
+      .defaultValue(true),
   ],
 });
