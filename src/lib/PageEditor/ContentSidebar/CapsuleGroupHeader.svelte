@@ -29,7 +29,7 @@
         : ''}"
       aria-hidden="true"
     />
-    <span class="truncate text-sm font-medium">{title}</span>
+    <span class="truncate text-sm font-normal">{title}</span>
   </button>
   <CapsuleInfoTooltip {capsuleKey} {instanceIds} />
 </div>

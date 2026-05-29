@@ -220,13 +220,6 @@
   }
 }
 
-/* VoidZero landing helpers (for pixel-perfect clone of the OSS section) */
-.bg-primary {
-  background-color: #08060d;
-}
-.bg-slate {
-  background-color: #14121a;
-}
 .border-nickel {
   border-color: rgb(59 52 64);
 }
