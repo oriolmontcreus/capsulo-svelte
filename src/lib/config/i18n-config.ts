@@ -7,6 +7,7 @@ export interface ResolvedI18nConfig {
 	locales: string[];
 	defaultLocale: string;
 	fallbackLocale?: string;
+	prefixDefaultLocale: boolean;
 }
 
 function formatPath(path: string): string {
@@ -71,11 +72,14 @@ export function getI18nConfig(config: CapsuloConfig = capsuloConfig): ResolvedI1
 	const locales = config.i18n.locales.map((locale) => locale.trim());
 	const defaultLocale = config.i18n.defaultLocale.trim();
 	const fallbackLocale = config.i18n.fallbackLocale?.trim();
+	const prefixDefaultLocale =
+		config.i18n.prefixDefaultLocale ?? locales.length > 1;
 
 	return {
 		locales,
 		defaultLocale,
-		fallbackLocale: fallbackLocale && fallbackLocale.length > 0 ? fallbackLocale : undefined
+		fallbackLocale: fallbackLocale && fallbackLocale.length > 0 ? fallbackLocale : undefined,
+		prefixDefaultLocale
 	};
 }
 
@@ -84,6 +88,7 @@ const resolvedConfig = getI18nConfig(capsuloConfig);
 export const LOCALES = resolvedConfig.locales;
 export const DEFAULT_LOCALE = resolvedConfig.defaultLocale;
 export const FALLBACK_LOCALE = resolvedConfig.fallbackLocale;
+export const PREFIX_DEFAULT_LOCALE = resolvedConfig.prefixDefaultLocale;
 
 export function isValidLocale(locale: string): boolean {
 	return LOCALES.includes(locale);

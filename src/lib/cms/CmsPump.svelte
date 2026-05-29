@@ -1,21 +1,15 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { initCmsPreview, teardownCmsPreview } from "$lib/cms/cms-preview-runtime";
-	import { resetPreviewStore } from "$lib/cms/preview-store.svelte";
+	import { resetPreviewStore, syncSiteLocaleFromPathname } from "$lib/cms/cms-store.svelte";
+	import { pathnameToPageId } from "$lib/i18n/routing";
 	import { PAGE_EDITOR_PREVIEW_PARAM } from "$lib/PageEditor/preview-channel";
 
-	function pathnameToPageId(pathname: string): string {
-		const clean = pathname.replace(/\/+$/, "");
-		if (!clean || clean === "/") return "index";
-		return clean
-			.split("/")
-			.filter(Boolean)
-			.map((segment) => decodeURIComponent(segment))
-			.join("/");
-	}
-
-	async function bootCmsPreview(): Promise<void> {
+	async function bootCmsRuntime(): Promise<void> {
 		if (typeof window === "undefined") return;
+
+		const { pathname } = window.location;
+		syncSiteLocaleFromPathname(pathname);
 
 		const params = new URLSearchParams(window.location.search);
 		const isPreview = params.get(PAGE_EDITOR_PREVIEW_PARAM) === "1";
@@ -26,17 +20,17 @@
 			return;
 		}
 
-		const pageId = pathnameToPageId(window.location.pathname);
+		const pageId = pathnameToPageId(pathname);
 		await initCmsPreview(pageId);
 	}
 
 	onMount(() => {
 		const handlePageLoad = () => {
-			void bootCmsPreview();
+			void bootCmsRuntime();
 		};
 
 		document.addEventListener("astro:page-load", handlePageLoad);
-		void bootCmsPreview();
+		void bootCmsRuntime();
 
 		return () => {
 			document.removeEventListener("astro:page-load", handlePageLoad);
@@ -46,4 +40,4 @@
 	});
 </script>
 
-<!-- Invisible island: wires preview postMessage into the shared preview store. -->
+<!-- Invisible island: syncs URL locale and wires preview postMessage into the shared CMS store. -->

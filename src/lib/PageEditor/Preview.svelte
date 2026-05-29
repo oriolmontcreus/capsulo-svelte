@@ -12,6 +12,7 @@
     type PageEditorPreviewReadyMessage,
     type PageEditorPreviewSyncMessage,
   } from "$lib/PageEditor/preview-channel";
+  import { pageIdToPathname } from "$lib/i18n/routing";
   import { formatLocaleLabel } from "$lib/utils/locale-label";
   import {
     clampPreviewDimension,
@@ -66,17 +67,7 @@
   let iframeResizeObserver: ResizeObserver | null = null;
   let viewportResizeObserver: ResizeObserver | null = null;
 
-  const previewPath = $derived.by(() => {
-    const normalizedPageId = pageId.trim();
-    if (!normalizedPageId || normalizedPageId === "index") {
-      return "/";
-    }
-    const encodedSegments = normalizedPageId
-      .split("/")
-      .filter(Boolean)
-      .map((segment) => encodeURIComponent(segment));
-    return `/${encodedSegments.join("/")}`;
-  });
+  const previewPath = $derived.by(() => pageIdToPathname(pageId, locale));
 
   const previewUrl = $derived.by(() => {
     const params = new URLSearchParams({

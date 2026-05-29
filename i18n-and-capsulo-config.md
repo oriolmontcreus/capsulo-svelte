@@ -75,7 +75,7 @@ En **`src/lib/form-builder/core/translation-config.ts`**:
 
 ## Coherencia Astro ↔ config
 
-**`astro.config.mjs`** copia `defaultLocale` y `locales` desde **`capsulo.config.ts`**. Las opciones **`routing.prefixDefaultLocale`** y **`redirectToDefaultLocale`** están fijas en el config de Astro de este repo (locale por defecto sin prefijo en URL según esa configuración).
+**`astro.config.mjs`** copia `defaultLocale`, `locales` y **`prefixDefaultLocale`** desde **`capsulo.config.ts`**. Con varios idiomas (o `prefixDefaultLocale: true`), todas las URLs públicas llevan prefijo (`/es/...`, `/en/...`); las rutas sin prefijo redirigen al locale por defecto.
 
 Si **`capsulo.config.ts`** y **`astro.config`** divergieran en locales, tendrías rutas que no coinciden con lo que el CMS y `i18n-utils` consideran válidos. La fuente de verdad pretendida es **`capsulo.config.ts`** leída por Astro al construir la config.
 

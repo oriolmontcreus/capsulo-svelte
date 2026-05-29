@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import CmsPump from "$lib/cms/CmsPump.svelte";
 import ModeWatcherClient from "$lib/components/ModeWatcherClient.svelte";
+import { getLocaleFromPathname } from "$lib/i18n/routing";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -9,10 +10,11 @@ interface Props {
 }
 
 const { fontFamily = "sans" } = Astro.props as Props;
+const locale = getLocaleFromPathname(Astro.url.pathname);
 ---
 
 <!doctype html>
-<html lang="en" class={fontFamily === "geist" ? "font-geist" : "font-sans"} transition:animate="none">
+<html lang={locale} class={fontFamily === "geist" ? "font-geist" : "font-sans"} transition:animate="none">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />

@@ -1,4 +1,3 @@
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 import { loadPageEditorDocumentFromCache } from "$lib/PageEditor/page-editor-cache";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 import {
@@ -8,7 +7,7 @@ import {
 	isPageEditorPreviewMessage
 } from "$lib/PageEditor/preview-channel";
 
-import { applyPreviewSync } from "./preview-store.svelte";
+import { applyPreviewSync, cmsStore } from "./cms-store.svelte";
 
 let runtimeTeardown: (() => void) | null = null;
 let resizeObserver: ResizeObserver | null = null;
@@ -93,14 +92,13 @@ export async function initCmsPreview(pageId: string): Promise<void> {
 	if (typeof window === "undefined") return;
 	teardownCmsPreview();
 
-	let locale = DEFAULT_LOCALE;
 	let valuesByInstance: PageEditorValuesByInstance = {};
 
 	const cachedDocument = await loadPageEditorDocumentFromCache(pageId);
 	if (cachedDocument?.valuesByInstance) {
 		valuesByInstance = cachedDocument.valuesByInstance;
 	}
-	applyPreviewSync(pageId, locale, valuesByInstance);
+	applyPreviewSync(pageId, cmsStore.locale, valuesByInstance);
 
 	// Watch islands for size changes and force Dev Toolbar reflow
 	setupIslandResizeObserver();

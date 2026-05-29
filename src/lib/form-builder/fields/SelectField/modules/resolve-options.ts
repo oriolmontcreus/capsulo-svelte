@@ -1,5 +1,6 @@
 import capsuleManifest from "virtual:capsule-manifest";
 import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+import { pageIdToPathname } from "$lib/i18n/routing";
 import type {
 	SelectFieldDefinition,
 	SelectOption,
@@ -28,8 +29,7 @@ function formatPageLabel(pageId: string): string {
 function formatPagePath(pageId: string, locale: string, autoResolveLocale: boolean): string {
 	const basePath = pageId === "index" ? "/" : `/${pageId}`;
 	if (!autoResolveLocale) return basePath;
-	if (pageId === "index") return `/${locale}`;
-	return `/${locale}${basePath}`;
+	return pageIdToPathname(pageId, locale);
 }
 
 function getSectionLabel(pageId: string): string {

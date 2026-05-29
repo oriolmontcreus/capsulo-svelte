@@ -2,6 +2,7 @@ export interface CapsuloI18nConfig {
 	locales: string[];
 	defaultLocale: string;
 	fallbackLocale?: string;
+	prefixDefaultLocale?: boolean;
 }
 
 export interface CapsuloConfig {

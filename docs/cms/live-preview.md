@@ -19,7 +19,7 @@ sequenceDiagram
   participant Editor as PageEditor_Preview
   participant Iframe as PublicPage_in_iframe
   participant Pump as CmsPump
-  participant Store as previewStore
+  participant Store as cmsStore
   participant Capsule as CapsuleIsland
 
   Editor->>Iframe: iframe loads page + pageEditorPreview=1
@@ -34,7 +34,7 @@ sequenceDiagram
 
 1. **Page Editor** ([`Preview.svelte`](../../src/lib/PageEditor/Preview.svelte)) embeds the real public page in an iframe (same origin), with query `pageEditorPreview=1`.
 2. On each edit, the editor sends a **`state-sync`** message (`valuesByInstance`, `locale`, `pageId`) via `postMessage`.
-3. Inside the iframe, **`CmsPump`** starts the preview runtime and writes into **`previewStore`**.
+3. Inside the iframe, **`CmsPump`** syncs locale from the URL, starts the preview runtime, and writes into **`cmsStore`**.
 4. Each **capsule island** (`client:load`) calls **`getCmsData()`**, which reads the store and resolves field values for that `instanceId`.
 5. Only the capsule’s Svelte tree updates; the rest of the page is unchanged.
 
@@ -44,7 +44,7 @@ In Astro, each `client:load` island is a **separate** Svelte app. `setContext` i
 
 So preview state lives in a shared module:
 
-- [`preview-store.svelte.ts`](../../src/lib/cms/preview-store.svelte.ts) — reactive `$state` (`active`, `pageId`, `locale`, `valuesByInstance`)
+- [`cms-store.svelte.ts`](../../src/lib/cms/cms-store.svelte.ts) — reactive `$state` (`active`, `pageId`, `locale`, `valuesByInstance`); `locale` is always synced from the URL
 - Any island that imports this module sees the same data and reactivity.
 
 ## Main files
@@ -53,19 +53,35 @@ So preview state lives in a shared module:
 |------|------|
 | [`preview-channel.ts`](../../src/lib/PageEditor/preview-channel.ts) | Message contract: `PAGE_EDITOR_PREVIEW_PARAM`, `state-sync`, `ready` |
 | [`cms-preview-runtime.ts`](../../src/lib/cms/cms-preview-runtime.ts) | `postMessage` listener, IndexedDB bootstrap, `ready` to parent |
-| [`preview-store.svelte.ts`](../../src/lib/cms/preview-store.svelte.ts) | Shared preview state |
+| [`cms-store.svelte.ts`](../../src/lib/cms/cms-store.svelte.ts) | Shared CMS state (locale + preview fields) |
+| [`routing.ts`](../../src/lib/i18n/routing.ts) | `getLocaleFromPathname`, `pathnameToPageId`, `pageIdToPathname` |
 | [`CmsPump.svelte`](../../src/lib/cms/CmsPump.svelte) | Invisible island: starts/stops runtime on preview query + Astro navigations |
 | [`get-cms-data.ts`](../../src/lib/cms/get-cms-data.ts) | Capsule API: resolve instance values with schema + locale rules |
 | [`Layout.astro`](../../src/layouts/Layout.astro) | Mounts `<CmsPump client:load />` on every page |
 | [`Preview.svelte`](../../src/lib/PageEditor/Preview.svelte) | Editor iframe + outbound `state-sync` |
 
+## Locale from URL
+
+Public pages use **URL-based locales** (same model as legacy Capsulo):
+
+| URL | Locale |
+|-----|--------|
+| `/es/capsule-prototype` | `es` |
+| `/en/capsule-prototype` | `en` |
+
+With `prefixDefaultLocale: true` in [`capsulo.config.ts`](../../capsulo.config.ts), every locale is explicit in the URL. Unprefixed paths (e.g. `/capsule-prototype`) redirect to the default locale (`/es/capsule-prototype`). Root `/` redirects to `/es/`.
+
+On every navigation, [`CmsPump`](../../src/lib/cms/CmsPump.svelte) calls `syncSiteLocaleFromPathname()` so `cmsStore.locale` matches the URL. Capsules never pass `locale` as a prop; they call `getCmsData()` only.
+
+In **preview mode**, the Page Editor can still override `cmsStore.locale` via `state-sync` (e.g. switching locale in the sidebar without reloading the iframe). The preview iframe URL uses `pageIdToPathname(pageId, locale)` (e.g. `/es/...`, `/en/...`).
+
 ## Production vs preview mode
 
 | | Preview (`?pageEditorPreview=1`) | Normal visit / static build |
 |--|----------------------------------|-----------------------------|
-| `CmsPump` | Starts runtime, listens to editor | Teardown; `previewStore.active = false` |
-| `getCmsData()` | Returns resolved values for `instanceId` | Returns `undefined` |
-| Capsule UI | Shows editor draft (empty string in template if you use `?? ""`) | No editor data (until published CMS content is wired separately) |
+| `CmsPump` | Syncs URL locale, starts runtime, listens to editor | Syncs URL locale only; `cmsStore.active = false` |
+| `getCmsData()` | Resolves draft values for `instanceId` + locale | Schema default values for current URL locale |
+| Capsule UI | Shows editor draft | Defaults until published content is wired separately |
 
 The preview listener and heavy sync logic only run when the preview query is present. The site build stays **static**; there is no server runtime for CMS.
 
@@ -125,8 +141,8 @@ export default defineCapsule({
 
 `getCmsData` uses [`resolveSchemaValues`](../../src/lib/form-builder/core/translation-runtime.ts):
 
-- Reads `previewStore.valuesByInstance[instanceId]`.
-- Resolves each field for `previewStore.locale`, with project `DEFAULT_LOCALE` as fallback per field rules.
+- Reads `cmsStore.valuesByInstance[instanceId]` when preview is active.
+- Resolves each field for `cmsStore.locale` (from URL or editor override), with project `DEFAULT_LOCALE` as fallback per field rules.
 - Non-translatable fields always use the default locale bucket.
 - If preview is inactive or the instance has no values, returns **`undefined`** (no invented defaults in the resolver).
 
@@ -165,9 +181,11 @@ For pure `.astro` capsules, the intended direction is either a thin `client:load
 1. `nvm use 22 && pnpm dev`
 2. Open `admin/page-editor/<page-slug>` (e.g. `capsule-prototype`).
 3. Edit fields in the Content Sidebar → preview updates without iframe reload.
-4. Change preview locale → translatable fields follow the selected locale.
-5. Open the public page **without** `pageEditorPreview=1` → capsules render without editor data, no errors.
-6. `pnpm build` → static output succeeds.
+4. Change preview locale → translatable fields follow the selected locale; iframe URL uses `/es/...` or `/en/...`.
+5. Open `/en/<page-slug>` without preview → `cmsStore.locale` is `en` (defaults until published content exists).
+6. Visiting `/capsule-prototype` (no prefix) → redirects to `/es/capsule-prototype`.
+6. Open the public page **without** `pageEditorPreview=1` → no preview listener, no errors.
+7. `pnpm build` → static output succeeds; `/en/...` routes are generated.
 
 ## Related docs
 
