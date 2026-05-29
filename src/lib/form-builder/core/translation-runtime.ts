@@ -16,7 +16,7 @@ export function createInitialFieldValue(
 ): LocalizedFieldValue<unknown> {
 	const normalizedDefaultLocale = normalizeLocale(defaultLocale);
 	const seedValue =
-		field.type === "text" || field.type === "textarea" || field.type === "rich-editor"
+		field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "select"
 			? (field.defaultValue ?? "")
 			: field.type === "toggle"
 				? (field.defaultValue ?? false)

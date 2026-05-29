@@ -87,12 +87,12 @@ export function buildSchemaRenderItems(
   const renderItems: SchemaRenderItem[] = [];
 
   for (const field of schema.fields) {
-    //TODO: This might be garbage
     if (
       field.type !== "text" &&
       field.type !== "textarea" &&
       field.type !== "rich-editor" &&
-      field.type !== "toggle"
+      field.type !== "toggle" &&
+      field.type !== "select"
     ) {
       continue;
     }

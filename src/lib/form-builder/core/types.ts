@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea" | "rich-editor" | "toggle";
+export type FieldType = "text" | "textarea" | "rich-editor" | "toggle" | "select";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -35,11 +35,53 @@ export interface ToggleFieldDefinition extends BaseFieldDefinition {
 	defaultValue?: boolean;
 }
 
+export interface SelectOption {
+	label: string;
+	value: string;
+	disabled?: boolean;
+	description?: string;
+}
+
+export interface SelectOptionGroup {
+	label: string;
+	options: SelectOption[];
+}
+
+export interface ResponsiveColumns {
+	base?: number;
+	sm?: number;
+	md?: number;
+	lg?: number;
+	xl?: number;
+}
+
+export interface InternalLinksConfig {
+	autoResolveLocale?: boolean;
+	groupBySection?: boolean;
+}
+
+export interface SelectFieldDefinition extends BaseFieldDefinition {
+	type: "select";
+	placeholder?: string;
+	defaultValue?: string;
+	options?: SelectOption[];
+	groups?: SelectOptionGroup[];
+	searchable?: boolean;
+	searchPlaceholder?: string;
+	emptyMessage?: string;
+	columns?: number | ResponsiveColumns;
+	highlightMatches?: boolean;
+	minSearchLength?: number;
+	internalLinks?: InternalLinksConfig;
+	colSpan?: number | "full" | ResponsiveColumns;
+}
+
 export type FieldDefinition =
 	| TextFieldDefinition
 	| TextareaFieldDefinition
 	| RichEditorFieldDefinition
-	| ToggleFieldDefinition;
+	| ToggleFieldDefinition
+	| SelectFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;

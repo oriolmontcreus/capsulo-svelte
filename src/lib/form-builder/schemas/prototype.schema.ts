@@ -3,6 +3,7 @@ import type { FieldDefinition } from "../core/types";
 import { Text } from "../fields/TextField/text-field.builder";
 import { RichEditor } from "../fields/RichEditorField/rich-editor-field.builder";
 import { Toggle } from "../fields/ToggleField/toggle-field.builder";
+import { Select } from "../fields/SelectField/select-field.builder";
 
 export const prototypeSchema = createSchema<FieldDefinition>({
 	name: "Prototype Schema",
@@ -23,6 +24,16 @@ export const prototypeSchema = createSchema<FieldDefinition>({
 		Toggle("published")
 			.label("Published")
 			.description("Whether the content is published")
-			.defaultValue(false)
+			.defaultValue(false),
+		Select("category")
+			.label("Category")
+			.placeholder("Select a category")
+			.description("The content category")
+			.options([
+				{ label: "Technology", value: "tech" },
+				{ label: "Science", value: "science" },
+				{ label: "Art", value: "art" },
+				{ label: "Business", value: "business" },
+			])
 	]
 });

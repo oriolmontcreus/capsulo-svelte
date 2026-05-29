@@ -1,8 +1,10 @@
 ---
 import Layout from "$/layouts/Layout.astro";
 import TestCapsule from "$/components/capsules/TestCapsule/TestCapsule.svelte";
+import SelectTests from "$/components/capsules/SelectTests/SelectTests.svelte";
 ---
 
 <Layout>
-		<TestCapsule instanceId="test-capsule-01" client:load />
+	<TestCapsule instanceId="test-capsule-01" client:load />
+	<SelectTests instanceId="select-tests-01" client:load />
 </Layout>

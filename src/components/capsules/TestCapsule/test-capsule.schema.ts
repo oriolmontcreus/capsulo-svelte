@@ -4,6 +4,7 @@ import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
 import { Textarea } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
 import { RichEditor } from "$lib/form-builder/fields/RichEditorField/rich-editor-field.builder";
 import { Toggle } from "$lib/form-builder/fields/ToggleField/toggle-field.builder";
+import { Select } from "$lib/form-builder/fields/SelectField/select-field.builder";
 
 export const testCapsuleSchema = createSchema<FieldDefinition>({
   name: "Test Capsule",
@@ -81,5 +82,37 @@ export const testCapsuleSchema = createSchema<FieldDefinition>({
       .description("Whether the capsule is currently active")
       .required()
       .defaultValue(true),
+    Select("country")
+      .label("Country")
+      .placeholder("Select a country")
+      .options([
+        { label: "United States", value: "us" },
+        { label: "United Kingdom", value: "uk" },
+        { label: "Canada", value: "ca" },
+        { label: "Australia", value: "au" },
+        { label: "Germany", value: "de" },
+        { label: "France", value: "fr" },
+      ]),
+    Select("framework")
+      .label("Framework")
+      .placeholder("Choose a framework")
+      .groups([
+        {
+          label: "Frontend",
+          options: [
+            { label: "React", value: "react" },
+            { label: "Vue", value: "vue" },
+            { label: "Svelte", value: "svelte" },
+          ],
+        },
+        {
+          label: "Backend",
+          options: [
+            { label: "Express", value: "express" },
+            { label: "Fastify", value: "fastify" },
+            { label: "Django", value: "django" },
+          ],
+        },
+      ]),
   ],
 });

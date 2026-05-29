@@ -4,6 +4,7 @@ import { textFieldToZod } from "../fields/TextField/text-field.zod";
 import { textareaFieldToZod } from "../fields/TextareaField/textarea-field.zod";
 import { richEditorFieldToZod } from "../fields/RichEditorField/rich-editor-field.zod";
 import { toggleFieldToZod } from "../fields/ToggleField/toggle-field.zod";
+import { selectFieldToZod } from "../fields/SelectField/select-field.zod";
 import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 
 interface SchemaToZodOptions {
@@ -27,6 +28,9 @@ export function schemaToZod(schema: SchemaDefinition, options: SchemaToZodOption
 				break;
 			case "toggle":
 				shape[field.name] = toggleFieldToZod(field);
+				break;
+			case "select":
+				shape[field.name] = selectFieldToZod(field, defaultLocale);
 				break;
 			default:
 				break;
