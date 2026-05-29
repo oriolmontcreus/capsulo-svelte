@@ -10,8 +10,10 @@
 		GroupHeading as SelectGroupHeading,
 		Portal as SelectPortal,
 	} from "$lib/components/ui/select";
+	import { cn } from "$lib/utils";
 	import SelectFieldGridStyles from "./SelectFieldGridStyles.svelte";
 	import SelectFieldSearchable from "./select-field-searchable.svelte";
+	import SelectOptionContent from "./SelectOptionContent.svelte";
 	import type { SelectFieldDefinition, SelectOption } from "./select-field.types";
 	import {
 		createSelectGridId,
@@ -49,66 +51,29 @@
 	}
 </script>
 
-{#snippet selectOptionContent(option: SelectOption)}
-	{option.label}
-	{#if option.description}
-		<span class="text-muted-foreground ml-1 text-xs">- {option.description}</span>
-	{/if}
+{#snippet selectItem(option: SelectOption)}
+	<SelectItem
+		value={option.value}
+		label={option.label}
+		disabled={option.disabled}
+		class={cn(option.description && "items-center py-2")}
+	>
+		<SelectOptionContent {option} />
+	</SelectItem>
 {/snippet}
 
-{#snippet flatSelectItems(options: SelectOption[])}
+{#snippet optionsList(options: SelectOption[])}
 	{#if useGrid}
-		<SelectFieldGridStyles {field} {selectId} />
 		<div data-select-id={selectId} class="select-grid-container" style={gridStyle}>
 			{#each options as option (option.value)}
-				<SelectItem
-					value={option.value}
-					label={option.label}
-					disabled={option.disabled}
-				>
-					{@render selectOptionContent(option)}
-				</SelectItem>
+				{@render selectItem(option)}
 			{/each}
 		</div>
 	{:else}
 		{#each options as option (option.value)}
-			<SelectItem value={option.value} label={option.label} disabled={option.disabled}>
-				{@render selectOptionContent(option)}
-			</SelectItem>
+			{@render selectItem(option)}
 		{/each}
 	{/if}
-{/snippet}
-
-{#snippet groupedSelectItems()}
-	{#each resolvedData.groups as group (group.label)}
-		<SelectGroup>
-			<SelectGroupHeading>{group.label}</SelectGroupHeading>
-			{#if useGrid}
-				<SelectFieldGridStyles {field} {selectId} />
-				<div data-select-id={selectId} class="select-grid-container" style={gridStyle}>
-					{#each group.options as option (option.value)}
-						<SelectItem
-							value={option.value}
-							label={option.label}
-							disabled={option.disabled}
-						>
-							{@render selectOptionContent(option)}
-						</SelectItem>
-					{/each}
-				</div>
-			{:else}
-				{#each group.options as option (option.value)}
-					<SelectItem
-						value={option.value}
-						label={option.label}
-						disabled={option.disabled}
-					>
-						{@render selectOptionContent(option)}
-					</SelectItem>
-				{/each}
-			{/if}
-		</SelectGroup>
-	{/each}
 {/snippet}
 
 <Field data-invalid={error ? "true" : undefined}>
@@ -137,10 +102,16 @@
 					class={useGrid ? "w-max max-w-[min(90vw,32rem)]" : undefined}
 					style={dropdownMinWidth ? `min-width:${dropdownMinWidth}` : undefined}
 				>
+					<SelectFieldGridStyles {field} {selectId} />
 					{#if resolvedData.hasGroups}
-						{@render groupedSelectItems()}
+						{#each resolvedData.groups as group (group.label)}
+							<SelectGroup>
+								<SelectGroupHeading>{group.label}</SelectGroupHeading>
+								{@render optionsList(group.options)}
+							</SelectGroup>
+						{/each}
 					{:else}
-						{@render flatSelectItems(resolvedData.options)}
+						{@render optionsList(resolvedData.options)}
 					{/if}
 				</SelectContent>
 			</SelectPortal>
