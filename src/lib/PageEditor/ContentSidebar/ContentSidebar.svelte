@@ -6,6 +6,7 @@
 	import { createContentSidebarDocument } from "./content-sidebar-document.svelte";
 	import { groupManifestEntries } from "./group-entries";
 	import ContentSidebarAlerts from "./ContentSidebarAlerts.svelte";
+	import ContentSidebarTopbar from "./ContentSidebarTopbar.svelte";
 	import CapsuleGroupSection from "./CapsuleGroupSection.svelte";
 	import type { ContentSidebarProps, PageEditorSaveControls } from "./types";
 
@@ -26,6 +27,7 @@
 
 	const groupedEntries = $derived(groupManifestEntries(entries));
 	const collapsedCapsules = createCollapsedCapsulesState();
+	const capsuleKeys = $derived(groupedEntries.map((group) => group.capsuleKey));
 
 	const document = createContentSidebarDocument({
 		getPageId: () => pageId,
@@ -39,6 +41,10 @@
 		},
 	});
 
+	const canCollapseAll = $derived(
+		!document.isBlockingLoad && capsuleKeys.length > 0,
+	);
+
 	onMount(() => {
 		document.initialize();
 	});
@@ -49,6 +55,11 @@
 	aria-label="Page settings"
 	style:width={width ? `${width}px` : undefined}
 >
+	<ContentSidebarTopbar
+		disabled={!canCollapseAll}
+		onCollapseAll={() => collapsedCapsules.collapseAll(capsuleKeys)}
+	/>
+
 	<div class="min-h-0 flex-1 overflow-y-auto">
 		<div class="space-y-4 p-4">
 			<ContentSidebarAlerts

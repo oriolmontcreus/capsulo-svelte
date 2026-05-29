@@ -15,8 +15,13 @@ export function createCollapsedCapsulesState() {
 		collapsedCapsuleKeys = next;
 	}
 
+	function collapseAll(capsuleKeys: string[]): void {
+		collapsedCapsuleKeys = new Set(capsuleKeys);
+	}
+
 	return {
 		isExpanded,
 		toggle,
+		collapseAll,
 	};
 }
