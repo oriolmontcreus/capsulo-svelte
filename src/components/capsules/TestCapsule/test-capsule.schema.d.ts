@@ -15,6 +15,6 @@ export interface TestCapsuleData {
 	bio?: string;
 	featured?: boolean;
 	active: boolean;
-	country?: any;
-	framework?: any;
+	country?: string;
+	framework?: string;
 }

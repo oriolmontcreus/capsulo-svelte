@@ -1,9 +1,11 @@
+import { getSelectInitialValue } from "../fields/SelectField/modules/select-value";
 import type {
 	FieldDefinition,
 	LocalizedFieldValue,
 	ResolvedSchemaValues,
 	SchemaDefinition,
-	SchemaValues
+	SchemaValues,
+	SelectFieldDefinition,
 } from "./types";
 
 function normalizeLocale(locale: string): string {
@@ -16,11 +18,13 @@ export function createInitialFieldValue(
 ): LocalizedFieldValue<unknown> {
 	const normalizedDefaultLocale = normalizeLocale(defaultLocale);
 	const seedValue =
-		field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "select"
-			? (field.defaultValue ?? "")
-			: field.type === "toggle"
-				? (field.defaultValue ?? false)
-				: "";
+		field.type === "select"
+			? getSelectInitialValue(field as SelectFieldDefinition)
+			: field.type === "text" || field.type === "textarea" || field.type === "rich-editor"
+				? (field.defaultValue ?? "")
+				: field.type === "toggle"
+					? (field.defaultValue ?? false)
+					: "";
 
 	return {
 		[normalizedDefaultLocale]: seedValue

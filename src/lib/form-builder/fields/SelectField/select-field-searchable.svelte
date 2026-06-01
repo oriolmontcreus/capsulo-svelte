@@ -17,11 +17,16 @@
     hasMultipleColumns,
   } from "./modules/responsive-styles";
   import { getAllOptions, resolveSelectData } from "./modules/resolve-options";
+  import {
+    formatSelectTriggerLabel,
+    normalizeSelectValue,
+    toggleSelectValue,
+  } from "./modules/select-value";
 
   interface Props {
     field: SelectFieldDefinition;
-    value: string;
-    onValueChange: (value: string) => void;
+    value: string | string[];
+    onValueChange: (value: string | string[]) => void;
     error?: string;
   }
 
@@ -35,8 +40,25 @@
   const selectId = createSelectGridId();
   const resolvedData = $derived(resolveSelectData(field));
   const allOptions = $derived(getAllOptions(resolvedData));
+  const normalizedValue = $derived(normalizeSelectValue(field, value));
+  const singleValue = $derived(
+    field.multiple ? "" : (normalizedValue as string),
+  );
+  const multipleValue = $derived(
+    field.multiple ? (normalizedValue as string[]) : [],
+  );
   const selectedOption = $derived(
-    allOptions.find((option) => option.value === value),
+    allOptions.find((option) => option.value === singleValue),
+  );
+  const triggerLabel = $derived(
+    field.multiple
+      ? formatSelectTriggerLabel(field, multipleValue, allOptions)
+      : singleValue
+        ? (selectedOption?.label ?? singleValue)
+        : (field.placeholder ?? "Select an option"),
+  );
+  const hasSelection = $derived(
+    field.multiple ? multipleValue.length > 0 : Boolean(singleValue),
   );
   const filteredData = $derived(
     filterResolvedData(resolvedData, searchQuery, field),
@@ -58,6 +80,12 @@
 
   function selectOption(option: { value: string; disabled?: boolean }): void {
     if (option.disabled) return;
+
+    if (field.multiple) {
+      onValueChange(toggleSelectValue(multipleValue, option.value));
+      return;
+    }
+
     onValueChange(option.value);
     open = false;
     searchQuery = "";
@@ -75,13 +103,11 @@
           aria-invalid={error ? true : undefined}
           class={cn(
             "w-full justify-between font-normal",
-            !value && "text-muted-foreground",
+            !hasSelection && "text-muted-foreground",
           )}
         >
           <span class="truncate">
-            {value
-              ? (selectedOption?.label ?? value)
-              : (field.placeholder ?? "Select an option")}
+            {triggerLabel}
           </span>
           <ChevronsUpDownIcon class="size-4 shrink-0 opacity-50" />
         </Button>
@@ -121,7 +147,7 @@
               {field}
               data={filteredData}
               {selectId}
-              {value}
+              value={normalizedValue}
               {searchQuery}
               {useGrid}
               {gridStyle}

@@ -31,7 +31,12 @@ class SelectFieldBuilderImpl implements SelectFieldBuilder {
 		return this;
 	}
 
-	defaultValue(value: string): this {
+	multiple(value = true): this {
+		this.field.multiple = value;
+		return this;
+	}
+
+	defaultValue(value: string | string[]): this {
 		this.field.defaultValue = value;
 		return this;
 	}

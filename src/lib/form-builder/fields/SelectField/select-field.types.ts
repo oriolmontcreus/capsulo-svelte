@@ -20,7 +20,8 @@ export interface SelectFieldBuilder extends FieldBuilder<SelectFieldDefinition> 
 	description(value: string): this;
 	placeholder(value: string): this;
 	required(value?: boolean): this;
-	defaultValue(value: string): this;
+	multiple(value?: boolean): this;
+	defaultValue(value: string | string[]): this;
 	options(value: SelectOption[]): this;
 	groups(value: SelectOptionGroup[]): this;
 	searchable(value?: boolean): this;

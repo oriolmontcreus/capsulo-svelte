@@ -4,10 +4,12 @@ import {
   resolveFieldValue,
   setFieldValue,
 } from "$lib/form-builder/core/translation-runtime";
+import { normalizeSelectValue } from "../fields/SelectField/modules/select-value";
 import type {
   FieldDefinition,
   SchemaDefinition,
   SchemaValues,
+  SelectFieldDefinition,
 } from "../core/types";
 
 interface SchemaRendererI18nInput {
@@ -28,7 +30,7 @@ export interface SchemaRenderItem {
   sourceField: FieldDefinition;
   localizedField: FieldDefinition;
   locale: string;
-  value: string | boolean;
+  value: string | boolean | string[];
 }
 
 function normalizeLocales(locales: string[] | undefined): string[] {
@@ -122,13 +124,22 @@ export function buildSchemaRenderItems(
             context.defaultLocale,
           );
 
+      const value =
+        field.type === "toggle"
+          ? typeof resolvedValue === "boolean"
+            ? resolvedValue
+            : false
+          : field.type === "select" && (field as SelectFieldDefinition).multiple
+            ? (normalizeSelectValue(field as SelectFieldDefinition, resolvedValue) as string[])
+            : typeof resolvedValue === "string"
+              ? resolvedValue
+              : "";
+
       renderItems.push({
         sourceField: field,
         localizedField,
         locale,
-        value: field.type === "toggle"
-          ? typeof resolvedValue === "boolean" ? resolvedValue : false
-          : typeof resolvedValue === "string" ? resolvedValue : "",
+        value,
       });
     }
   }
@@ -141,7 +152,7 @@ export function applySchemaFieldUpdate(
   values: SchemaValues,
   fieldName: string,
   fieldLocale: string,
-  nextValue: string | boolean,
+  nextValue: string | boolean | string[],
   context: SchemaRendererI18nContext,
 ): SchemaValues {
   const field = schema.fields.find((item) => item.name === fieldName);

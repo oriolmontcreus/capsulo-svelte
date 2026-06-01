@@ -3,6 +3,7 @@ export interface ParsedSchemaField {
 	type: string;
 	required: boolean;
 	hasDefaultValue: boolean;
+	multiple: boolean;
 	builder: string;
 }
 

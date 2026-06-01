@@ -83,7 +83,7 @@
   function updateValue(
     fieldName: string,
     fieldLocale: string,
-    nextValue: string | boolean,
+    nextValue: string | boolean | string[],
   ) {
     values = applySchemaFieldUpdate(
       props.schema,
@@ -105,7 +105,7 @@
       <FieldComponent
         field={item.localizedField}
         value={item.value}
-        onValueChange={(nextValue: string | boolean) =>
+        onValueChange={(nextValue: string | boolean | string[]) =>
           updateValue(item.sourceField.name, item.locale, nextValue)}
       />
     {/if}

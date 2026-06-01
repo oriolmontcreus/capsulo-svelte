@@ -63,7 +63,8 @@ export interface InternalLinksConfig {
 export interface SelectFieldDefinition extends BaseFieldDefinition {
 	type: "select";
 	placeholder?: string;
-	defaultValue?: string;
+	multiple?: boolean;
+	defaultValue?: string | string[];
 	options?: SelectOption[];
 	groups?: SelectOptionGroup[];
 	searchable?: boolean;

@@ -52,7 +52,15 @@
 							<span class="text-muted-foreground block font-mono text-xs">{field.name}</span>
 						</dt>
 						<dd class="space-y-1">
-							{#if field.value}
+							{#if Array.isArray(field.value) && field.value.length > 0}
+								<div class="flex flex-wrap gap-1">
+									{#each field.value as item (item)}
+										<Badge variant="secondary" class="font-mono">
+											{item}
+										</Badge>
+									{/each}
+								</div>
+							{:else if field.value && !Array.isArray(field.value)}
 								<Badge variant="secondary" class="font-mono">
 									{String(field.value)}
 								</Badge>
