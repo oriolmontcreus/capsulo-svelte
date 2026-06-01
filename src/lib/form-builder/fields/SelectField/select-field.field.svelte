@@ -32,6 +32,9 @@
 
 	let { field, value, onValueChange, error }: Props = $props();
 
+	let selectTriggerRef = $state<HTMLElement | null>(null);
+	const labelId = $derived(`${field.name}-label`);
+
 	const selectId = createSelectGridId();
 	const resolvedData = $derived(resolveSelectData(field));
 	const useGrid = $derived(hasMultipleColumns(field));
@@ -48,6 +51,10 @@
 
 	function handleValueChange(newValue: string): void {
 		onValueChange(newValue);
+	}
+
+	function openSelectFromLabel(): void {
+		selectTriggerRef?.click();
 	}
 </script>
 
@@ -77,7 +84,7 @@
 {/snippet}
 
 <Field data-invalid={error ? "true" : undefined}>
-	<FieldLabel for={field.name}>
+	<FieldLabel id={labelId} onclick={openSelectFromLabel}>
 		{field.label ?? field.name}
 		{#if field.required}
 			<span class="text-destructive">*</span>
@@ -93,7 +100,13 @@
 			value={value || undefined}
 			onValueChange={handleValueChange}
 		>
-			<SelectTrigger id={field.name} class="w-full" aria-invalid={error ? true : undefined}>
+			<SelectTrigger
+				bind:ref={selectTriggerRef}
+				id={field.name}
+				aria-labelledby={labelId}
+				class="w-full"
+				aria-invalid={error ? true : undefined}
+			>
 				<SelectPrimitive.Value placeholder={field.placeholder ?? "Select an option"} />
 			</SelectTrigger>
 
