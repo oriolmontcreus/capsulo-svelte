@@ -17,8 +17,8 @@
 	import type { SelectFieldDefinition, SelectOption } from "./select-field.types";
 	import {
 		createSelectGridId,
-		getBaseGridStyle,
 		getDropdownMinWidth,
+		getGridInlineStyle,
 		hasMultipleColumns,
 	} from "./modules/responsive-styles";
 	import { getAllOptions, resolveSelectData } from "./modules/resolve-options";
@@ -42,7 +42,7 @@
 	const selectId = createSelectGridId();
 	const resolvedData = $derived(resolveSelectData(field));
 	const useGrid = $derived(hasMultipleColumns(field));
-	const gridStyle = $derived(useGrid ? getBaseGridStyle(field) : undefined);
+	const gridStyle = $derived(getGridInlineStyle(field));
 	const dropdownMinWidth = $derived(getDropdownMinWidth(field));
 	const allOptions = $derived(getAllOptions(resolvedData));
 

@@ -27,6 +27,27 @@ export function getBaseGridStyle(field: SelectFieldDefinition): string {
 	return `display:grid;grid-template-columns:repeat(${columns},minmax(0,1fr));gap:0.25rem;width:100%;`;
 }
 
+/** Inline grid styles — omitted when responsive CSS handles layout (inline would override media queries). */
+export function getGridInlineStyle(field: SelectFieldDefinition): string | undefined {
+	if (!hasMultipleColumns(field)) return undefined;
+	if (shouldInjectResponsiveStyles(field)) return undefined;
+	return getBaseGridStyle(field);
+}
+
+export function getMaxColumnCount(field: SelectFieldDefinition): number {
+	if (!field.columns) return 1;
+	if (typeof field.columns === "number") return Math.max(1, field.columns);
+	const columns = field.columns;
+	return Math.max(
+		1,
+		columns.base ?? 1,
+		columns.sm ?? 0,
+		columns.md ?? 0,
+		columns.lg ?? 0,
+		columns.xl ?? 0,
+	);
+}
+
 const RESPONSIVE_BREAKPOINTS: Array<{ key: keyof ResponsiveColumns; minWidth: string }> =
 	[
 		{ key: "sm", minWidth: "640px" },
@@ -61,6 +82,8 @@ export function shouldInjectResponsiveStyles(field: SelectFieldDefinition): bool
 
 export function getDropdownMinWidth(field: SelectFieldDefinition): string | undefined {
 	if (!hasMultipleColumns(field)) return undefined;
-	const columns = getBaseColumnCount(field);
+	const columns = shouldInjectResponsiveStyles(field)
+		? getMaxColumnCount(field)
+		: getBaseColumnCount(field);
 	return `${Math.max(columns * 9, 16)}rem`;
 }
