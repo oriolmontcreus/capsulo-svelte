@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Popover } from "bits-ui";
-  import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
+  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { cn } from "$lib/utils";
@@ -109,7 +109,7 @@
           <span class="truncate">
             {triggerLabel}
           </span>
-          <ChevronsUpDownIcon class="size-4 shrink-0 opacity-50" />
+          <ChevronDownIcon class="text-muted-foreground size-4 shrink-0 pointer-events-none" />
         </Button>
       </div>
     {/snippet}
