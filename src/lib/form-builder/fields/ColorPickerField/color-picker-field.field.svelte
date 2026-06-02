@@ -12,12 +12,10 @@
 		PopoverTrigger,
 	} from "$lib/components/ui/popover";
 	import {
-		Root as SelectRoot,
-		Trigger as SelectTrigger,
-		Content as SelectContent,
-		Item as SelectItem,
-		Portal as SelectPortal,
-	} from "$lib/components/ui/select";
+		Root as TabsRoot,
+		List as TabsList,
+		Trigger as TabsTrigger,
+	} from "$lib/components/ui/tabs";
 	import type { ColorPickerFieldDefinition } from "./color-picker-field.types";
 	import {
 		COLOR_CHANNELS_BY_SPACE,
@@ -95,12 +93,6 @@
 			? field.presetColors
 			: DEFAULT_SWATCHES,
 	);
-
-	const colorSpaceItems = [
-		{ value: "hsb", label: "hsb" },
-		{ value: "hsl", label: "hsl" },
-		{ value: "rgb", label: "rgb" },
-	] as const;
 
 	$effect(() => {
 		const normalized = normalizeHex(value || "#000000", includeAlpha);
@@ -265,6 +257,20 @@
 				</div>
 			{:else}
 				<div class="color-picker-panel flex w-[248px] flex-col gap-2 p-3">
+					<!-- Color space tabs (like the reference design) -->
+					<TabsRoot
+						value={colorSpace}
+						onValueChange={(v) => {
+							colorSpace = v as ColorSpace;
+						}}
+					>
+						<TabsList class="w-full" variant="default">
+							<TabsTrigger value="hsb" class="uppercase">Hex</TabsTrigger>
+							<TabsTrigger value="rgb" class="uppercase">RGB</TabsTrigger>
+							<TabsTrigger value="hsl" class="uppercase">HSL</TabsTrigger>
+						</TabsList>
+					</TabsRoot>
+
 					<!-- Color area (HSB saturation × brightness) -->
 					<div
 						bind:this={areaEl}
@@ -332,29 +338,6 @@
 							</div>
 						</div>
 					{/if}
-
-					<!-- Color space select -->
-					<SelectRoot
-						type="single"
-						items={[...colorSpaceItems]}
-						value={colorSpace}
-						onValueChange={(v) => {
-							if (v) colorSpace = v as ColorSpace;
-						}}
-					>
-						<SelectTrigger class="h-9 w-full uppercase">
-							{colorSpace}
-						</SelectTrigger>
-						<SelectPortal>
-							<SelectContent>
-								{#each colorSpaceItems as item (item.value)}
-									<SelectItem value={item.value} class="uppercase" label={item.label}>
-										{item.label}
-									</SelectItem>
-								{/each}
-							</SelectContent>
-						</SelectPortal>
-					</SelectRoot>
 
 					<!-- Channel fields -->
 					<div class="grid w-full grid-cols-3 items-center gap-2">
