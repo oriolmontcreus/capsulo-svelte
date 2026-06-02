@@ -20,6 +20,14 @@
 		localHex = value || "#000000";
 	});
 
+	// Close popover when window loses focus (e.g. clicking into an iframe)
+	$effect(() => {
+		if (!open) return;
+		const onBlur = () => { open = false; };
+		window.addEventListener("blur", onBlur);
+		return () => window.removeEventListener("blur", onBlur);
+	});
+
 	function onInput(colorInfo: { hsv: unknown; rgb: unknown; hex: string | null; color: unknown }): void {
 		if (colorInfo.hex != null) {
 			const normalized = colorInfo.hex.toLowerCase();
