@@ -94,7 +94,8 @@ export function buildSchemaRenderItems(
       field.type !== "textarea" &&
       field.type !== "rich-editor" &&
       field.type !== "toggle" &&
-      field.type !== "select"
+      field.type !== "select" &&
+      field.type !== "colorpicker"
     ) {
       continue;
     }

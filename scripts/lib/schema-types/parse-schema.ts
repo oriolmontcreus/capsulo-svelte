@@ -12,6 +12,7 @@ const BUILDER_TS_TYPE_MAP: Record<string, string> = {
   RichEditor: "string",
   Toggle: "boolean",
   Select: "string",
+  ColorPicker: "string",
 };
 
 function isSelectBuilder(builder: string): boolean {

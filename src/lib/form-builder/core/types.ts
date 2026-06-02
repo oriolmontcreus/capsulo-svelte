@@ -1,4 +1,4 @@
-export type FieldType = "text" | "textarea" | "rich-editor" | "toggle" | "select";
+export type FieldType = "text" | "textarea" | "rich-editor" | "toggle" | "select" | "colorpicker";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -77,12 +77,21 @@ export interface SelectFieldDefinition extends BaseFieldDefinition {
 	colSpan?: number | "full" | ResponsiveColumns;
 }
 
+export interface ColorPickerFieldDefinition extends BaseFieldDefinition {
+	type: "colorpicker";
+	defaultValue?: string;
+	showAlpha?: boolean;
+	presetColors?: string[];
+	onlyPresets?: boolean;
+}
+
 export type FieldDefinition =
 	| TextFieldDefinition
 	| TextareaFieldDefinition
 	| RichEditorFieldDefinition
 	| ToggleFieldDefinition
-	| SelectFieldDefinition;
+	| SelectFieldDefinition
+	| ColorPickerFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;
