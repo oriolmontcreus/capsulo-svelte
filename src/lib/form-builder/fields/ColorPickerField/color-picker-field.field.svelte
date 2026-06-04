@@ -82,6 +82,9 @@
   const thumbClass =
     "color-thumb pointer-events-none absolute z-10 size-[17px] rounded-full border-2 border-white bg-clip-padding shadow-[0_0_4px_rgba(0,0,0,0.5)]";
 
+  const swatchButtonClass =
+    "size-8 cursor-pointer rounded-md border border-border transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
   const DEFAULT_SWATCHES = [
     "#000000",
     "#ffffff",
@@ -294,9 +297,10 @@
           {#each swatches as color (color)}
             <button
               type="button"
-              class="size-8 rounded-md border border-border transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring"
+              class={swatchButtonClass}
               style="background-color: {color};"
               title={color}
+              aria-label={color}
               onclick={() => applyFromHex(color, true)}
             ></button>
           {/each}
@@ -320,7 +324,7 @@
           <!-- Color area (HSB saturation × brightness) -->
           <div
             bind:this={areaEl}
-            class="color-area relative h-[180px] w-full cursor-crosshair rounded-lg"
+            class="color-area relative h-[180px] w-full cursor-crosshair rounded-lg border border-border"
             onpointerdown={onAreaPointerDown}
             role="slider"
             aria-label="Saturation and brightness"
@@ -464,9 +468,10 @@
               {#each field.presetColors as presetColor (presetColor)}
                 <button
                   type="button"
-                  class="size-7 rounded-md border border-border transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring"
+                  class={swatchButtonClass}
                   style="background-color: {presetColor};"
                   title={presetColor}
+                  aria-label={presetColor}
                   onclick={() => applyFromHex(presetColor)}
                 ></button>
               {/each}
@@ -516,5 +521,4 @@
   .color-alpha-track:active .color-thumb {
     --thumb-scale: 1.15;
   }
-
 </style>
