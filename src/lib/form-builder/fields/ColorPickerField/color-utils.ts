@@ -1,4 +1,4 @@
-export type ColorSpace = "hsb" | "hsl" | "rgb";
+export type ColorSpace = "hex" | "hsl" | "rgb";
 
 export type ColorChannel =
 	| "hue"
@@ -30,11 +30,16 @@ export interface Hsla {
 	a: number;
 }
 
-export const COLOR_CHANNELS_BY_SPACE: Record<ColorSpace, ColorChannel[]> = {
-	hsb: ["hue", "saturation", "brightness"],
+export const COLOR_CHANNELS_BY_SPACE: Record<Exclude<ColorSpace, "hex">, ColorChannel[]> = {
 	hsl: ["hue", "saturation", "lightness"],
 	rgb: ["red", "green", "blue"],
 };
+
+const HEX_INPUT_PATTERN = /^#?([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
+export function isValidHexInput(hex: string): boolean {
+	return HEX_INPUT_PATTERN.test(hex.trim());
+}
 
 export const CHANNEL_LABELS: Record<ColorChannel, string> = {
 	hue: "H",
@@ -235,13 +240,11 @@ export function hexToHsva(hex: string): Hsva {
 	return rgbaToHsva(hexToRgba(hex));
 }
 
-export function getChannelValue(hsva: Hsva, colorSpace: ColorSpace, channel: ColorChannel): number {
-	if (colorSpace === "hsb") {
-		if (channel === "hue") return round(hsva.h);
-		if (channel === "saturation") return round(hsva.s);
-		if (channel === "brightness") return round(hsva.v);
-	}
-
+export function getChannelValue(
+	hsva: Hsva,
+	colorSpace: Exclude<ColorSpace, "hex">,
+	channel: ColorChannel,
+): number {
 	if (colorSpace === "hsl") {
 		const hsla = rgbaToHsla(hsvaToRgba(hsva));
 		if (channel === "hue") return round(hsla.h);
@@ -257,7 +260,10 @@ export function getChannelValue(hsva: Hsva, colorSpace: ColorSpace, channel: Col
 	return 0;
 }
 
-export function getChannelMax(colorSpace: ColorSpace, channel: ColorChannel): number {
+export function getChannelMax(
+	colorSpace: Exclude<ColorSpace, "hex">,
+	channel: ColorChannel,
+): number {
 	if (channel === "hue") return 360;
 	if (colorSpace === "rgb") return 255;
 	return 100;
@@ -265,18 +271,12 @@ export function getChannelMax(colorSpace: ColorSpace, channel: ColorChannel): nu
 
 export function setChannelValue(
 	hsva: Hsva,
-	colorSpace: ColorSpace,
+	colorSpace: Exclude<ColorSpace, "hex">,
 	channel: ColorChannel,
 	value: number,
 ): Hsva {
 	const max = getChannelMax(colorSpace, channel);
 	const clamped = clamp(value, 0, max);
-
-	if (colorSpace === "hsb") {
-		if (channel === "hue") return { ...hsva, h: clamped };
-		if (channel === "saturation") return { ...hsva, s: clamped };
-		if (channel === "brightness") return { ...hsva, v: clamped };
-	}
 
 	if (colorSpace === "hsl") {
 		const hsla = rgbaToHsla(hsvaToRgba(hsva));

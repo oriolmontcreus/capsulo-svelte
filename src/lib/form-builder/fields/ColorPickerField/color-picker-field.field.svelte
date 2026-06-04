@@ -29,6 +29,7 @@
     hsvaToAreaBackground,
     hsvaToCssColor,
     hsvaToHex,
+    isValidHexInput,
     normalizeHex,
     round,
     setChannelValue,
@@ -52,7 +53,13 @@
 
   const localHex = $derived(hsvaToHex(hsva, includeAlpha));
 
-  const channels = $derived(COLOR_CHANNELS_BY_SPACE[colorSpace]);
+  const channels = $derived(
+    colorSpace === "hex" ? [] : COLOR_CHANNELS_BY_SPACE[colorSpace],
+  );
+
+  let hexDraft = $state("");
+  let hexFocused = $state(false);
+  let hexDirty = $state(false);
 
   const areaThumbStyle = $derived({
     left: `${hsva.s}%`,
@@ -98,6 +105,13 @@
     const normalized = normalizeHex(value || "#000000", includeAlpha);
     if (normalized === lastEmittedHex) return;
     hsva = hexToHsva(normalized);
+    hexDirty = false;
+  });
+
+  $effect(() => {
+    localHex;
+    if (hexFocused || hexDirty) return;
+    hexDraft = localHex;
   });
 
   function commitColor(next: Hsva): void {
@@ -107,18 +121,24 @@
     onValueChange(hex);
   }
 
+  function commitColorFromPicker(next: Hsva): void {
+    hexDirty = false;
+    commitColor(next);
+  }
+
   function applyFromHex(hex: string, closePopover = false): void {
+    hexDirty = false;
     const normalized = normalizeHex(hex, includeAlpha);
     commitColor(hexToHsva(normalized));
     if (closePopover) open = false;
   }
 
   function setHue(h: number): void {
-    commitColor({ ...hsva, h: clamp(h, 0, 360) });
+    commitColorFromPicker({ ...hsva, h: clamp(h, 0, 360) });
   }
 
   function setSaturationBrightness(s: number, v: number): void {
-    commitColor({
+    commitColorFromPicker({
       ...hsva,
       s: clamp(s, 0, 100),
       v: clamp(v, 0, 100),
@@ -126,13 +146,32 @@
   }
 
   function setAlpha(a: number): void {
-    commitColor({ ...hsva, a: clamp(a, 0, 1) });
+    commitColorFromPicker({ ...hsva, a: clamp(a, 0, 1) });
   }
 
   function setChannel(channel: ColorChannel, raw: string): void {
+    if (colorSpace === "hex") return;
     const parsed = Number.parseFloat(raw);
     if (Number.isNaN(parsed)) return;
-    commitColor(setChannelValue(hsva, colorSpace, channel, parsed));
+    commitColorFromPicker(setChannelValue(hsva, colorSpace, channel, parsed));
+  }
+
+  function commitHexDraft(): void {
+    if (!isValidHexInput(hexDraft)) {
+      hexDraft = localHex;
+      hexDirty = false;
+      return;
+    }
+    const normalized = normalizeHex(hexDraft, includeAlpha);
+    lastEmittedHex = normalized;
+    commitColor(hexToHsva(normalized));
+    hexDirty = true;
+  }
+
+  function onHexInput(raw: string): void {
+    if (!/^#?[0-9a-fA-F]*$/.test(raw)) return;
+    hexDraft = raw;
+    hexDirty = true;
   }
 
   function clamp(n: number, min: number, max: number): number {
@@ -208,6 +247,7 @@
   }
 
   function channelInputValue(channel: ColorChannel): string {
+    if (colorSpace === "hex") return "";
     return String(getChannelValue(hsva, colorSpace, channel));
   }
 
@@ -265,7 +305,7 @@
             }}
           >
             <TabsList class="w-full" variant="default">
-              <TabsTrigger value="hsb" class="uppercase">Hex</TabsTrigger>
+              <TabsTrigger value="hex" class="uppercase">Hex</TabsTrigger>
               <TabsTrigger value="rgb" class="uppercase">RGB</TabsTrigger>
               <TabsTrigger value="hsl" class="uppercase">HSL</TabsTrigger>
             </TabsList>
@@ -344,28 +384,69 @@
           {/if}
 
           <!-- Channel fields -->
-          <div class="grid w-full grid-cols-3 items-center gap-2">
-            {#each channels as channel (channel)}
-              <div class="flex flex-col gap-1">
-                <label
-                  class="text-muted-foreground text-xs uppercase"
-                  for="{field.name}-{channel}"
-                >
-                  {CHANNEL_LABELS[channel]}
-                </label>
-                <Input
-                  id="{field.name}-{channel}"
-                  type="number"
-                  min={0}
-                  max={getChannelMax(colorSpace, channel)}
-                  step={channel === "hue" ? 1 : colorSpace === "rgb" ? 1 : 0.1}
-                  class="h-8 px-2 text-center text-xs tabular-nums"
-                  value={channelInputValue(channel)}
-                  oninput={(e) => setChannel(channel, e.currentTarget.value)}
-                />
-              </div>
-            {/each}
-          </div>
+          {#if colorSpace === "hex"}
+            <div class="flex flex-col gap-1">
+              <label
+                class="text-muted-foreground text-xs uppercase"
+                for="{field.name}-hex"
+              >
+                Hex
+              </label>
+              <Input
+                id="{field.name}-hex"
+                type="text"
+                inputmode="text"
+                spellcheck={false}
+                autocomplete="off"
+                autocapitalize="off"
+                maxlength={includeAlpha ? 9 : 7}
+                pattern="^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+                class="h-8 px-2 font-mono text-xs"
+                value={hexDraft}
+                onfocus={() => {
+                  hexFocused = true;
+                  if (!hexDraft) hexDraft = localHex;
+                }}
+                onblur={() => {
+                  hexFocused = false;
+                  commitHexDraft();
+                }}
+                onkeydown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                }}
+                oninput={(e) => onHexInput(e.currentTarget.value)}
+              />
+            </div>
+          {:else}
+            <div class="grid w-full grid-cols-3 items-center gap-2">
+              {#each channels as channel (channel)}
+                <div class="flex flex-col gap-1">
+                  <label
+                    class="text-muted-foreground text-xs uppercase"
+                    for="{field.name}-{channel}"
+                  >
+                    {CHANNEL_LABELS[channel]}
+                  </label>
+                  <Input
+                    id="{field.name}-{channel}"
+                    type="number"
+                    min={0}
+                    max={getChannelMax(colorSpace, channel)}
+                    step={channel === "hue"
+                      ? 1
+                      : colorSpace === "rgb"
+                        ? 1
+                        : 0.1}
+                    class="h-8 px-2 text-center text-xs tabular-nums"
+                    value={channelInputValue(channel)}
+                    oninput={(e) => setChannel(channel, e.currentTarget.value)}
+                  />
+                </div>
+              {/each}
+            </div>
+          {/if}
 
           <!-- Preset swatches -->
           {#if field.presetColors && field.presetColors.length > 0}
