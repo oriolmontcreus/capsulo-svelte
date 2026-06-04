@@ -261,7 +261,7 @@
 </script>
 
 <Field data-invalid={error ? "true" : undefined}>
-  <FieldLabel for={field.name}>
+  <FieldLabel id="{field.name}-label">
     {field.label ?? field.name}
     {#if field.required}
       <span class="text-destructive">*</span>
@@ -273,7 +273,8 @@
       <button
         type="button"
         id={field.name}
-        class="flex h-10 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-labelledby="{field.name}-label"
+        class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         <span
           class="size-6 shrink-0 rounded-md border border-border"
@@ -314,8 +315,7 @@
           <!-- Color area (HSB saturation × brightness) -->
           <div
             bind:this={areaEl}
-            class="color-area relative h-[180px] w-full cursor-crosshair overflow-hidden rounded-lg"
-            style="background: {areaBackground};"
+            class="color-area relative h-[180px] w-full cursor-crosshair rounded-lg"
             onpointerdown={onAreaPointerDown}
             role="slider"
             aria-label="Saturation and brightness"
@@ -323,8 +323,13 @@
             tabindex="0"
           >
             <div
-              class="color-thumb pointer-events-none absolute size-[17px] rounded-full border-2 border-white shadow-[0_0_4px_rgba(0,0,0,0.5)]"
-              style="left: {areaThumbStyle.left}; top: {areaThumbStyle.top};"
+              class="pointer-events-none absolute inset-0 overflow-hidden rounded-lg"
+              style="background: {areaBackground};"
+              aria-hidden="true"
+            ></div>
+            <div
+              class="color-thumb color-area-thumb pointer-events-none absolute z-10 size-[17px] rounded-full border-2 border-white bg-clip-padding shadow-[0_0_4px_rgba(0,0,0,0.5)]"
+              style="left: {areaThumbStyle.left}; top: {areaThumbStyle.top}; background-color: {swatchColor};"
             ></div>
           </div>
 
@@ -501,9 +506,13 @@
       repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px;
   }
 
-  .color-area:active .color-thumb,
+  .color-area:active .color-area-thumb,
   .color-hue-track:active .color-thumb,
   .color-alpha-track:active .color-thumb {
     --thumb-scale: 1.15;
+  }
+
+  .color-area-thumb {
+    z-index: 10;
   }
 </style>
