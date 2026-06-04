@@ -192,6 +192,7 @@
         <button
           type="button"
           onclick={() => enterFolder(folder.name)}
+          draggable="false"
           class="group border-border bg-background hover:bg-primary/10 focus-visible:ring-ring cursor-pointer rounded-xl border p-6 shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none text-left"
         >
           <div class="flex flex-col gap-4">
@@ -220,6 +221,7 @@
           data-page-editor-link
           data-page-id={page.pageId}
           data-astro-prefetch="hover"
+          draggable="false"
           class="group border-border bg-background hover:bg-muted/40 focus-visible:ring-ring flex cursor-pointer flex-col gap-4 rounded-xl border p-6 shadow-sm transition-colors focus-visible:ring-2 focus-visible:outline-none"
         >
           <div
