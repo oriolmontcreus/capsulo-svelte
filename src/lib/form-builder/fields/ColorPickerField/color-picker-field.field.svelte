@@ -29,6 +29,7 @@
     hsvaToAreaBackground,
     hsvaToCssColor,
     hsvaToHex,
+    hueToCssColor,
     isValidHexInput,
     normalizeHex,
     round,
@@ -76,6 +77,10 @@
 
   const areaBackground = $derived(hsvaToAreaBackground(hsva.h));
   const swatchColor = $derived(hsvaToCssColor(hsva));
+  const hueThumbColor = $derived(hueToCssColor(hsva.h));
+
+  const thumbClass =
+    "color-thumb pointer-events-none absolute z-10 size-[17px] rounded-full border-2 border-white bg-clip-padding shadow-[0_0_4px_rgba(0,0,0,0.5)]";
 
   const DEFAULT_SWATCHES = [
     "#000000",
@@ -328,7 +333,7 @@
               aria-hidden="true"
             ></div>
             <div
-              class="color-thumb color-area-thumb pointer-events-none absolute z-10 size-[17px] rounded-full border-2 border-white bg-clip-padding shadow-[0_0_4px_rgba(0,0,0,0.5)]"
+              class="{thumbClass} color-area-thumb"
               style="left: {areaThumbStyle.left}; top: {areaThumbStyle.top}; background-color: {swatchColor};"
             ></div>
           </div>
@@ -353,8 +358,8 @@
               tabindex="0"
             >
               <div
-                class="color-thumb pointer-events-none absolute top-1/2 size-[17px] rounded-full border-2 border-white bg-white shadow-[0_0_4px_rgba(0,0,0,0.5)]"
-                style="left: {hueThumbStyle.left};"
+                class="{thumbClass} top-1/2"
+                style="left: {hueThumbStyle.left}; background-color: {hueThumbColor};"
               ></div>
             </div>
           </div>
@@ -381,8 +386,8 @@
                 tabindex="0"
               >
                 <div
-                  class="color-thumb pointer-events-none absolute top-1/2 size-[17px] rounded-full border-2 border-white bg-white shadow-[0_0_4px_rgba(0,0,0,0.5)]"
-                  style="left: {alphaThumbStyle.left};"
+                  class="{thumbClass} top-1/2"
+                  style="left: {alphaThumbStyle.left}; background-color: {swatchColor};"
                 ></div>
               </div>
             </div>
@@ -512,7 +517,4 @@
     --thumb-scale: 1.15;
   }
 
-  .color-area-thumb {
-    z-index: 10;
-  }
 </style>
