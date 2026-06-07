@@ -3,9 +3,11 @@
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-  import type { SchemaValues } from "$lib/form-builder/core/types";
   import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
-  import { loadGlobalsDocumentFromDb } from "$lib/globals/globals-documents";
+  import {
+    ensureGlobalsLoaded,
+    globalsStore,
+  } from "$lib/globals/globals-store.svelte";
   import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
   import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
   import { formatVariablePreviewValue } from "$lib/globals/variable-autocomplete/format-variable-preview";
@@ -95,11 +97,10 @@
     isSaving: false,
   });
 
-  let globalsValues = $state<SchemaValues>({});
   const knownKeys = getGlobalsKnownKeys();
 
   const resolvedGlobals = $derived(
-    resolveGlobalsValues(globalsValues, locale, DEFAULT_LOCALE),
+    resolveGlobalsValues(globalsStore.values, locale, DEFAULT_LOCALE),
   );
 
   function getPreview(key: string): string {
@@ -107,11 +108,7 @@
   }
 
   onMount(() => {
-    void loadGlobalsDocumentFromDb().then((result) => {
-      if (!result.errorMessage) {
-        globalsValues = result.values;
-      }
-    });
+    void ensureGlobalsLoaded();
   });
 </script>
 

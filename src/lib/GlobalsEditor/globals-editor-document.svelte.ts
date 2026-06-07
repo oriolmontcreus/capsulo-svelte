@@ -4,12 +4,11 @@ import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
 import type { SchemaValues } from "$lib/form-builder/core/types";
 import {
-	invalidateGlobalsCache,
-} from "$lib/globals/get-globals";
-import {
-	loadGlobalsDocumentFromDb,
-	saveGlobalsDocumentToDb,
-} from "$lib/globals/globals-documents";
+	ensureGlobalsLoaded,
+	globalsStore,
+	setGlobalsValues,
+} from "$lib/globals/globals-store.svelte";
+import { saveGlobalsDocumentToDb } from "$lib/globals/globals-documents";
 import { session, syncSession } from "$lib/stores/session";
 
 type DocumentContext = {
@@ -64,16 +63,13 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 			return;
 		}
 
-		const loadResult = await loadGlobalsDocumentFromDb();
-		loadError = loadResult.errorMessage;
-
-		const nextValues =
-			loadResult.hasExistingDocument && Object.keys(loadResult.values).length > 0
-				? loadResult.values
-				: createSchemaInitialValues(globalsSchema, DEFAULT_LOCALE);
-
-		applyHydratedValues(nextValues);
-		hasExistingDocument = loadResult.hasExistingDocument;
+		try {
+			const nextValues = await ensureGlobalsLoaded();
+			applyHydratedValues(nextValues);
+			hasExistingDocument = globalsStore.hasExistingDocument;
+		} catch (error) {
+			loadError = error instanceof Error ? error.message : "Failed to load global variables";
+		}
 		isLoading = false;
 		syncSaveState();
 	}
@@ -99,7 +95,7 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		}
 
 		hasExistingDocument = true;
-		invalidateGlobalsCache();
+		setGlobalsValues(context.getValues(), { hasExistingDocument: true });
 		context.setIsSaving(false);
 		syncSaveState();
 	}
