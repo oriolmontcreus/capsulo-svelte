@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Popover } from "bits-ui";
+  import * as Popover from "$lib/components/ui/popover";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
@@ -34,6 +34,7 @@
 
   let open = $state(false);
   let searchQuery = $state("");
+  let lastSearchQuery = $state("");
   let triggerRef = $state<HTMLDivElement | null>(null);
   let contentWidth = $state<number | undefined>(undefined);
 
@@ -60,8 +61,9 @@
   const hasSelection = $derived(
     field.multiple ? multipleValue.length > 0 : Boolean(singleValue),
   );
+  const displaySearchQuery = $derived(open ? searchQuery : lastSearchQuery);
   const filteredData = $derived(
-    filterResolvedData(resolvedData, searchQuery, field),
+    filterResolvedData(resolvedData, displaySearchQuery, field),
   );
   const filteredCount = $derived(countResolvedOptions(filteredData));
   const useGrid = $derived(hasMultipleColumns(field));
@@ -69,11 +71,15 @@
   const dropdownMinWidth = $derived(getDropdownMinWidth(field));
   const highlightEnabled = $derived(field.highlightMatches ?? false);
 
+  $effect(() => {
+    if (!open) return;
+    lastSearchQuery = searchQuery;
+  });
+
   function handleOpenChange(nextOpen: boolean): void {
     open = nextOpen;
-    if (!nextOpen) {
+    if (nextOpen) {
       searchQuery = "";
-    } else {
       contentWidth = triggerRef?.offsetWidth;
     }
   }
@@ -88,7 +94,6 @@
 
     onValueChange(option.value);
     open = false;
-    searchQuery = "";
   }
 </script>
 
@@ -115,17 +120,16 @@
     {/snippet}
   </Popover.Trigger>
 
-  <Popover.Portal>
-    <Popover.Content
-      class="bg-popover text-popover-foreground z-50 max-h-80 rounded-md border p-0 shadow-md"
-      align="start"
-      style={[
-        contentWidth ? `width:${contentWidth}px` : "",
-        dropdownMinWidth ? `min-width:${dropdownMinWidth}` : "",
-      ]
-        .filter(Boolean)
-        .join(";") || undefined}
-    >
+  <Popover.Content
+    align="start"
+    class="max-h-80 w-auto gap-0 p-0"
+    style={[
+      contentWidth ? `width:${contentWidth}px` : "",
+      dropdownMinWidth ? `min-width:${dropdownMinWidth}` : "",
+    ]
+      .filter(Boolean)
+      .join(";") || undefined}
+  >
       <div class="flex flex-col">
         <div class="border-b p-2">
           <Input
@@ -148,7 +152,7 @@
               data={filteredData}
               {selectId}
               value={normalizedValue}
-              {searchQuery}
+              searchQuery={displaySearchQuery}
               {useGrid}
               {gridStyle}
               {highlightEnabled}
@@ -157,6 +161,5 @@
           {/if}
         </div>
       </div>
-    </Popover.Content>
-  </Popover.Portal>
+  </Popover.Content>
 </Popover.Root>
