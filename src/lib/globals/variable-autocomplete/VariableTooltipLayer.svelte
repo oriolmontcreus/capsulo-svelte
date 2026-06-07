@@ -20,21 +20,36 @@
 	let virtualAnchorEl = $state<HTMLSpanElement | undefined>();
 	let hoveredKey = $state<string | null>(null);
 	let anchorRect = $state<DOMRect | null>(null);
+	let lastPreviewText = $state("");
+	let lastAnchorRect = $state<DOMRect | null>(null);
+
+	const effectiveAnchorRect = $derived(anchorRect ?? lastAnchorRect);
 
 	const previewText = $derived.by(() => {
-		if (!hoveredKey || !globalsContext) return "";
-		return globalsContext.getPreview(hoveredKey);
+		if (hoveredKey && globalsContext) {
+			return globalsContext.getPreview(hoveredKey);
+		}
+		return lastPreviewText;
 	});
 
 	const tooltipOpen = $derived(Boolean(hoveredKey && globalsContext && anchorRect));
 
 	$effect(() => {
-		if (!virtualAnchorEl || !anchorRect) return;
+		if (!hoveredKey || !globalsContext) return;
+		lastPreviewText = globalsContext.getPreview(hoveredKey);
+	});
+
+	$effect(() => {
+		if (anchorRect) lastAnchorRect = anchorRect;
+	});
+
+	$effect(() => {
+		if (!virtualAnchorEl || !effectiveAnchorRect) return;
 
 		virtualAnchorEl.style.position = "fixed";
-		virtualAnchorEl.style.top = `${anchorRect.bottom}px`;
-		virtualAnchorEl.style.left = `${anchorRect.left}px`;
-		virtualAnchorEl.style.width = `${anchorRect.width}px`;
+		virtualAnchorEl.style.top = `${effectiveAnchorRect.bottom}px`;
+		virtualAnchorEl.style.left = `${effectiveAnchorRect.left}px`;
+		virtualAnchorEl.style.width = `${effectiveAnchorRect.width}px`;
 		virtualAnchorEl.style.height = "1px";
 		virtualAnchorEl.style.pointerEvents = "none";
 	});
@@ -84,7 +99,7 @@
 		<Tooltip.Root open={tooltipOpen}>
 			<Tooltip.Trigger class="sr-only" tabindex={-1} aria-hidden="true"></Tooltip.Trigger>
 			<Tooltip.Content
-				customAnchor={anchorRect ? virtualAnchorEl : undefined}
+				customAnchor={effectiveAnchorRect ? virtualAnchorEl : undefined}
 				side="bottom"
 				align="center"
 				sideOffset={6}
