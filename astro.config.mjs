@@ -29,9 +29,14 @@ export default defineConfig({
     },
   },
 
-  redirects: i18nConfig.prefixDefaultLocale
-    ? buildUnprefixedLocaleRedirects(i18nConfig.defaultLocale, pagesDir)
-    : {},
+  redirects: {
+    ...(i18nConfig.prefixDefaultLocale
+      ? buildUnprefixedLocaleRedirects(i18nConfig.defaultLocale, pagesDir)
+      : {}),
+    '/login': '/admin/login',
+    '/es/login': '/admin/login',
+    '/en/login': '/admin/login',
+  },
 
   integrations: [svelte(), autoI18nRoutes()],
 

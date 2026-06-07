@@ -21,7 +21,7 @@
 {#if hasCheckedAuth && !isAuthenticated}
 	<div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
 		Sign in to load and save page editor content.
-		<a href="/login" class="underline">Go to login</a>.
+		<a href="/admin/login" class="underline">Go to login</a>.
 	</div>
 {/if}
 

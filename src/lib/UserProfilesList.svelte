@@ -30,7 +30,7 @@
 	<p class="text-muted-foreground">Loading profiles…</p>
 {:else if phase === "need_login"}
 	<p class="text-muted-foreground">
-		<a class="text-primary underline underline-offset-4" href="/login">Sign in</a> to load profiles.
+		<a class="text-primary underline underline-offset-4" href="/admin/login">Sign in</a> to load profiles.
 	</p>
 {:else if loadError}
 	<p class="text-destructive" role="alert">{loadError}</p>

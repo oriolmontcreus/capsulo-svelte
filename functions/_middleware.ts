@@ -15,9 +15,15 @@ function getSupabaseBindings(env: Env): { url: string; anonKey: string } | null 
 	return { url, anonKey };
 }
 
+const ADMIN_LOGIN_PATH = "/admin/login";
+
 //TODO: We might want to give the user the option to change the protected cms route to a different prefix
 function isAdminRoute(pathname: string): boolean {
 	return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+function isAdminLoginRoute(pathname: string): boolean {
+	return pathname === ADMIN_LOGIN_PATH;
 }
 
 export async function onRequest(
@@ -25,7 +31,7 @@ export async function onRequest(
 ): Promise<Response> {
 	const url = new URL(context.request.url);
 
-	if (!isAdminRoute(url.pathname)) {
+	if (!isAdminRoute(url.pathname) || isAdminLoginRoute(url.pathname)) {
 		return context.next();
 	}
 
@@ -68,7 +74,7 @@ export async function onRequest(
 	} = await supabase.auth.getUser();
 
 	if (!user) {
-		return Response.redirect(new URL("/login", url.origin).href, 302);
+		return Response.redirect(new URL(ADMIN_LOGIN_PATH, url.origin).href, 302);
 	}
 
 	response.headers.set("Cache-Control", "private, no-store, max-age=0");
