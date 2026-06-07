@@ -35,13 +35,6 @@ export function setGlobalsValues(
 	}
 }
 
-export function resetGlobalsStore(): void {
-	globalsStore.values = {};
-	globalsStore.loaded = false;
-	globalsStore.hasExistingDocument = false;
-	inflightLoad = null;
-}
-
 export async function ensureGlobalsLoaded(): Promise<SchemaValues> {
 	if (globalsStore.loaded) return globalsStore.values;
 	if (inflightLoad) return inflightLoad;

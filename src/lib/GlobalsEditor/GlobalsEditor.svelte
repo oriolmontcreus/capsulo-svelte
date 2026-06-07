@@ -15,10 +15,8 @@
 	import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
 	import type { SchemaValues } from "$lib/form-builder/core/types";
 	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
-	import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
-	import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
 	import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
-	import { formatVariablePreviewValue } from "$lib/globals/variable-autocomplete/format-variable-preview";
+	import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
 	import { formatLocaleLabel } from "$lib/utils/locale-label";
 
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
@@ -44,14 +42,8 @@
 		},
 	});
 
-	const knownKeys = getGlobalsKnownKeys();
-
-	const resolvedGlobals = $derived(
-		resolveGlobalsValues(values, locale, DEFAULT_LOCALE)
-	);
-
 	function getPreview(key: string): string {
-		return formatVariablePreviewValue(key, resolvedGlobals[key], knownKeys);
+		return formatVariablePreviewFromValues(key, values, locale);
 	}
 
 	onMount(() => {
@@ -60,7 +52,7 @@
 </script>
 
 <Tooltip.Provider delayDuration={150}>
-	<GlobalVariablesProvider {locale} {knownKeys} {getPreview}>
+	<GlobalVariablesProvider {getPreview}>
 		<div class="bg-background text-foreground flex min-h-dvh w-full flex-col">
 			<nav
 				class="border-border flex h-11 shrink-0 items-center justify-between border-b px-4"

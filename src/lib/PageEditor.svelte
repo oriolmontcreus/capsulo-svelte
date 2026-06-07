@@ -3,14 +3,12 @@
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-  import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
   import {
     ensureGlobalsLoaded,
     globalsStore,
   } from "$lib/globals/globals-store.svelte";
-  import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
   import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
-  import { formatVariablePreviewValue } from "$lib/globals/variable-autocomplete/format-variable-preview";
+  import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
 
   import {
     Breadcrumb,
@@ -97,14 +95,8 @@
     isSaving: false,
   });
 
-  const knownKeys = getGlobalsKnownKeys();
-
-  const resolvedGlobals = $derived(
-    resolveGlobalsValues(globalsStore.values, locale, DEFAULT_LOCALE),
-  );
-
   function getPreview(key: string): string {
-    return formatVariablePreviewValue(key, resolvedGlobals[key], knownKeys);
+    return formatVariablePreviewFromValues(key, globalsStore.values, locale);
   }
 
   onMount(() => {
@@ -113,7 +105,7 @@
 </script>
 
 <Tooltip.Provider delayDuration={150}>
-  <GlobalVariablesProvider {locale} {knownKeys} {getPreview}>
+  <GlobalVariablesProvider {getPreview}>
   <div
     class="page-editor bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >

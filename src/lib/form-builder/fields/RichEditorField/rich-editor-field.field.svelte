@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from "svelte";
-  import { createSubscriber } from "svelte/reactivity";
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
   import Underline from "@tiptap/extension-underline";
   import { createGlobalVariableHighlightExtension } from "$lib/globals/variable-autocomplete/global-variable-highlight-extension";
   import VariableTooltipLayer from "$lib/globals/variable-autocomplete/VariableTooltipLayer.svelte";
+  import { createReactiveEditor } from "$lib/globals/variable-autocomplete/variable-tiptap/create-reactive-editor";
 
   import {
     Field,
@@ -36,30 +36,8 @@
   let isApplyingExternalValue = false;
   let lastEmittedHtml: string | undefined = undefined;
 
-  // Make TipTap reactively usable in Svelte 5 without forcing re-render loops.
-  const editorSubscriberCache = new WeakMap<Editor, Editor>();
-  function makeReactiveEditor(instance: Editor): Editor {
-    const cached = editorSubscriberCache.get(instance);
-    if (cached) return cached;
-
-    const subscribe = createSubscriber((update) => {
-      instance.on("transaction", update);
-      return () => instance.off("transaction", update);
-    });
-
-    const proxy = new Proxy(instance, {
-      get(target, prop, receiver) {
-        subscribe();
-        return Reflect.get(target, prop, receiver);
-      },
-    });
-
-    editorSubscriberCache.set(instance, proxy as Editor);
-    return proxy as Editor;
-  }
-
   const reactiveEditor = $derived(
-    editor ? makeReactiveEditor(editor) : undefined,
+    editor ? createReactiveEditor(editor) : undefined,
   );
 
   onMount(() => {
