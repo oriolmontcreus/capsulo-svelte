@@ -18,9 +18,11 @@ function buildVariableDecorations(doc: import("@tiptap/pm/model").Node): Decorat
 		for (const match of text.matchAll(VARIABLE_PATTERN)) {
 			const start = pos + match.index;
 			const end = start + match[0].length;
+			const variableName = match[0].slice(2, -2).trim();
 			decorations.push(
 				Decoration.inline(start, end, {
-					class: getVariableNodeClassName()
+					class: getVariableNodeClassName(),
+					"data-global-variable": variableName
 				})
 			);
 		}

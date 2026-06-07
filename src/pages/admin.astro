@@ -8,11 +8,19 @@ import Layout from "../layouts/Layout.astro";
 		<p class="text-muted-foreground text-sm">
 			Open the page editor to manage capsule-driven pages detected in the site.
 		</p>
-		<a
-			href="/admin/page-editor"
-			class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors"
-		>
-			Open page editor
-		</a>
+		<div class="flex flex-wrap gap-3">
+			<a
+				href="/admin/page-editor"
+				class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center rounded-md px-4 py-2 text-sm font-medium transition-colors"
+			>
+				Open page editor
+			</a>
+			<a
+				href="/admin/globals"
+				class="border-input hover:bg-muted inline-flex items-center rounded-md border px-4 py-2 text-sm font-medium transition-colors"
+			>
+				Global variables
+			</a>
+		</div>
 	</main>
 </Layout>

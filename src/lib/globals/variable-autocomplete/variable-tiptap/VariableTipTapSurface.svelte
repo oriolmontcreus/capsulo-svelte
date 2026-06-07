@@ -17,6 +17,7 @@
 		multilineEditorClass,
 		singlelineEditorClass
 	} from "./variable-tiptap-styles";
+	import VariableTooltipLayer from "../VariableTooltipLayer.svelte";
 
 	type Props = {
 		mode: "singleline" | "multiline";
@@ -171,24 +172,26 @@
 	});
 </script>
 
-<div
-	bind:this={surfaceEl}
-	class={surfaceClass}
-	style={surfaceStyle}
-	aria-invalid={invalid ? "true" : undefined}
-	data-slot={singleLine ? "input" : "textarea"}
->
+<VariableTooltipLayer>
 	<div
-		bind:this={element}
-		{id}
-		role="textbox"
-		aria-multiline={!singleLine}
-		class={cn(
-			editorClass,
-			singleLine ? "variable-tiptap-singleline" : "variable-tiptap-multiline"
-		)}
-	></div>
-</div>
+		bind:this={surfaceEl}
+		class={surfaceClass}
+		style={surfaceStyle}
+		aria-invalid={invalid ? "true" : undefined}
+		data-slot={singleLine ? "input" : "textarea"}
+	>
+		<div
+			bind:this={element}
+			{id}
+			role="textbox"
+			aria-multiline={!singleLine}
+			class={cn(
+				editorClass,
+				singleLine ? "variable-tiptap-singleline" : "variable-tiptap-multiline"
+			)}
+		></div>
+	</div>
+</VariableTooltipLayer>
 
 <style>
 	:global(.variable-tiptap-singleline .ProseMirror),

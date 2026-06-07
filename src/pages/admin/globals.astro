@@ -1,0 +1,14 @@
+---
+import Layout from "$/layouts/Layout.astro";
+import GlobalsEditor from "$lib/GlobalsEditor/GlobalsEditor.svelte";
+---
+
+<Layout fontFamily="geist">
+	<GlobalsEditor client:load />
+</Layout>
+
+<style>
+	:global(astro-dev-toolbar) {
+		display: none !important;
+	}
+</style>

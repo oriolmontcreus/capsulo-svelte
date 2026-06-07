@@ -1,7 +1,14 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+  import type { SchemaValues } from "$lib/form-builder/core/types";
+  import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
+  import { loadGlobalsDocumentFromDb } from "$lib/globals/globals-documents";
+  import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
+  import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
+  import { formatVariablePreviewValue } from "$lib/globals/variable-autocomplete/format-variable-preview";
 
   import {
     Breadcrumb,
@@ -87,9 +94,29 @@
     disabled: true,
     isSaving: false,
   });
+
+  let globalsValues = $state<SchemaValues>({});
+  const knownKeys = getGlobalsKnownKeys();
+
+  const resolvedGlobals = $derived(
+    resolveGlobalsValues(globalsValues, locale, DEFAULT_LOCALE),
+  );
+
+  function getPreview(key: string): string {
+    return formatVariablePreviewValue(key, resolvedGlobals[key], knownKeys);
+  }
+
+  onMount(() => {
+    void loadGlobalsDocumentFromDb().then((result) => {
+      if (!result.errorMessage) {
+        globalsValues = result.values;
+      }
+    });
+  });
 </script>
 
 <Tooltip.Provider delayDuration={150}>
+  <GlobalVariablesProvider {locale} {knownKeys} {getPreview}>
   <div
     class="page-editor bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >
@@ -172,4 +199,5 @@
       />
     </div>
   </div>
+  </GlobalVariablesProvider>
 </Tooltip.Provider>

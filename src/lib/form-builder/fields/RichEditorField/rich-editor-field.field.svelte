@@ -6,6 +6,7 @@
   import Placeholder from "@tiptap/extension-placeholder";
   import Underline from "@tiptap/extension-underline";
   import { createGlobalVariableHighlightExtension } from "$lib/globals/variable-autocomplete/global-variable-highlight-extension";
+  import VariableTooltipLayer from "$lib/globals/variable-autocomplete/VariableTooltipLayer.svelte";
 
   import {
     Field,
@@ -120,54 +121,56 @@
     {/if}
   </FieldLabel>
 
-  <div
-    class={cn(
-      "border-input focus-within:border-ring focus-within:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 dark:bg-input/30 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 flex w-full flex-col overflow-hidden rounded-md border bg-white shadow-xs outline-none transition-[color,box-shadow] focus-within:ring-3 aria-invalid:ring-3 disabled:cursor-not-allowed disabled:opacity-50",
-    )}
-    aria-invalid={error ? "true" : undefined}
-  >
-    {#if reactiveEditor}
-      <div class="border-input/60 flex items-center gap-1 border-b px-2 py-1">
-        <button
-          type="button"
-          class={cn(
-            toolbarButtonBaseClass,
-            reactiveEditor.isActive("bold") && "bg-muted text-foreground",
-          )}
-          onclick={() => reactiveEditor.chain().focus().toggleBold().run()}
-        >
-          B
-        </button>
-
-        <button
-          type="button"
-          class={cn(
-            toolbarButtonBaseClass,
-            reactiveEditor.isActive("italic") && "bg-muted text-foreground",
-          )}
-          onclick={() => reactiveEditor.chain().focus().toggleItalic().run()}
-        >
-          <i>I</i>
-        </button>
-
-        <button
-          type="button"
-          class={cn(
-            toolbarButtonBaseClass,
-            reactiveEditor.isActive("underline") && "bg-muted text-foreground",
-          )}
-          onclick={() => reactiveEditor.chain().focus().toggleUnderline().run()}
-        >
-          <u>U</u>
-        </button>
-      </div>
-    {/if}
-
+  <VariableTooltipLayer>
     <div
-      bind:this={element}
-      class="min-h-[60px] px-3 py-2 text-base md:text-sm [&_.ProseMirror]:min-h-[60px] [&_.ProseMirror]:outline-none"
-    ></div>
-  </div>
+      class={cn(
+        "border-input focus-within:border-ring focus-within:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 dark:bg-input/30 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 flex w-full flex-col overflow-hidden rounded-md border bg-white shadow-xs outline-none transition-[color,box-shadow] focus-within:ring-3 aria-invalid:ring-3 disabled:cursor-not-allowed disabled:opacity-50",
+      )}
+      aria-invalid={error ? "true" : undefined}
+    >
+      {#if reactiveEditor}
+        <div class="border-input/60 flex items-center gap-1 border-b px-2 py-1">
+          <button
+            type="button"
+            class={cn(
+              toolbarButtonBaseClass,
+              reactiveEditor.isActive("bold") && "bg-muted text-foreground",
+            )}
+            onclick={() => reactiveEditor.chain().focus().toggleBold().run()}
+          >
+            B
+          </button>
+
+          <button
+            type="button"
+            class={cn(
+              toolbarButtonBaseClass,
+              reactiveEditor.isActive("italic") && "bg-muted text-foreground",
+            )}
+            onclick={() => reactiveEditor.chain().focus().toggleItalic().run()}
+          >
+            <i>I</i>
+          </button>
+
+          <button
+            type="button"
+            class={cn(
+              toolbarButtonBaseClass,
+              reactiveEditor.isActive("underline") && "bg-muted text-foreground",
+            )}
+            onclick={() => reactiveEditor.chain().focus().toggleUnderline().run()}
+          >
+            <u>U</u>
+          </button>
+        </div>
+      {/if}
+
+      <div
+        bind:this={element}
+        class="min-h-[60px] px-3 py-2 text-base md:text-sm [&_.ProseMirror]:min-h-[60px] [&_.ProseMirror]:outline-none"
+      ></div>
+    </div>
+  </VariableTooltipLayer>
 
   {#if field.description}
     <FieldDescription>{field.description}</FieldDescription>
