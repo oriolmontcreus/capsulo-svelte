@@ -124,7 +124,8 @@
 			content: value ?? "",
 			editorProps: {
 				attributes: {
-					class: "outline-none"
+					class: "outline-none",
+					spellcheck: "false"
 				},
 				handleKeyDown(view, event) {
 					return autocompleteBridge.handleKeyDown(view, event);

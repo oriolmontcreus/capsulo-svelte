@@ -66,6 +66,9 @@
       ],
       content: value ?? "",
       editorProps: {
+        attributes: {
+          spellcheck: "false",
+        },
         handleKeyDown(view, event) {
           return autocompleteBridge.handleKeyDown(view, event);
         },
