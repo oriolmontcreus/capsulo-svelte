@@ -16,6 +16,7 @@
 	import type { SchemaValues } from "$lib/form-builder/core/types";
 	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
 	import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
+	import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
 	import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
 	import { formatLocaleLabel } from "$lib/utils/locale-label";
 
@@ -46,13 +47,17 @@
 		return formatVariablePreviewFromValues(key, values, locale);
 	}
 
+	function getVariableItems() {
+		return buildVariableItems(values, locale);
+	}
+
 	onMount(() => {
 		document.initialize();
 	});
 </script>
 
 <Tooltip.Provider delayDuration={150}>
-	<GlobalVariablesProvider {getPreview}>
+	<GlobalVariablesProvider {getPreview} {getVariableItems}>
 		<div class="bg-background text-foreground flex min-h-dvh w-full flex-col">
 			<nav
 				class="border-border flex h-11 shrink-0 items-center justify-between border-b px-4"

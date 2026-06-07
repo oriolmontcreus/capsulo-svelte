@@ -17,6 +17,9 @@
 		multilineEditorClass,
 		singlelineEditorClass
 	} from "./variable-tiptap-styles";
+	import VariableAutocompleteLayer, {
+		type AutocompleteHandlers
+	} from "../VariableAutocompleteLayer.svelte";
 	import VariableTooltipLayer from "../VariableTooltipLayer.svelte";
 
 	type Props = {
@@ -51,6 +54,14 @@
 
 	let isApplyingExternalValue = false;
 	let lastEmittedValue: string | undefined = undefined;
+
+	const autocompleteBridge: AutocompleteHandlers = {
+		handleKeyDown: () => false
+	};
+
+	function setAutocompleteHandlers(handlers: AutocompleteHandlers | null): void {
+		autocompleteBridge.handleKeyDown = handlers?.handleKeyDown ?? (() => false);
+	}
 
 	const singleLine = $derived(mode === "singleline");
 
@@ -115,6 +126,9 @@
 				attributes: {
 					class: "outline-none"
 				},
+				handleKeyDown(view, event) {
+					return autocompleteBridge.handleKeyDown(view, event);
+				},
 				handlePaste(view, event) {
 					if (singleLine && event.clipboardData) {
 						const pasted = event.clipboardData.getData("text/plain");
@@ -172,26 +186,32 @@
 	});
 </script>
 
-<VariableTooltipLayer>
-	<div
-		bind:this={surfaceEl}
-		class={surfaceClass}
-		style={surfaceStyle}
-		aria-invalid={invalid ? "true" : undefined}
-		data-slot={singleLine ? "input" : "textarea"}
-	>
+<VariableAutocompleteLayer
+	getEditor={() => editor}
+	{singleLine}
+	onHandlersChange={setAutocompleteHandlers}
+>
+	<VariableTooltipLayer>
 		<div
-			bind:this={element}
-			{id}
-			role="textbox"
-			aria-multiline={!singleLine}
-			class={cn(
-				editorClass,
-				singleLine ? "variable-tiptap-singleline" : "variable-tiptap-multiline"
-			)}
-		></div>
-	</div>
-</VariableTooltipLayer>
+			bind:this={surfaceEl}
+			class={surfaceClass}
+			style={surfaceStyle}
+			aria-invalid={invalid ? "true" : undefined}
+			data-slot={singleLine ? "input" : "textarea"}
+		>
+			<div
+				bind:this={element}
+				{id}
+				role="textbox"
+				aria-multiline={!singleLine}
+				class={cn(
+					editorClass,
+					singleLine ? "variable-tiptap-singleline" : "variable-tiptap-multiline"
+				)}
+			></div>
+		</div>
+	</VariableTooltipLayer>
+</VariableAutocompleteLayer>
 
 <style>
 	:global(.variable-tiptap-singleline .ProseMirror),

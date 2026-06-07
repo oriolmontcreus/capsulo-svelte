@@ -3,7 +3,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 
 import { createGlobalVariableHighlightExtension } from "../global-variable-highlight-extension";
-import { SingleLineExtension } from "./single-line-extension";
 
 export type MinimalEditorMode = "singleline" | "multiline";
 
@@ -31,10 +30,6 @@ export function createMinimalExtensions(
 		Placeholder.configure({ placeholder }),
 		createGlobalVariableHighlightExtension()
 	];
-
-	if (mode === "singleline") {
-		extensions.push(SingleLineExtension);
-	}
 
 	return extensions;
 }

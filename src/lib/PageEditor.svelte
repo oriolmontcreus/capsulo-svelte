@@ -8,6 +8,7 @@
     globalsStore,
   } from "$lib/globals/globals-store.svelte";
   import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
+  import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
   import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
 
   import {
@@ -99,13 +100,17 @@
     return formatVariablePreviewFromValues(key, globalsStore.values, locale);
   }
 
+  function getVariableItems() {
+    return buildVariableItems(globalsStore.values, locale);
+  }
+
   onMount(() => {
     void ensureGlobalsLoaded();
   });
 </script>
 
 <Tooltip.Provider delayDuration={150}>
-  <GlobalVariablesProvider {getPreview}>
+  <GlobalVariablesProvider {getPreview} {getVariableItems}>
   <div
     class="page-editor bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
   >
