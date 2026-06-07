@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "tags": ["-lintignore"],
+  "entry": [
+    "capsulo.config.ts",
+    "functions/**/*.{ts,js}",
+    "src/components/capsules/**/capsule.definition.ts",
+    "src/config/**/*.ts",
+    "src/styles/**/*.css"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx,svelte,astro}",
+    "functions/**/*.{ts,js}",
+    "scripts/**/*.ts"
+  ],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "ignoreIssues": {
+    "src/lib/components/ui/**/index.ts": ["exports", "types", "enumMembers"]
+  }
+}
