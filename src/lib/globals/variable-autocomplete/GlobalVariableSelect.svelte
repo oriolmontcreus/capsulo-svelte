@@ -31,11 +31,24 @@
 	let listEl = $state<HTMLUListElement | undefined>();
 	let virtualAnchorEl = $state<HTMLSpanElement | undefined>();
 	let lastAnchorRect = $state<DOMRect | null>(null);
+	let lastSearchQuery = $state("");
+	let lastItems = $state<VariableItem[]>([]);
+	let lastSelectedIndex = $state(0);
 
 	const effectiveAnchorRect = $derived(anchorRect ?? lastAnchorRect);
+	const displaySearchQuery = $derived(open ? searchQuery : lastSearchQuery);
+	const displayItems = $derived(open ? items : lastItems);
+	const displaySelectedIndex = $derived(open ? selectedIndex : lastSelectedIndex);
 
 	$effect(() => {
 		if (anchorRect) lastAnchorRect = anchorRect;
+	});
+
+	$effect(() => {
+		if (!open) return;
+		lastSearchQuery = searchQuery;
+		lastItems = items;
+		lastSelectedIndex = selectedIndex;
 	});
 
 	$effect(() => {
@@ -51,11 +64,11 @@
 
 	$effect(() => {
 		if (!open || !listEl) return;
-		const activeItem = listEl.children[selectedIndex] as HTMLElement | undefined;
+		const activeItem = listEl.children[displaySelectedIndex] as HTMLElement | undefined;
 		activeItem?.scrollIntoView({ block: "nearest" });
 	});
 
-	const selectedItem = $derived(items[selectedIndex]);
+	const selectedItem = $derived(displayItems[displaySelectedIndex]);
 </script>
 
 <div class="relative w-full">
@@ -78,24 +91,24 @@
 					<div class="flex w-1/2 flex-col border-r">
 						<div class="text-muted-foreground bg-muted/30 border-b p-2 text-xs">
 							<span class="font-semibold">Variables</span>
-							{#if searchQuery}
-								<span class="ml-1 opacity-70">- Filtering by "{searchQuery}"</span>
+							{#if displaySearchQuery}
+								<span class="ml-1 opacity-70">- Filtering by "{displaySearchQuery}"</span>
 							{/if}
 						</div>
 						<div class="flex-1 overflow-y-auto">
-							{#if items.length === 0}
+							{#if displayItems.length === 0}
 								<div class="text-muted-foreground py-2 text-center text-sm">
 									No variables found.
 								</div>
 							{:else}
 								<ul bind:this={listEl}>
-									{#each items as item, index (item.key)}
+									{#each displayItems as item, index (item.key)}
 										<li>
 											<button
 												type="button"
 												class={cn(
 													"relative flex w-full cursor-pointer select-none items-center rounded-none border-b px-2 py-1.5 text-sm outline-none transition-colors",
-													index === selectedIndex
+													index === displaySelectedIndex
 														? "bg-accent text-accent-foreground"
 														: "hover:bg-accent/50"
 												)}

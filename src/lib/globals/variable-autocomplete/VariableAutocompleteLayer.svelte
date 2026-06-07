@@ -51,6 +51,28 @@
 			editor.off("transaction", onTransaction);
 		};
 	});
+
+	$effect(() => {
+		if (!autocomplete?.open) return;
+
+		const closeOnScroll = (event: Event) => {
+			const target = event.target;
+			if (
+				target instanceof Element &&
+				target.closest('[data-slot="popover-content"]')
+			) {
+				return;
+			}
+
+			autocomplete.close();
+		};
+
+		document.addEventListener("scroll", closeOnScroll, { capture: true, passive: true });
+
+		return () => {
+			document.removeEventListener("scroll", closeOnScroll, { capture: true });
+		};
+	});
 </script>
 
 {#if autocomplete}
