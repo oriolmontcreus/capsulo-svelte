@@ -9,9 +9,6 @@ export const cmsStore = $state({
 	valuesByInstance: {} as PageEditorValuesByInstance
 });
 
-/** @deprecated Use `cmsStore` */
-export const previewStore = cmsStore;
-
 export function syncSiteLocaleFromPathname(pathname: string): void {
 	cmsStore.locale = getLocaleFromPathname(pathname);
 }
