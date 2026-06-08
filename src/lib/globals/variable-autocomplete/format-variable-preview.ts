@@ -6,7 +6,7 @@ import { formatGlobalDisplayValue } from "$lib/globals/types";
 
 const knownKeys = getGlobalsKnownKeys();
 
-export function formatVariablePreviewValue(
+function formatVariablePreviewValue(
 	key: string,
 	value: unknown,
 	keys: ReadonlySet<string> = knownKeys

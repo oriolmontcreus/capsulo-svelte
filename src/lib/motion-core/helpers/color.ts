@@ -12,7 +12,7 @@ export const clamp01 = (value: number) => clamp(value, 0, 1);
 export const srgbToLinear = (value: number) =>
 	value <= 0.04045 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
 
-export const normalizeTriplet = (
+const normalizeTriplet = (
 	r: number,
 	g: number,
 	b: number,
@@ -21,7 +21,7 @@ export const normalizeTriplet = (
 	return [clamp01(r / scale), clamp01(g / scale), clamp01(b / scale)];
 };
 
-export const parseHexColor = (
+const parseHexColor = (
 	value: string,
 ): [number, number, number] | null => {
 	const hex = value.replace("#", "").trim();
@@ -42,7 +42,7 @@ export const parseHexColor = (
 
 let cssColorContext: CanvasRenderingContext2D | null | undefined;
 
-export const parseCssColor = (
+const parseCssColor = (
 	value: string,
 ): [number, number, number] | null => {
 	if (typeof document === "undefined") return null;
@@ -109,12 +109,4 @@ export const toRgb = (
 	}
 
 	return fallback;
-};
-
-export const toLinearRgb = (
-	value: ColorRepresentation,
-	fallback: [number, number, number],
-): [number, number, number] => {
-	const [r, g, b] = toRgb(value, fallback);
-	return [srgbToLinear(r), srgbToLinear(g), srgbToLinear(b)];
 };

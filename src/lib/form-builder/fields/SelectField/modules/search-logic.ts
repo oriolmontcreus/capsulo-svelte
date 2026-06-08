@@ -3,7 +3,7 @@ import type {
 } from "./resolve-options";
 import type { SelectFieldDefinition, SelectOption } from "../../../core/types";
 
-export function createOptionMatcher(field: SelectFieldDefinition) {
+function createOptionMatcher(field: SelectFieldDefinition) {
 	const minSearchLength = field.minSearchLength ?? 0;
 
 	return function optionMatchesSearch(option: SelectOption, query: string): boolean {
@@ -15,7 +15,7 @@ export function createOptionMatcher(field: SelectFieldDefinition) {
 	};
 }
 
-export function filterOptions(
+function filterOptions(
 	options: SelectOption[],
 	query: string,
 	field: SelectFieldDefinition,

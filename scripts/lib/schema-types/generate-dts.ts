@@ -27,7 +27,7 @@ function renderInterface(schema: ParsedSchemaDefinition): string {
 	);
 }
 
-export function generateDtsFromSchemaFile(schemaPath: string): GeneratedDtsFile {
+function generateDtsFromSchemaFile(schemaPath: string): GeneratedDtsFile {
 	const parsed = parseSchemaFile(schemaPath);
 	const interfaces = parsed.schemas.map((schema) => renderInterface(schema)).join("\n\n");
 
@@ -44,7 +44,7 @@ export function generateDtsFromSchemaFile(schemaPath: string): GeneratedDtsFile 
 	};
 }
 
-export async function writeFileIfChanged(filePath: string, content: string): Promise<FileWriteResult> {
+async function writeFileIfChanged(filePath: string, content: string): Promise<FileWriteResult> {
 	let previous: string | null = null;
 	try {
 		previous = await fs.readFile(filePath, "utf8");
@@ -64,7 +64,7 @@ export async function writeFileIfChanged(filePath: string, content: string): Pro
 	return "written";
 }
 
-export async function processSchemaFile(schemaPath: string): Promise<ProcessSchemaResult> {
+async function processSchemaFile(schemaPath: string): Promise<ProcessSchemaResult> {
 	try {
 		const parsed = parseSchemaFile(schemaPath);
 		const generated = generateDtsFromSchemaFile(schemaPath);

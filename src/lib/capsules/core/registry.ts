@@ -1,4 +1,3 @@
-import type { SchemaDefinition } from "$lib/form-builder/core/types";
 import type { CapsuleDefinition, RegisteredCapsule } from "./types";
 
 type CapsuleModule = {
@@ -69,12 +68,4 @@ export function getAllCapsules(): RegisteredCapsule[] {
 
 export function getCapsuleByKey(key: string): RegisteredCapsule | undefined {
 	return capsuleRegistry.find((capsule) => capsule.key === key);
-}
-
-export function getCapsuleByFolder(folderName: string): RegisteredCapsule | undefined {
-	return capsuleRegistry.find((capsule) => capsule.folderName === folderName);
-}
-
-export function getAllCapsuleSchemas(): SchemaDefinition[] {
-	return capsuleRegistry.map((capsule) => capsule.schema);
 }

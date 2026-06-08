@@ -7,7 +7,7 @@ import ToggleFieldComponent from "../fields/ToggleField/toggle-field.field.svelt
 import SelectFieldComponent from "../fields/SelectField/select-field.field.svelte";
 import ColorPickerFieldComponent from "../fields/ColorPickerField/color-picker-field.field.svelte";
 
-export const fieldRegistry: Record<FieldType, Component<any>> = {
+const fieldRegistry: Record<FieldType, Component<any>> = {
   text: TextFieldComponent,
   textarea: TextareaFieldComponent,
   "rich-editor": RichEditorFieldComponent,

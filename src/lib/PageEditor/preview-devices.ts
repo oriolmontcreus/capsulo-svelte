@@ -34,7 +34,7 @@ export const PREVIEW_DIMENSION_MIN = 200;
 export const PREVIEW_DIMENSION_MAX = 4000;
 
 /** Chrome DevTools device-mode presets (vertical viewport). */
-export const PREVIEW_DEVICE_PRESETS: PreviewDevicePreset[] = [
+const PREVIEW_DEVICE_PRESETS: PreviewDevicePreset[] = [
   { id: "responsive", label: "Responsive", widthPx: 0, heightPx: 0, category: "desktop" },
   { id: "iphone-se", label: "iPhone SE", widthPx: 375, heightPx: 667, category: "phone" },
   { id: "iphone-xr", label: "iPhone XR", widthPx: 414, heightPx: 896, category: "phone" },

@@ -42,7 +42,6 @@
     "@internationalized/date": "^3.12.1",
     "@lucide/svelte": "^1.17.0",
     "@tailwindcss/vite": "latest",
-    "@types/gsap": "^3.0.0",
     "@types/node": "^25.9.2",
     "bits-ui": "^2.18.1",
     "clsx": "^2.1.1",

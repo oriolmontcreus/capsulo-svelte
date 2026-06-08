@@ -23,7 +23,7 @@ export function getLocaleFromPathname(pathname: string): string {
 /**
  * Removes a leading locale prefix from a pathname (e.g. `/en/about` → `/about`).
  */
-export function stripLocalePrefix(pathname: string): string {
+function stripLocalePrefix(pathname: string): string {
 	const localePattern = new RegExp(`^/(${LOCALES.join("|")})(?=/|$)`);
 	const withoutLocale = pathname.replace(localePattern, "");
 

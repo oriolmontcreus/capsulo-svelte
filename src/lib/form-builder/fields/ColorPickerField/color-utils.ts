@@ -51,7 +51,7 @@ export const CHANNEL_LABELS: Record<ColorChannel, string> = {
 	blue: "B",
 };
 
-export function clamp(value: number, min: number, max: number): number {
+function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
 }
 
@@ -65,7 +65,7 @@ function componentToHex(c: number): string {
 	return hex.length === 1 ? `0${hex}` : hex;
 }
 
-export function rgbaToHex(rgba: Rgba, includeAlpha = false): string {
+function rgbaToHex(rgba: Rgba, includeAlpha = false): string {
 	const { r, g, b, a } = rgba;
 	const base = `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`;
 	if (!includeAlpha) return base;
@@ -73,7 +73,7 @@ export function rgbaToHex(rgba: Rgba, includeAlpha = false): string {
 	return `${base}${alpha}`;
 }
 
-export function hexToRgba(hex: string): Rgba {
+function hexToRgba(hex: string): Rgba {
 	let normalized = hex.trim().toLowerCase();
 	if (!normalized.startsWith("#")) normalized = `#${normalized}`;
 
@@ -97,7 +97,7 @@ export function hexToRgba(hex: string): Rgba {
 	return { r, g, b, a };
 }
 
-export function rgbaToHsva(rgba: Rgba): Hsva {
+function rgbaToHsva(rgba: Rgba): Hsva {
 	const r = rgba.r / 255;
 	const g = rgba.g / 255;
 	const b = rgba.b / 255;
@@ -121,7 +121,7 @@ export function rgbaToHsva(rgba: Rgba): Hsva {
 	return { h, s, v, a: rgba.a };
 }
 
-export function hsvaToRgba(hsva: Hsva): Rgba {
+function hsvaToRgba(hsva: Hsva): Rgba {
 	const h = ((hsva.h % 360) + 360) % 360;
 	const s = clamp(hsva.s, 0, 100) / 100;
 	const v = clamp(hsva.v, 0, 100) / 100;
@@ -162,7 +162,7 @@ export function hsvaToRgba(hsva: Hsva): Rgba {
 	};
 }
 
-export function rgbaToHsla(rgba: Rgba): Hsla {
+function rgbaToHsla(rgba: Rgba): Hsla {
 	const r = rgba.r / 255;
 	const g = rgba.g / 255;
 	const b = rgba.b / 255;
@@ -191,7 +191,7 @@ export function rgbaToHsla(rgba: Rgba): Hsla {
 	};
 }
 
-export function hslaToRgba(hsla: Hsla): Rgba {
+function hslaToRgba(hsla: Hsla): Rgba {
 	const h = ((hsla.h % 360) + 360) % 360;
 	const s = clamp(hsla.s, 0, 100) / 100;
 	const l = clamp(hsla.l, 0, 100) / 100;

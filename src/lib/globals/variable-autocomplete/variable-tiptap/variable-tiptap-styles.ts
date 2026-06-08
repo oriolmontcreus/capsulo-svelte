@@ -3,7 +3,7 @@ import { cn } from "$lib/utils";
 import { variableEditorClass } from "../field-surface-styles";
 
 /** TipTap mount node — transparent pass-through, no scrollbars. */
-export const variableTipTapMountClass = cn(
+const variableTipTapMountClass = cn(
 	variableEditorClass,
 	"overflow-hidden outline-none"
 );

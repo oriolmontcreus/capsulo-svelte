@@ -16,13 +16,13 @@ export function hasMultipleColumns(field: SelectFieldDefinition): boolean {
 	);
 }
 
-export function getBaseColumnCount(field: SelectFieldDefinition): number {
+function getBaseColumnCount(field: SelectFieldDefinition): number {
 	if (!field.columns) return 1;
 	if (typeof field.columns === "number") return Math.max(1, field.columns);
 	return Math.max(1, field.columns.base ?? 1);
 }
 
-export function getBaseGridStyle(field: SelectFieldDefinition): string {
+function getBaseGridStyle(field: SelectFieldDefinition): string {
 	const columns = getBaseColumnCount(field);
 	return `display:grid;grid-template-columns:repeat(${columns},minmax(0,1fr));gap:0.25rem;width:100%;`;
 }
@@ -34,7 +34,7 @@ export function getGridInlineStyle(field: SelectFieldDefinition): string | undef
 	return getBaseGridStyle(field);
 }
 
-export function getMaxColumnCount(field: SelectFieldDefinition): number {
+function getMaxColumnCount(field: SelectFieldDefinition): number {
 	if (!field.columns) return 1;
 	if (typeof field.columns === "number") return Math.max(1, field.columns);
 	const columns = field.columns;

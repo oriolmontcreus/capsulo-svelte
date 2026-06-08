@@ -129,5 +129,3 @@ export function createVariableAutocomplete(options: VariableAutocompleteOptions)
 		handleOpenChange
 	};
 }
-
-export type VariableAutocompleteController = ReturnType<typeof createVariableAutocomplete>;

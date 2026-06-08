@@ -16,16 +16,6 @@ export type PageEditorPersistedContentV1 = {
 
 export type PageEditorPersistedContent = PageEditorPersistedContentV1;
 
-export type PageEditorDocumentRow = {
-	page_id: string;
-	content: PageEditorPersistedContent;
-	content_format_version: number;
-	created_by: string | null;
-	updated_by: string | null;
-	created_at: string;
-	updated_at: string;
-};
-
 export type PageEditorCachedDocument = {
 	pageId: string;
 	valuesByInstance: PageEditorValuesByInstance;

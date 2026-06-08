@@ -87,7 +87,6 @@ const resolvedConfig = getI18nConfig(capsuloConfig);
 
 export const LOCALES = resolvedConfig.locales;
 export const DEFAULT_LOCALE = resolvedConfig.defaultLocale;
-export const FALLBACK_LOCALE = resolvedConfig.fallbackLocale;
 export const PREFIX_DEFAULT_LOCALE = resolvedConfig.prefixDefaultLocale;
 
 export function isValidLocale(locale: string): boolean {
