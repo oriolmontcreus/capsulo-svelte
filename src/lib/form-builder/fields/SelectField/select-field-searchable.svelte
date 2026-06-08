@@ -5,6 +5,7 @@
   import * as Popover from "$lib/components/ui/popover";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import { Button } from "$lib/components/ui/button";
+  import { Input } from "$lib/components/ui/input";
   import { cn } from "$lib/utils";
   import SelectFieldSearchableList from "./SelectFieldSearchableList.svelte";
   import type { SelectFieldDefinition } from "./select-field.types";
@@ -38,6 +39,7 @@
   let searchQuery = $state("");
   let lastSearchQuery = $state("");
   let triggerRef = $state<HTMLButtonElement | null>(null);
+  let searchInputRef = $state<HTMLInputElement | null>(null);
   let contentWidth = $state<number | undefined>(undefined);
 
   const selectId = createSelectGridId();
@@ -154,7 +156,14 @@
 
   <Popover.Content
     align="start"
-    class="max-h-80 w-auto p-0"
+    class={cn(
+      "bg-popover text-popover-foreground ring-foreground/10 max-h-80 overflow-hidden rounded-md p-0 shadow-md ring-1",
+      useGrid && "w-max max-w-[min(90vw,32rem)]",
+    )}
+    onOpenAutoFocus={(event) => {
+      event.preventDefault();
+      queueMicrotask(() => searchInputRef?.focus());
+    }}
     style={[
       contentWidth ? `width:${contentWidth}px` : "",
       dropdownMinWidth ? `min-width:${dropdownMinWidth}` : "",
@@ -162,13 +171,19 @@
       .filter(Boolean)
       .join(";") || undefined}
   >
-    <Command.Root shouldFilter={false} class="max-h-80 rounded-md">
-      <Command.Input
-        bind:value={searchQuery}
-        placeholder={field.searchPlaceholder ?? "Search..."}
-      />
-      <Command.List class="max-h-64">
-        <Command.Empty>
+    <Command.Root shouldFilter={false} class="max-h-80 gap-0 rounded-md p-0">
+      <div class="border-b p-2">
+        <Input
+          bind:ref={searchInputRef}
+          type="search"
+          bind:value={searchQuery}
+          placeholder={field.searchPlaceholder ?? "Search..."}
+          class="h-9"
+          autocomplete="off"
+        />
+      </div>
+      <Command.List class="max-h-64 overflow-y-auto p-1">
+        <Command.Empty class="text-muted-foreground py-6 text-center text-sm">
           {field.emptyMessage ?? "No results found."}
         </Command.Empty>
         {#if filteredCount > 0}

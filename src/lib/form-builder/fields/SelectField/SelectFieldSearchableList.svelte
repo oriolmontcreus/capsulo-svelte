@@ -43,25 +43,28 @@
     }
     return (normalizedValue as string) === optionValue;
   }
+
+  const itemClass = cn(
+    "[&_.cn-command-item-indicator]:hidden",
+    "data-selected:bg-accent data-selected:text-accent-foreground",
+    "focus:bg-accent focus:text-accent-foreground",
+    "relative flex w-full cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none",
+    "data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50",
+  );
 </script>
 
 {#snippet commandItem(option: SelectOption)}
   <Command.Item
     value={option.value}
     disabled={option.disabled}
-    class={cn(
-      "[&_.cn-command-item-indicator]:hidden",
-      option.description && "min-h-12 items-center py-2",
-      !option.description && "min-h-9",
-    )}
+    class={cn(itemClass, option.description && "items-center py-2")}
     onSelect={() => onSelect(option)}
   >
-    <CheckIcon
-      class={cn(
-        "size-4 shrink-0",
-        !isOptionSelected(option.value) && "text-transparent",
-      )}
-    />
+    <span class="absolute inset-e-2 flex size-3.5 items-center justify-center">
+      {#if isOptionSelected(option.value)}
+        <CheckIcon class="size-4" />
+      {/if}
+    </span>
     <SelectOptionContent
       {option}
       query={searchQuery}
@@ -92,7 +95,7 @@
 
 {#if data.hasGroups}
   {#each data.groups as group (group.label)}
-    <Command.Group heading={group.label} value={group.label}>
+    <Command.Group heading={group.label} value={group.label} class="p-0">
       {@render optionsList(group.options)}
     </Command.Group>
   {/each}
