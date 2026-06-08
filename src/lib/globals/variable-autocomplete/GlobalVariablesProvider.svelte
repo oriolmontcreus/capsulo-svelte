@@ -19,8 +19,8 @@
 
 	setContext(GLOBAL_VARIABLES_CONTEXT_KEY, {
 		knownKeys,
-		getPreview,
-		getVariableItems
+		getPreview: (key: string) => getPreview(key),
+		getVariableItems: () => getVariableItems()
 	});
 </script>
 

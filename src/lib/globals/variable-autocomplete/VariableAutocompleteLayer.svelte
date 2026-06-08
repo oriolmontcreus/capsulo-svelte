@@ -27,9 +27,11 @@
 
 	const autocomplete = globalsContext?.getVariableItems
 		? createVariableAutocomplete({
-				getEditor,
+				getEditor: () => getEditor(),
 				getItems: globalsContext.getVariableItems,
-				singleLine
+				get singleLine() {
+					return singleLine;
+				}
 			})
 		: null;
 
