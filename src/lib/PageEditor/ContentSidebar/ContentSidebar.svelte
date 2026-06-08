@@ -5,6 +5,7 @@
 	import { createCollapsedCapsulesState } from "./collapsed-capsules.svelte";
 	import { createContentSidebarDocument } from "./content-sidebar-document.svelte";
 	import { groupManifestEntries } from "./group-entries";
+	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import ContentSidebarAlerts from "./ContentSidebarAlerts.svelte";
 	import ContentSidebarTopbar from "./ContentSidebarTopbar.svelte";
 	import CapsuleGroupSection from "./CapsuleGroupSection.svelte";
@@ -60,30 +61,32 @@
 		onCollapseAll={() => collapsedCapsules.collapseAll(capsuleKeys)}
 	/>
 
-	<div class="min-h-0 flex-1 overflow-y-auto">
-		<div class="space-y-4 p-4">
-			<ContentSidebarAlerts
-				hasCheckedAuth={document.hasCheckedAuth}
-				isAuthenticated={document.isAuthenticated}
-				loadError={document.loadError}
-				saveError={document.saveError}
-				isBlockingLoad={document.isBlockingLoad}
-				hasEntries={entries.length > 0}
-			/>
+	<div class="min-h-0 flex-1">
+		<ScrollArea class="h-full w-full">
+			<div class="space-y-4 p-4">
+				<ContentSidebarAlerts
+					hasCheckedAuth={document.hasCheckedAuth}
+					isAuthenticated={document.isAuthenticated}
+					loadError={document.loadError}
+					saveError={document.saveError}
+					isBlockingLoad={document.isBlockingLoad}
+					hasEntries={entries.length > 0}
+				/>
 
-			{#if !document.isBlockingLoad && entries.length > 0}
-				{#each groupedEntries as group (group.capsuleKey)}
-					<CapsuleGroupSection
-						{group}
-						isExpanded={collapsedCapsules.isExpanded(group.capsuleKey)}
-						{locale}
-						{valuesByInstance}
-						schemaHydrationVersion={document.schemaHydrationVersion}
-						onToggle={() => collapsedCapsules.toggle(group.capsuleKey)}
-						onInstanceValuesChange={document.updateInstanceValues}
-					/>
-				{/each}
-			{/if}
-		</div>
+				{#if !document.isBlockingLoad && entries.length > 0}
+					{#each groupedEntries as group (group.capsuleKey)}
+						<CapsuleGroupSection
+							{group}
+							isExpanded={collapsedCapsules.isExpanded(group.capsuleKey)}
+							{locale}
+							{valuesByInstance}
+							schemaHydrationVersion={document.schemaHydrationVersion}
+							onToggle={() => collapsedCapsules.toggle(group.capsuleKey)}
+							onInstanceValuesChange={document.updateInstanceValues}
+						/>
+					{/each}
+				{/if}
+			</div>
+		</ScrollArea>
 	</div>
 </aside>
