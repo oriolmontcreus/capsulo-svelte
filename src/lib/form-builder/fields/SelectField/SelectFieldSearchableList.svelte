@@ -1,5 +1,6 @@
 <script lang="ts">
   import CheckIcon from "@lucide/svelte/icons/check";
+  import * as Command from "$lib/components/ui/command";
   import { cn } from "$lib/utils";
   import SelectFieldGridStyles from "./SelectFieldGridStyles.svelte";
   import SelectOptionContent from "./SelectOptionContent.svelte";
@@ -44,30 +45,29 @@
   }
 </script>
 
-{#snippet optionButton(option: SelectOption)}
-  <button
-    type="button"
+{#snippet commandItem(option: SelectOption)}
+  <Command.Item
+    value={option.value}
     disabled={option.disabled}
     class={cn(
-      "hover:bg-accent cursor-pointer hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex w-full items-center rounded-sm px-2 py-2 text-left outline-hidden select-none disabled:pointer-events-none disabled:opacity-50",
-      isOptionSelected(option.value) && "bg-accent text-accent-foreground",
-      option.description ? "min-h-12" : "min-h-9",
+      "[&_.cn-command-item-indicator]:hidden",
+      option.description && "min-h-12 items-center py-2",
+      !option.description && "min-h-9",
     )}
-    onclick={() => onSelect(option)}
+    onSelect={() => onSelect(option)}
   >
-    <span class="absolute inset-e-2 flex size-3.5 items-center justify-center">
-      {#if isOptionSelected(option.value)}
-        <CheckIcon class="size-4" />
-      {/if}
-    </span>
-    <div class="pe-6">
-      <SelectOptionContent
-        {option}
-        query={searchQuery}
-        highlight={highlightEnabled}
-      />
-    </div>
-  </button>
+    <CheckIcon
+      class={cn(
+        "size-4 shrink-0",
+        !isOptionSelected(option.value) && "text-transparent",
+      )}
+    />
+    <SelectOptionContent
+      {option}
+      query={searchQuery}
+      highlight={highlightEnabled}
+    />
+  </Command.Item>
 {/snippet}
 
 {#snippet optionsList(options: SelectOption[])}
@@ -78,12 +78,12 @@
       style={gridStyle}
     >
       {#each options as option (option.value)}
-        {@render optionButton(option)}
+        {@render commandItem(option)}
       {/each}
     </div>
   {:else}
     {#each options as option (option.value)}
-      {@render optionButton(option)}
+      {@render commandItem(option)}
     {/each}
   {/if}
 {/snippet}
@@ -92,10 +92,9 @@
 
 {#if data.hasGroups}
   {#each data.groups as group (group.label)}
-    <div class="text-muted-foreground px-2 pt-2 pb-1 text-xs font-medium">
-      {group.label}
-    </div>
-    {@render optionsList(group.options)}
+    <Command.Group heading={group.label} value={group.label}>
+      {@render optionsList(group.options)}
+    </Command.Group>
   {/each}
 {:else}
   {@render optionsList(data.options)}

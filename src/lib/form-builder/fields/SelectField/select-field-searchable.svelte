@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { tick } from "svelte";
+  import { on } from "svelte/events";
+  import * as Command from "$lib/components/ui/command";
   import * as Popover from "$lib/components/ui/popover";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
   import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
   import { cn } from "$lib/utils";
   import SelectFieldSearchableList from "./SelectFieldSearchableList.svelte";
   import type { SelectFieldDefinition } from "./select-field.types";
@@ -35,7 +37,7 @@
   let open = $state(false);
   let searchQuery = $state("");
   let lastSearchQuery = $state("");
-  let triggerRef = $state<HTMLDivElement | null>(null);
+  let triggerRef = $state<HTMLButtonElement | null>(null);
   let contentWidth = $state<number | undefined>(undefined);
 
   const selectId = createSelectGridId();
@@ -76,12 +78,42 @@
     lastSearchQuery = searchQuery;
   });
 
+  $effect(() => {
+    if (!open || typeof window === "undefined") return;
+
+    const closePopover = () => {
+      open = false;
+    };
+
+    const closeOnIframePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof HTMLIFrameElement) {
+        closePopover();
+      }
+    };
+
+    const cleanupPointerDown = on(document, "pointerdown", closeOnIframePointerDown, {
+      capture: true,
+    });
+    const cleanupWindowBlur = on(window, "blur", closePopover);
+
+    return () => {
+      cleanupPointerDown();
+      cleanupWindowBlur();
+    };
+  });
+
   function handleOpenChange(nextOpen: boolean): void {
     open = nextOpen;
     if (nextOpen) {
       searchQuery = "";
       contentWidth = triggerRef?.offsetWidth;
     }
+  }
+
+  async function closeAndFocusTrigger(): Promise<void> {
+    open = false;
+    await tick();
+    triggerRef?.focus();
   }
 
   function selectOption(option: { value: string; disabled?: boolean }): void {
@@ -93,36 +125,36 @@
     }
 
     onValueChange(option.value);
-    open = false;
+    void closeAndFocusTrigger();
   }
 </script>
 
 <Popover.Root bind:open onOpenChange={handleOpenChange}>
-  <Popover.Trigger>
+  <Popover.Trigger bind:ref={triggerRef}>
     {#snippet child({ props })}
-      <div bind:this={triggerRef} class="w-full">
-        <Button
-          {...props}
-          type="button"
-          variant="outline"
-          aria-invalid={error ? true : undefined}
-          class={cn(
-            "w-full justify-between font-normal",
-            !hasSelection && "text-muted-foreground",
-          )}
-        >
-          <span class="truncate">
-            {triggerLabel}
-          </span>
-          <ChevronDownIcon class="text-muted-foreground size-4 shrink-0 pointer-events-none" />
-        </Button>
-      </div>
+      <Button
+        {...props}
+        type="button"
+        variant="outline"
+        role="combobox"
+        aria-expanded={open}
+        aria-invalid={error ? true : undefined}
+        class={cn(
+          "w-full justify-between font-normal",
+          !hasSelection && "text-muted-foreground",
+        )}
+      >
+        <span class="truncate">
+          {triggerLabel}
+        </span>
+        <ChevronDownIcon class="text-muted-foreground size-4 shrink-0 pointer-events-none" />
+      </Button>
     {/snippet}
   </Popover.Trigger>
 
   <Popover.Content
     align="start"
-    class="max-h-80 w-auto gap-0 p-0"
+    class="max-h-80 w-auto p-0"
     style={[
       contentWidth ? `width:${contentWidth}px` : "",
       dropdownMinWidth ? `min-width:${dropdownMinWidth}` : "",
@@ -130,36 +162,29 @@
       .filter(Boolean)
       .join(";") || undefined}
   >
-      <div class="flex flex-col">
-        <div class="border-b p-2">
-          <Input
-            type="search"
-            bind:value={searchQuery}
-            placeholder={field.searchPlaceholder ?? "Search..."}
-            class="h-9"
-            autocomplete="off"
+    <Command.Root shouldFilter={false} class="max-h-80 rounded-md">
+      <Command.Input
+        bind:value={searchQuery}
+        placeholder={field.searchPlaceholder ?? "Search..."}
+      />
+      <Command.List class="max-h-64">
+        <Command.Empty>
+          {field.emptyMessage ?? "No results found."}
+        </Command.Empty>
+        {#if filteredCount > 0}
+          <SelectFieldSearchableList
+            {field}
+            data={filteredData}
+            {selectId}
+            value={normalizedValue}
+            searchQuery={displaySearchQuery}
+            {useGrid}
+            {gridStyle}
+            {highlightEnabled}
+            onSelect={selectOption}
           />
-        </div>
-
-        <div class="max-h-64 overflow-y-auto p-1">
-          {#if filteredCount === 0}
-            <p class="text-muted-foreground px-2 py-6 text-center text-sm">
-              {field.emptyMessage ?? "No results found."}
-            </p>
-          {:else}
-            <SelectFieldSearchableList
-              {field}
-              data={filteredData}
-              {selectId}
-              value={normalizedValue}
-              searchQuery={displaySearchQuery}
-              {useGrid}
-              {gridStyle}
-              {highlightEnabled}
-              onSelect={selectOption}
-            />
-          {/if}
-        </div>
-      </div>
+        {/if}
+      </Command.List>
+    </Command.Root>
   </Popover.Content>
 </Popover.Root>
