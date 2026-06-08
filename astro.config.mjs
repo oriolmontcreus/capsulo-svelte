@@ -23,10 +23,8 @@ export default defineConfig({
   i18n: {
     defaultLocale: i18nConfig.defaultLocale,
     locales: i18nConfig.locales,
-    routing: {
-      prefixDefaultLocale: i18nConfig.prefixDefaultLocale,
-      redirectToDefaultLocale: i18nConfig.prefixDefaultLocale,
-    },
+    // Manual routing: public pages use injected /{locale}/* routes; admin stays at /admin/*.
+    routing: 'manual',
   },
 
   redirects: {

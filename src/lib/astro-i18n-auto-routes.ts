@@ -3,8 +3,9 @@ import path from "node:path";
 import type { AstroIntegration } from "astro";
 
 import capsuloConfig from "../../capsulo.config";
+import { getI18nConfig } from "./config/i18n-config";
 
-type PublicPageRoute = {
+type PageRoute = {
   pattern: string;
   entrypoint: string;
 };
@@ -13,14 +14,20 @@ function normalizeSlashes(value: string): string {
   return value.replaceAll("\\", "/");
 }
 
+function isAstroPage(relativePath: string): boolean {
+  return relativePath.endsWith(".astro");
+}
+
 function isPublicPage(relativePath: string): boolean {
+  if (!isAstroPage(relativePath)) return false;
+
   const segments = relativePath.split("/");
   const fileName = segments[segments.length - 1] ?? "";
 
   if (segments.includes("api")) return false;
   if (segments.includes("admin") || fileName.startsWith("admin")) return false;
 
-  return relativePath.endsWith(".astro");
+  return true;
 }
 
 function getUrlPathFromFile(relativePath: string): string {
@@ -32,12 +39,11 @@ function getUrlPathFromFile(relativePath: string): string {
   return `/${withoutIndex}`;
 }
 
-function listPublicPageRoutes(pagesDir: string): PublicPageRoute[] {
+function listAstroPageFiles(pagesDir: string): string[] {
   if (!fs.existsSync(pagesDir)) {
     return [];
   }
 
-  const routes: PublicPageRoute[] = [];
   const files: string[] = [];
 
   function walk(dirPath: string): void {
@@ -53,18 +59,30 @@ function listPublicPageRoutes(pagesDir: string): PublicPageRoute[] {
 
   walk(pagesDir);
 
-  for (const filePath of files) {
-    const relativePath = normalizeSlashes(path.relative(pagesDir, filePath));
-    if (!isPublicPage(relativePath)) continue;
+  return files;
+}
 
-    const urlPath = getUrlPathFromFile(relativePath);
+function listPageRoutes(
+  pagesDir: string,
+  matches: (relativePath: string) => boolean,
+): PageRoute[] {
+  const routes: PageRoute[] = [];
+
+  for (const filePath of listAstroPageFiles(pagesDir)) {
+    const relativePath = normalizeSlashes(path.relative(pagesDir, filePath));
+    if (!matches(relativePath)) continue;
+
     routes.push({
-      pattern: urlPath,
+      pattern: getUrlPathFromFile(relativePath),
       entrypoint: `./src/pages/${relativePath}`,
     });
   }
 
   return routes;
+}
+
+function listPublicPageRoutes(pagesDir: string): PageRoute[] {
+  return listPageRoutes(pagesDir, isPublicPage);
 }
 
 function buildLocalizedPattern(locale: string, urlPath: string): string {
@@ -127,8 +145,7 @@ export function autoI18nRoutes(): AstroIntegration {
       "astro:config:setup": ({ injectRoute, config }) => {
         if (!config.i18n) return;
 
-        const prefixDefaultLocale =
-          config.i18n.routing?.prefixDefaultLocale ?? false;
+        const { prefixDefaultLocale } = getI18nConfig(capsuloConfig);
         const locales = capsuloConfig.i18n.locales.map((locale) =>
           locale.trim(),
         );
@@ -147,6 +164,7 @@ export function autoI18nRoutes(): AstroIntegration {
             });
           }
         }
+
       },
 
       "astro:build:done": ({ dir }) => {
