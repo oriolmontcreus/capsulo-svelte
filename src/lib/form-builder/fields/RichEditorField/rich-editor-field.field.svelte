@@ -3,7 +3,6 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
-  import Underline from "@tiptap/extension-underline";
   import { createGlobalVariableHighlightExtension } from "$lib/globals/variable-autocomplete/global-variable-highlight-extension";
   import VariableAutocompleteLayer, {
     type AutocompleteHandlers,
@@ -58,7 +57,6 @@
       element,
       extensions: [
         StarterKit,
-        Underline,
         Placeholder.configure({
           placeholder: field.placeholder ?? "",
         }),
