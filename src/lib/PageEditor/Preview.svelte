@@ -81,6 +81,12 @@
     return new URL(previewUrl, window.location.origin).toString();
   });
 
+  /** Portals target body by default; in fullscreen only descendants of the fullscreen element are visible. */
+  const previewOverlayPortalProps = $derived.by(() => {
+    if (!isFullscreen || !previewRootEl) return undefined;
+    return { to: previewRootEl };
+  });
+
   function toSerializableValues(): PageEditorValuesByInstance {
     try {
       return JSON.parse(
@@ -351,7 +357,7 @@
         >
           {getPreviewDeviceLabel(previewDevice)}
         </Select.Trigger>
-        <Select.Content class="max-h-72 min-w-44">
+        <Select.Content class="max-h-72 min-w-44" portalProps={previewOverlayPortalProps}>
           <Select.Item value="responsive" class="text-xs">Responsive</Select.Item>
           {#each PREVIEW_DEVICE_GROUPS as group (group.category)}
             {@const devices = getPreviewDevicesByCategory(group.category)}
@@ -403,7 +409,7 @@
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content>Reset preview</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>Reset preview</Tooltip.Content>
       </Tooltip.Root>
     </div>
 
@@ -417,7 +423,7 @@
         >
           {formatLocaleLabel(locale || DEFAULT_LOCALE)}
         </Select.Trigger>
-        <Select.Content align="end" class="min-w-44">
+        <Select.Content align="end" class="min-w-44" portalProps={previewOverlayPortalProps}>
           {#each LOCALES as localeCode (localeCode)}
             <Select.Item value={localeCode} class="text-xs">
               {formatLocaleLabel(localeCode)}
@@ -440,7 +446,7 @@
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content>Copy URL</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>Copy URL</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
@@ -457,7 +463,7 @@
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content>Open in new tab</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>Open in new tab</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
@@ -478,7 +484,7 @@
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>
           {isFullscreen ? "Exit fullscreen preview" : "Fullscreen preview"}
         </Tooltip.Content>
       </Tooltip.Root>
