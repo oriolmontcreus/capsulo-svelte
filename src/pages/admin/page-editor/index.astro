@@ -1,5 +1,5 @@
 ---
-import Layout from "$/layouts/Layout.astro";
+import AdminLayout from "$/layouts/AdminLayout.astro";
 import PageEditorIndex from "$lib/PageEditor/PageEditorIndex.svelte";
 import capsuleManifest from "virtual:capsule-manifest";
 
@@ -28,11 +28,11 @@ const pageCards: PageCard[] = Object.entries(capsuleManifest)
 	.sort((a, b) => a.pageId.localeCompare(b.pageId));
 ---
 
-<Layout fontFamily="geist">
-	<main class="mx-auto max-w-6xl p-6">
+<AdminLayout activeRoute="page-editor">
+	<main class="mx-auto max-w-6xl overflow-y-auto p-6">
 		<PageEditorIndex {pageCards} client:load />
 	</main>
-</Layout>
+</AdminLayout>
 
 <script>
 	import { initPageEditorIndexPrefetch } from "$lib/PageEditor/prefetch-page-editor-data";

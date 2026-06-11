@@ -58,7 +58,7 @@
 
 <Tooltip.Provider delayDuration={150}>
 	<GlobalVariablesProvider {getPreview} {getVariableItems}>
-		<div class="bg-background text-foreground flex min-h-dvh w-full flex-col">
+		<div class="bg-background text-foreground flex h-full w-full flex-col">
 			<nav
 				class="border-border flex h-11 shrink-0 items-center justify-between border-b px-4"
 			>
@@ -102,7 +102,7 @@
 				</div>
 			</nav>
 
-			<main class="mx-auto w-full max-w-3xl flex-1 p-6">
+			<main class="mx-auto w-full max-w-3xl flex-1 overflow-y-auto p-6">
 				<div class="space-y-4">
 					<div>
 						<h1 class="text-2xl font-semibold">Global Variables</h1>

@@ -112,7 +112,7 @@
 <Tooltip.Provider delayDuration={150}>
   <GlobalVariablesProvider {getPreview} {getVariableItems}>
   <div
-    class="page-editor bg-background text-foreground flex h-dvh w-full flex-col overflow-hidden"
+    class="page-editor bg-background text-foreground flex h-full w-full flex-col overflow-hidden"
   >
     <!-- Navbar -->
     <nav

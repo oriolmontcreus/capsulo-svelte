@@ -1,14 +1,8 @@
 ---
-import Layout from "$/layouts/Layout.astro";
+import AdminLayout from "$/layouts/AdminLayout.astro";
 import GlobalsEditor from "$lib/GlobalsEditor/GlobalsEditor.svelte";
 ---
 
-<Layout fontFamily="geist">
+<AdminLayout activeRoute="globals">
 	<GlobalsEditor client:load />
-</Layout>
-
-<style>
-	:global(astro-dev-toolbar) {
-		display: none !important;
-	}
-</style>
+</AdminLayout>

@@ -1,0 +1,19 @@
+---
+import Layout from "./Layout.astro";
+import AdminNav from "$lib/admin/AdminNav.svelte";
+
+interface Props {
+	activeRoute: "page-editor" | "globals";
+}
+
+const { activeRoute } = Astro.props as Props;
+---
+
+<Layout fontFamily="geist">
+	<div class="flex h-dvh w-full overflow-hidden">
+		<AdminNav {activeRoute} client:load transition:persist="admin-nav" />
+		<div class="min-w-0 flex-1 overflow-hidden">
+			<slot />
+		</div>
+	</div>
+</Layout>

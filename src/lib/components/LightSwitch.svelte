@@ -4,9 +4,17 @@
 
   import { Button } from "$lib/components/ui/button";
   import { toggleMode } from "mode-watcher";
+  import type { ButtonVariant } from "$lib/components/ui/button";
+  import { cn } from "$lib/utils";
+  import type { ClassValue } from "clsx";
+
+  let {
+    variant = "outline",
+    class: className,
+  }: { variant: ButtonVariant; class?: ClassValue } = $props();
 </script>
 
-<Button onclick={toggleMode} variant="outline" size="icon">
+<Button onclick={toggleMode} {variant} size="icon" class={cn(className)}>
   <SunIcon
     class="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all! dark:scale-0 dark:-rotate-90"
   />
