@@ -6,6 +6,7 @@ import { richEditorFieldToZod } from "../fields/RichEditorField/rich-editor-fiel
 import { toggleFieldToZod } from "../fields/ToggleField/toggle-field.zod";
 import { selectFieldToZod } from "../fields/SelectField/select-field.zod";
 import { colorPickerFieldToZod } from "../fields/ColorPickerField/color-picker-field.zod";
+import { fileUploadFieldToZod } from "../fields/FileUploadField/file-upload-field.zod";
 import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 
 interface SchemaToZodOptions {
@@ -35,6 +36,9 @@ export function schemaToZod(schema: SchemaDefinition, options: SchemaToZodOption
 				break;
 			case "colorpicker":
 				shape[field.name] = colorPickerFieldToZod(field, defaultLocale);
+				break;
+			case "file-upload":
+				shape[field.name] = fileUploadFieldToZod(field, defaultLocale);
 				break;
 			default:
 				break;

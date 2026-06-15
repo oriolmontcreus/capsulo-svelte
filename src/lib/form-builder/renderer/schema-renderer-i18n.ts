@@ -95,7 +95,8 @@ export function buildSchemaRenderItems(
       field.type !== "rich-editor" &&
       field.type !== "toggle" &&
       field.type !== "select" &&
-      field.type !== "colorpicker"
+      field.type !== "colorpicker" &&
+      field.type !== "file-upload"
     ) {
       continue;
     }
@@ -130,11 +131,13 @@ export function buildSchemaRenderItems(
           ? typeof resolvedValue === "boolean"
             ? resolvedValue
             : false
-          : field.type === "select" && (field as SelectFieldDefinition).multiple
-            ? (normalizeSelectValue(field as SelectFieldDefinition, resolvedValue) as string[])
-            : typeof resolvedValue === "string"
-              ? resolvedValue
-              : "";
+          : field.type === "file-upload"
+            ? (Array.isArray(resolvedValue) ? (resolvedValue as string[]) : [])
+            : field.type === "select" && (field as SelectFieldDefinition).multiple
+              ? (normalizeSelectValue(field as SelectFieldDefinition, resolvedValue) as string[])
+              : typeof resolvedValue === "string"
+                ? resolvedValue
+                : "";
 
       renderItems.push({
         sourceField: field,

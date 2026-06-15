@@ -20,11 +20,13 @@ export function createInitialFieldValue(
 	const seedValue =
 		field.type === "select"
 			? getSelectInitialValue(field as SelectFieldDefinition)
-			: field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "colorpicker"
-				? (field.defaultValue ?? "")
-				: field.type === "toggle"
-					? (field.defaultValue ?? false)
-					: "";
+			: field.type === "file-upload"
+				? (field.defaultValue ?? [])
+				: field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "colorpicker"
+					? (field.defaultValue ?? "")
+					: field.type === "toggle"
+						? (field.defaultValue ?? false)
+						: "";
 
 	return {
 		[normalizedDefaultLocale]: seedValue

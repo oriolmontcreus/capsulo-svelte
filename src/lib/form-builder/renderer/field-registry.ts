@@ -6,6 +6,7 @@ import RichEditorFieldComponent from "../fields/RichEditorField/rich-editor-fiel
 import ToggleFieldComponent from "../fields/ToggleField/toggle-field.field.svelte";
 import SelectFieldComponent from "../fields/SelectField/select-field.field.svelte";
 import ColorPickerFieldComponent from "../fields/ColorPickerField/color-picker-field.field.svelte";
+import FileUploadFieldComponent from "../fields/FileUploadField/file-upload-field.field.svelte";
 
 const fieldRegistry: Record<FieldType, Component<any>> = {
   text: TextFieldComponent,
@@ -14,6 +15,7 @@ const fieldRegistry: Record<FieldType, Component<any>> = {
   toggle: ToggleFieldComponent,
   select: SelectFieldComponent,
   colorpicker: ColorPickerFieldComponent,
+  "file-upload": FileUploadFieldComponent,
 };
 
 export function getFieldComponent(type: FieldType): Component<any> | undefined {

@@ -1,4 +1,11 @@
-export type FieldType = "text" | "textarea" | "rich-editor" | "toggle" | "select" | "colorpicker";
+export type FieldType =
+	| "text"
+	| "textarea"
+	| "rich-editor"
+	| "toggle"
+	| "select"
+	| "colorpicker"
+	| "file-upload";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -85,13 +92,24 @@ export interface ColorPickerFieldDefinition extends BaseFieldDefinition {
 	onlyPresets?: boolean;
 }
 
+export interface FileUploadFieldDefinition extends BaseFieldDefinition {
+	type: "file-upload";
+	defaultValue?: string[];
+	accept?: string;
+	maxSize?: number;
+	maxFiles?: number;
+	multiple?: boolean;
+	colSpan?: number | "full" | ResponsiveColumns;
+}
+
 export type FieldDefinition =
 	| TextFieldDefinition
 	| TextareaFieldDefinition
 	| RichEditorFieldDefinition
 	| ToggleFieldDefinition
 	| SelectFieldDefinition
-	| ColorPickerFieldDefinition;
+	| ColorPickerFieldDefinition
+	| FileUploadFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;
