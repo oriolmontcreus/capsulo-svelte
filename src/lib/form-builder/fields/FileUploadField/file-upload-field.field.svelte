@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Upload, X, ImageIcon, Loader2 } from "@lucide/svelte";
+  import { Upload, X, ImageIcon, Loader2, Pencil } from "@lucide/svelte";
   import {
     Field,
     FieldDescription,
@@ -9,6 +9,9 @@
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
   import { getSignedUrls, removeFiles, uploadFile } from "./storage";
   import { registerUploadFlusher } from "./upload-staging";
+  import { isSvgFile, isSvgPath } from "./svg-utils";
+  import ImageZoomModal from "./ImageZoomModal.svelte";
+  import SvgEditorModal from "./SvgEditorModal.svelte";
 
   interface Props {
     field: FileUploadFieldDefinition;
@@ -228,6 +231,89 @@
   const canAddMore = $derived(
     !multiple || !maxFiles || totalCount < maxFiles,
   );
+
+  // Image zoom + SVG editing.
+  type SvgEditing =
+    | { kind: "committed"; path: string }
+    | { kind: "staged"; id: string }
+    | null;
+
+  let zoomSrc = $state<string | null>(null);
+  let svgEditing = $state<SvgEditing>(null);
+  let svgEditorOpen = $state(false);
+
+  const editingStagedFile = $derived(
+    svgEditing?.kind === "staged"
+      ? stagedFiles.find((staged) => staged.id === svgEditing.id)
+      : undefined,
+  );
+  const svgEditorFile = $derived(editingStagedFile?.file);
+  const svgEditorUrl = $derived(
+    svgEditing?.kind === "committed" ? signedUrls[svgEditing.path] : undefined,
+  );
+  const svgEditorName = $derived(
+    svgEditing?.kind === "committed"
+      ? fileNameFromPath(svgEditing.path)
+      : (editingStagedFile?.file.name ?? "SVG"),
+  );
+
+  function openZoom(src: string): void {
+    zoomSrc = src;
+  }
+
+  function closeZoom(): void {
+    zoomSrc = null;
+  }
+
+  function editCommittedSvg(path: string): void {
+    svgEditing = { kind: "committed", path };
+    svgEditorOpen = true;
+  }
+
+  function editStagedSvg(id: string): void {
+    svgEditing = { kind: "staged", id };
+    svgEditorOpen = true;
+  }
+
+  // Clear the editing target once the modal is fully closed.
+  $effect(() => {
+    if (!svgEditorOpen) svgEditing = null;
+  });
+
+  // SVG edits follow the deferred-save model: edited committed files are staged
+  // anew and the original path is marked for removal; edited staged files are
+  // replaced in place.
+  async function handleSaveSvg(content: string): Promise<void> {
+    const blob = new Blob([content], { type: "image/svg+xml" });
+
+    if (svgEditing?.kind === "committed") {
+      const path = svgEditing.path;
+      const file = new File([blob], fileNameFromPath(path), {
+        type: "image/svg+xml",
+      });
+      stagedFiles = [...stagedFiles, createStagedFile(file)];
+      if (!removedPaths.includes(path)) removedPaths = [...removedPaths, path];
+    } else if (svgEditing?.kind === "staged") {
+      const id = svgEditing.id;
+      const target = stagedFiles.find((staged) => staged.id === id);
+      if (target) {
+        URL.revokeObjectURL(target.previewUrl);
+        const file = new File([blob], target.file.name, {
+          type: "image/svg+xml",
+        });
+        stagedFiles = stagedFiles.map((staged) =>
+          staged.id === id
+            ? {
+                ...staged,
+                file,
+                previewUrl: URL.createObjectURL(file),
+                isImage: true,
+              }
+            : staged,
+        );
+      }
+    }
+  }
 </script>
 
 <Field data-invalid={error ? "true" : undefined}>
@@ -275,15 +361,31 @@
   {#if visibleCommitted.length > 0 || stagedFiles.length > 0}
     <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
       {#each visibleCommitted as path (path)}
+        {@const committedSvg = isSvgPath(path)}
         <li
           class="group bg-muted relative aspect-square overflow-hidden rounded-md border"
         >
           {#if isImagePath(path) && signedUrls[path]}
-            <img
-              src={signedUrls[path]}
-              alt={fileNameFromPath(path)}
-              class="size-full object-cover"
-            />
+            {#if committedSvg}
+              <img
+                src={signedUrls[path]}
+                alt={fileNameFromPath(path)}
+                class="size-full object-cover"
+              />
+            {:else}
+              <button
+                type="button"
+                onclick={() => openZoom(signedUrls[path])}
+                aria-label="Zoom {fileNameFromPath(path)}"
+                class="size-full cursor-zoom-in"
+              >
+                <img
+                  src={signedUrls[path]}
+                  alt={fileNameFromPath(path)}
+                  class="size-full object-cover"
+                />
+              </button>
+            {/if}
           {:else if isImagePath(path)}
             <div class="flex size-full items-center justify-center">
               <Loader2 class="text-muted-foreground size-4 animate-spin" />
@@ -298,27 +400,57 @@
               </span>
             </div>
           {/if}
-          <button
-            type="button"
-            onclick={() => removeCommitted(path)}
-            aria-label="Remove {fileNameFromPath(path)}"
-            class="bg-background/80 absolute top-1 right-1 rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-background"
+          <div
+            class="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            <X class="size-3.5" />
-          </button>
+            {#if committedSvg && signedUrls[path]}
+              <button
+                type="button"
+                onclick={() => editCommittedSvg(path)}
+                aria-label="Edit {fileNameFromPath(path)}"
+                class="bg-background/80 hover:bg-background rounded-full p-1"
+              >
+                <Pencil class="size-3.5" />
+              </button>
+            {/if}
+            <button
+              type="button"
+              onclick={() => removeCommitted(path)}
+              aria-label="Remove {fileNameFromPath(path)}"
+              class="bg-background/80 hover:bg-background rounded-full p-1"
+            >
+              <X class="size-3.5" />
+            </button>
+          </div>
         </li>
       {/each}
 
       {#each stagedFiles as staged (staged.id)}
+        {@const stagedSvg = isSvgFile(staged.file)}
         <li
           class="group border-primary relative aspect-square overflow-hidden rounded-md border-2"
         >
           {#if staged.isImage}
-            <img
-              src={staged.previewUrl}
-              alt={staged.file.name}
-              class="size-full object-cover"
-            />
+            {#if stagedSvg}
+              <img
+                src={staged.previewUrl}
+                alt={staged.file.name}
+                class="size-full object-cover"
+              />
+            {:else}
+              <button
+                type="button"
+                onclick={() => openZoom(staged.previewUrl)}
+                aria-label="Zoom {staged.file.name}"
+                class="size-full cursor-zoom-in"
+              >
+                <img
+                  src={staged.previewUrl}
+                  alt={staged.file.name}
+                  class="size-full object-cover"
+                />
+              </button>
+            {/if}
           {:else}
             <div
               class="flex size-full flex-col items-center justify-center gap-1 p-1 text-center"
@@ -334,14 +466,28 @@
           >
             new
           </span>
-          <button
-            type="button"
-            onclick={() => removeStaged(staged.id)}
-            aria-label="Remove {staged.file.name}"
-            class="bg-background/80 absolute top-1 right-1 rounded-full p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-background"
+          <div
+            class="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            <X class="size-3.5" />
-          </button>
+            {#if stagedSvg}
+              <button
+                type="button"
+                onclick={() => editStagedSvg(staged.id)}
+                aria-label="Edit {staged.file.name}"
+                class="bg-background/80 hover:bg-background rounded-full p-1"
+              >
+                <Pencil class="size-3.5" />
+              </button>
+            {/if}
+            <button
+              type="button"
+              onclick={() => removeStaged(staged.id)}
+              aria-label="Remove {staged.file.name}"
+              class="bg-background/80 hover:bg-background rounded-full p-1"
+            >
+              <X class="size-3.5" />
+            </button>
+          </div>
         </li>
       {/each}
     </ul>
@@ -387,3 +533,15 @@
     <FieldError>{error}</FieldError>
   {/if}
 </Field>
+
+{#if zoomSrc}
+  <ImageZoomModal src={zoomSrc} onClose={closeZoom} />
+{/if}
+
+<SvgEditorModal
+  bind:open={svgEditorOpen}
+  fileName={svgEditorName}
+  file={svgEditorFile}
+  url={svgEditorUrl}
+  onSave={handleSaveSvg}
+/>
