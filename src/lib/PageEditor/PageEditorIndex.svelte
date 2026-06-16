@@ -100,8 +100,8 @@
       .join(" ");
   }
 
-  function formatFolderDisplayName(name: string): string {
-    return displayName(name);
+  function routePath(...segments: string[]): string {
+    return "/" + segments.join("/");
   }
 
   onMount(() => {
@@ -193,13 +193,13 @@
         >
           <div class="flex flex-col gap-4">
             <div
-              class="bg-accent/10 text-accent flex size-12 items-center justify-center rounded-lg"
+              class="bg-background-muted text-foreground-muted flex size-12 items-center justify-center rounded-lg"
             >
               <FolderIcon class="size-6" />
             </div>
             <div class="flex flex-col gap-1.5">
-              <p class="text-base font-normal">
-                {formatFolderDisplayName(folder.name)}
+              <p class="font-mono text-sm">
+                {routePath(...currentPath, folder.name)}
               </p>
               <p class="text-foreground-muted text-sm">
                 {folder.itemCount}
@@ -226,7 +226,9 @@
             <FileTextIcon class="size-6" />
           </div>
           <div class="flex flex-col gap-1.5">
-            <p class="font-mono text-sm">{page.name}</p>
+            <p class="font-mono text-sm">
+              {routePath(...currentPath, page.name)}
+            </p>
             <div class="text-foreground-muted flex items-center gap-3 text-xs">
               <span>{page.capsuleCount} capsules</span>
               <span>{page.instanceCount} instances</span>
