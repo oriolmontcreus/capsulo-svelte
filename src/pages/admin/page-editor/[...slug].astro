@@ -20,7 +20,7 @@ const { pageId = "", entries = [] } = Astro.props as Partial<StaticPathProps>;
 const hasPage = pageId.length > 0;
 ---
 
-<AdminLayout activeRoute="page-editor">
+<AdminLayout activeRoute="page-editor" scrollable={!hasPage}>
 	{
 		hasPage ? (
 			<PageEditor pageId={pageId} entries={entries} client:load />

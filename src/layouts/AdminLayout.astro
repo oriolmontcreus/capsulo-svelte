@@ -1,19 +1,29 @@
 ---
 import Layout from "./Layout.astro";
 import AdminNav from "$lib/admin/AdminNav.svelte";
+import { ScrollArea } from "$lib/components/ui/scroll-area";
 
 interface Props {
 	activeRoute: "page-editor" | "globals";
+	scrollable?: boolean;
 }
 
-const { activeRoute } = Astro.props as Props;
+const { activeRoute, scrollable = true } = Astro.props as Props;
 ---
 
 <Layout fontFamily="geist">
-	<div class="flex h-dvh w-full overflow-hidden bg-neutral-100">
+	<div class="flex h-dvh w-full overflow-hidden bg-neutral-100 dark:bg-[oklch(0.205_0_0)]">
 		<AdminNav {activeRoute} client:load transition:persist="admin-nav" />
-		<div class="min-w-0 flex-1 overflow-hidden">
-			<slot />
+		<div class="min-h-0 min-w-0 flex-1 overflow-hidden">
+			{scrollable ? (
+				<ScrollArea class="h-full w-full" client:load>
+					<slot />
+				</ScrollArea>
+			) : (
+				<div class="h-full min-h-0">
+					<slot />
+				</div>
+			)}
 		</div>
 	</div>
 </Layout>
