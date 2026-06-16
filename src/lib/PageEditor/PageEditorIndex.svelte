@@ -117,7 +117,7 @@
   });
 </script>
 
-<div class="relative flex flex-col gap-6">
+<div class="relative flex flex-col gap-6 py-20">
   <!-- Header + Breadcrumb -->
   <div class="flex flex-col gap-2">
     <div class="flex flex-col gap-2">

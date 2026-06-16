@@ -10,7 +10,7 @@ const { activeRoute } = Astro.props as Props;
 ---
 
 <Layout fontFamily="geist">
-	<div class="flex h-dvh w-full overflow-hidden">
+	<div class="flex h-dvh w-full overflow-hidden bg-neutral-100">
 		<AdminNav {activeRoute} client:load transition:persist="admin-nav" />
 		<div class="min-w-0 flex-1 overflow-hidden">
 			<slot />
