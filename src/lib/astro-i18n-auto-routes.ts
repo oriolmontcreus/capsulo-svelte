@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
 
 import capsuloConfig from "../../capsulo.config";
@@ -149,7 +150,7 @@ export function autoI18nRoutes(): AstroIntegration {
         const locales = capsuloConfig.i18n.locales.map((locale) =>
           locale.trim(),
         );
-        const pagesDir = path.join(config.root.pathname, "src", "pages");
+        const pagesDir = path.join(fileURLToPath(config.root), "src", "pages");
         const publicPages = listPublicPageRoutes(pagesDir);
 
         for (const locale of locales) {
@@ -174,7 +175,7 @@ export function autoI18nRoutes(): AstroIntegration {
 
         const pagesDir = path.join(process.cwd(), "src", "pages");
         writeStaticRedirectsFile(
-          dir.pathname,
+          fileURLToPath(dir),
           capsuloConfig.i18n.defaultLocale.trim(),
           pagesDir,
         );
