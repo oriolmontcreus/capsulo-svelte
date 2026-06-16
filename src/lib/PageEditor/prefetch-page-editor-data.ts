@@ -23,15 +23,6 @@ function isRemoteTimestampNewer(
 	return remoteMs > cacheMs;
 }
 
-function scheduleIdle(callback: () => void): void {
-	if ("requestIdleCallback" in globalThis) {
-		globalThis.requestIdleCallback(() => callback());
-		return;
-	}
-
-	globalThis.setTimeout(callback, 350);
-}
-
 export function initPageEditorIndexPrefetch(): void {
 	const prefetchedPageIds = new Set<string>();
 
@@ -73,12 +64,4 @@ export function initPageEditorIndexPrefetch(): void {
 		link.addEventListener("focus", warm, { once: true });
 		link.addEventListener("touchstart", warm, { once: true });
 	}
-
-	scheduleIdle(() => {
-		for (const link of links) {
-			const pageId = link.getAttribute("data-page-id");
-			if (!pageId) continue;
-			void prefetchPageEditorData(pageId);
-		}
-	});
 }
