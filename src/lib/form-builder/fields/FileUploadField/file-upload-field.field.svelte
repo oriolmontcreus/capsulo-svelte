@@ -7,7 +7,7 @@
     FieldLabel,
   } from "$lib/components/ui/field";
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
-  import { getSignedUrls, removeFiles, uploadFile } from "./storage";
+  import { fileNameFromPath, removeFiles, runSignedUrlResolver, uploadFile } from "./storage";
   import { registerUploadFlusher } from "./upload-staging";
   import { isSvgFile, isSvgPath } from "./svg-utils";
   import ImageZoomModal from "./ImageZoomModal.svelte";
@@ -56,12 +56,6 @@
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  function fileNameFromPath(path: string): string {
-    const last = path.split("/").pop() ?? path;
-    const dashIndex = last.indexOf("-");
-    return dashIndex >= 0 ? last.slice(dashIndex + 1) : last;
-  }
-
   function isImagePath(path: string): boolean {
     return /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(path);
   }
@@ -83,22 +77,15 @@
     });
   }
 
-  $effect(() => {
-    const pathsToResolve = visibleCommitted.filter(
-      (path) => !(path in signedUrls),
-    );
-    if (pathsToResolve.length === 0) return;
-
-    let cancelled = false;
-    void getSignedUrls(pathsToResolve).then((resolved) => {
-      if (cancelled) return;
-      signedUrls = { ...signedUrls, ...resolved };
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  });
+  $effect(() =>
+    runSignedUrlResolver(
+      () => visibleCommitted,
+      () => signedUrls,
+      (next) => {
+        signedUrls = next;
+      },
+    ),
+  );
 
   $effect(() => {
     const unregister = registerUploadFlusher(flush);

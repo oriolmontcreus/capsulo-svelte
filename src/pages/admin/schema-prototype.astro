@@ -1,0 +1,10 @@
+---
+import AdminLayout from "$/layouts/AdminLayout.astro";
+import SchemaPrototypeDemo from "$lib/form-builder/demo/SchemaPrototypeDemo.svelte";
+---
+
+<AdminLayout activeRoute="globals">
+	<main class="mx-auto max-w-6xl p-6">
+		<SchemaPrototypeDemo client:load />
+	</main>
+</AdminLayout>

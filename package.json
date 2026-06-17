@@ -33,7 +33,6 @@
     "@tiptap/pm": "^3.23.6",
     "@tiptap/starter-kit": "^3.23.6",
     "astro": "^6.2.1",
-    "codemirror": "^6.0.2",
     "cookie": "^1.1.1",
     "mode-watcher": "0.5.1",
     "ogl": "^1.0.11",

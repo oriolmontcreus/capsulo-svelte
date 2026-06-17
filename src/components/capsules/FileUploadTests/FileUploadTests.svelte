@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getCmsData } from "$lib/cms/get-cms-data";
   import * as Card from "$lib/components/ui/card";
-  import { getSignedUrls } from "$lib/form-builder/fields/FileUploadField/storage";
+  import { fileNameFromPath, runSignedUrlResolver } from "$lib/form-builder/fields/FileUploadField/storage";
 
   import { fileUploadTestsSchema } from "./file-upload-tests.schema";
   import type { FileUploadTestsData } from "./file-upload-tests.schema.d";
@@ -32,26 +32,15 @@
 
   let signedUrls = $state<Record<string, string>>({});
 
-  $effect(() => {
-    const pathsToResolve = allPaths.filter((path) => !(path in signedUrls));
-    if (pathsToResolve.length === 0) return;
-
-    let cancelled = false;
-    void getSignedUrls(pathsToResolve).then((resolved) => {
-      if (cancelled) return;
-      signedUrls = { ...signedUrls, ...resolved };
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  function fileNameFromPath(path: string): string {
-    const last = path.split("/").pop() ?? path;
-    const dashIndex = last.indexOf("-");
-    return dashIndex >= 0 ? last.slice(dashIndex + 1) : last;
-  }
+  $effect(() =>
+    runSignedUrlResolver(
+      () => allPaths,
+      () => signedUrls,
+      (next) => {
+        signedUrls = next;
+      },
+    ),
+  );
 
   function pathsFor(fieldName: string): string[] {
     const value = data[fieldName as keyof typeof data];

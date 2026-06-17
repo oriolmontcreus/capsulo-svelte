@@ -58,7 +58,7 @@ export async function removeFiles(paths: string[]): Promise<void> {
  * (the bucket is private). Returns a path -> signed URL map; paths that fail to
  * resolve are simply omitted.
  */
-export async function getSignedUrls(
+async function getSignedUrls(
 	paths: string[],
 ): Promise<Record<string, string>> {
 	if (paths.length === 0) return {};
@@ -78,4 +78,28 @@ export async function getSignedUrls(
 		}
 	}
 	return result;
+}
+
+export function fileNameFromPath(path: string): string {
+	const last = path.split("/").pop() ?? path;
+	const dashIndex = last.indexOf("-");
+	return dashIndex >= 0 ? last.slice(dashIndex + 1) : last;
+}
+
+/** ponytail: Svelte $effect body — call from `$effect(() => runSignedUrlResolver(...))` */
+export function runSignedUrlResolver(
+	getPaths: () => string[],
+	getCache: () => Record<string, string>,
+	setCache: (cache: Record<string, string>) => void,
+): (() => void) | undefined {
+	const pathsToResolve = getPaths().filter((path) => !(path in getCache()));
+	if (pathsToResolve.length === 0) return;
+
+	let cancelled = false;
+	void getSignedUrls(pathsToResolve).then((resolved) => {
+		if (cancelled) return;
+		setCache({ ...getCache(), ...resolved });
+	});
+
+	return () => cancelled = true;
 }

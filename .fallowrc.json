@@ -1,7 +1,6 @@
 {
-  "$schema": "https://unpkg.com/knip@6/schema.json",
-  "tags": ["-lintignore"],
-  "ignore": [
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
     "src/lib/components/ui/dropdown-menu/**"
   ],
   "entry": [
@@ -11,22 +10,20 @@
     "src/components/capsules/**/capsule.definition.ts",
     "src/lib/capsules/core/define-capsule.ts",
     "src/config/**/*.ts",
-    "src/styles/**/*.css",
     "src/lib/form-builder/demo/**/*.{ts,svelte}",
     "src/lib/form-builder/core/schema-to-zod.ts",
     "src/lib/form-builder/fields/**/*.zod.ts",
     "src/lib/form-builder/schemas/**/*.ts"
   ],
-  "project": [
-    "src/**/*.{ts,tsx,svelte,astro}",
-    "functions/**/*.{ts,js}",
-    "scripts/**/*.ts"
+  "ignoreExports": [
+    { "file": "src/lib/components/ui/**/index.ts", "exports": ["*"] }
   ],
   "ignoreExportsUsedInFile": {
-    "interface": true,
-    "type": true
+    "type": true,
+    "interface": true
   },
-  "ignoreIssues": {
-    "src/lib/components/ui/**/index.ts": ["exports", "types", "enumMembers"]
-  }
+  "duplicates": {
+    "minOccurrences": 3
+  },
+  "rules": {}
 }

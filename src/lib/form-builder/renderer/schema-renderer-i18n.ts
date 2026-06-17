@@ -80,6 +80,50 @@ export function createSchemaInitialValues(
   return initialValues;
 }
 
+function isRenderableField(field: FieldDefinition): boolean {
+  return (
+    field.type === "text" ||
+    field.type === "textarea" ||
+    field.type === "rich-editor" ||
+    field.type === "toggle" ||
+    field.type === "select" ||
+    field.type === "colorpicker" ||
+    field.type === "file-upload"
+  );
+}
+
+function getFieldLocales(
+  field: FieldDefinition,
+  context: SchemaRendererI18nContext,
+  translatableLocaleMode: TranslatableLocaleMode,
+): string[] {
+  if (field.translatable && field.type !== "toggle") {
+    return translatableLocaleMode === "active-only"
+      ? [context.editingLocale]
+      : context.locales;
+  }
+  return [context.defaultLocale];
+}
+
+function resolveRenderValue(
+  field: FieldDefinition,
+  resolvedValue: unknown,
+): string | boolean | string[] {
+  if (field.type === "toggle") {
+    return typeof resolvedValue === "boolean" ? resolvedValue : false;
+  }
+  if (field.type === "file-upload") {
+    return Array.isArray(resolvedValue) ? (resolvedValue as string[]) : [];
+  }
+  if (field.type === "select" && (field as SelectFieldDefinition).multiple) {
+    return normalizeSelectValue(
+      field as SelectFieldDefinition,
+      resolvedValue,
+    ) as string[];
+  }
+  return typeof resolvedValue === "string" ? resolvedValue : "";
+}
+
 export function buildSchemaRenderItems(
   schema: SchemaDefinition,
   values: SchemaValues,
@@ -89,23 +133,11 @@ export function buildSchemaRenderItems(
   const renderItems: SchemaRenderItem[] = [];
 
   for (const field of schema.fields) {
-    if (
-      field.type !== "text" &&
-      field.type !== "textarea" &&
-      field.type !== "rich-editor" &&
-      field.type !== "toggle" &&
-      field.type !== "select" &&
-      field.type !== "colorpicker" &&
-      field.type !== "file-upload"
-    ) {
+    if (!isRenderableField(field)) {
       continue;
     }
 
-    const fieldLocales = field.translatable && field.type !== "toggle"
-      ? translatableLocaleMode === "active-only"
-        ? [context.editingLocale]
-        : context.locales
-      : [context.defaultLocale];
+    const fieldLocales = getFieldLocales(field, context, translatableLocaleMode);
 
     for (const locale of fieldLocales) {
       const localizedField: FieldDefinition = {
@@ -126,24 +158,11 @@ export function buildSchemaRenderItems(
             context.defaultLocale,
           );
 
-      const value =
-        field.type === "toggle"
-          ? typeof resolvedValue === "boolean"
-            ? resolvedValue
-            : false
-          : field.type === "file-upload"
-            ? (Array.isArray(resolvedValue) ? (resolvedValue as string[]) : [])
-            : field.type === "select" && (field as SelectFieldDefinition).multiple
-              ? (normalizeSelectValue(field as SelectFieldDefinition, resolvedValue) as string[])
-              : typeof resolvedValue === "string"
-                ? resolvedValue
-                : "";
-
       renderItems.push({
         sourceField: field,
         localizedField,
         locale,
-        value,
+        value: resolveRenderValue(field, resolvedValue),
       });
     }
   }
