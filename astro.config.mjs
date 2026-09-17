@@ -8,6 +8,7 @@ import svelte from '@astrojs/svelte';
 
 import tailwindcss from '@tailwindcss/vite';
 import { astroClientDepsFixPlugin } from './src/lib/vite-plugin-astro-client-deps-fix.ts';
+import { devAutoLoginPlugin } from './src/lib/vite-plugin-dev-auto-login.ts';
 import { capsuleManifestPlugin } from './src/lib/vite-plugin-capsule-manifest.ts';
 import { schemaTypesPlugin } from './src/lib/vite-plugin-schema-types.ts';
 import capsuloConfig from './capsulo.config.ts';
@@ -42,6 +43,7 @@ export default defineConfig({
   vite: {
     plugins: [
       astroClientDepsFixPlugin(),
+      devAutoLoginPlugin(),
       capsuleManifestPlugin(),
       schemaTypesPlugin(),
       tailwindcss(),
