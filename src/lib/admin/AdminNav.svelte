@@ -1,13 +1,15 @@
 <script lang="ts">
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import GlobeIcon from "@lucide/svelte/icons/globe";
+  import GitCompareArrowsIcon from "@lucide/svelte/icons/git-compare-arrows";
   import { onMount } from "svelte";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
   import type { ClassValue } from "clsx";
   import { cn } from "$lib/utils";
+  import { listChangedPages } from "$lib/PageEditor/changes/changed-pages";
 
-  type AdminRoute = "page-editor" | "globals";
+  type AdminRoute = "page-editor" | "globals" | "changes";
 
   type NavItem = {
     id: AdminRoute;
@@ -34,13 +36,25 @@
       icon: GlobeIcon,
       matchPrefix: "/admin/globals",
     },
+    {
+      id: "changes",
+      href: "/admin/changes",
+      label: "Changes",
+      icon: GitCompareArrowsIcon,
+      matchPrefix: "/admin/changes",
+    },
   ];
 
   let pathname = $state("");
+  let changedCount = $state(0);
 
   function syncPathname() {
     if (typeof window === "undefined") return;
     pathname = window.location.pathname;
+  }
+
+  async function syncChangedCount() {
+    changedCount = (await listChangedPages()).length;
   }
 
   function isActive(item: NavItem): boolean {
@@ -55,8 +69,13 @@
 
   onMount(() => {
     syncPathname();
-    document.addEventListener("astro:page-load", syncPathname);
-    return () => document.removeEventListener("astro:page-load", syncPathname);
+    void syncChangedCount();
+    const onPageLoad = () => {
+      syncPathname();
+      void syncChangedCount();
+    };
+    document.addEventListener("astro:page-load", onPageLoad);
+    return () => document.removeEventListener("astro:page-load", onPageLoad);
   });
 </script>
 
@@ -79,7 +98,7 @@
                 aria-current={active ? "page" : undefined}
                 class={cn(
                   triggerClass as ClassValue,
-                  "focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
+                  "focus-visible:ring-ring relative flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
                   active
                     ? "bg-primary/30 text-foreground"
                     : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
@@ -87,6 +106,14 @@
               >
                 <Icon class="size-3.5" aria-hidden="true" />
                 <span class="sr-only">{item.label}</span>
+                {#if item.id === "changes" && changedCount > 0}
+                  <span
+                    class="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full px-1 text-[9px] leading-none font-medium tabular-nums"
+                    aria-label="{changedCount} pages with changes"
+                  >
+                    {changedCount}
+                  </span>
+                {/if}
               </a>
             {/snippet}
           </Tooltip.Trigger>

@@ -83,6 +83,8 @@ export type SavePageEditorDocumentInput = {
 	userId: string;
 	valuesByInstance: PageEditorValuesByInstance;
 	hasExistingDocument: boolean;
+	/** Commit message recorded on the pages-history revision (Changes page). */
+	comment?: string;
 };
 
 export type SavePageEditorDocumentResult = {
@@ -125,7 +127,8 @@ export async function savePageEditorDocumentToDb(
 		page_id: input.pageId,
 		content: serializedContent,
 		content_format_version: PAGE_EDITOR_CONTENT_FORMAT_VERSION,
-		created_by: input.userId
+		created_by: input.userId,
+		comment: input.comment ?? null
 	});
 
 	if (revisionError) {

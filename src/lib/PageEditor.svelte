@@ -146,11 +146,10 @@
 
       <Button
         size="sm"
+        href="/admin/changes"
         class="h-7 px-3 text-white rounded-full border border-card"
-        onclick={() => saveControls.save()}
-        disabled={saveControls.disabled}
       >
-        {saveControls.isSaving ? "Saving..." : "Save"}
+        Review changes
       </Button>
     </nav>
 

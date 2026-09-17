@@ -1,0 +1,8 @@
+---
+import AdminLayout from "$/layouts/AdminLayout.astro";
+import ChangesPage from "$lib/PageEditor/changes/ChangesPage.svelte";
+---
+
+<AdminLayout activeRoute="changes" scrollable={false}>
+	<ChangesPage client:load />
+</AdminLayout>

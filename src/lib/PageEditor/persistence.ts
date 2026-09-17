@@ -18,7 +18,10 @@ export type PageEditorPersistedContent = PageEditorPersistedContentV1;
 
 export type PageEditorCachedDocument = {
 	pageId: string;
+	/** Current local draft values (auto-synced on every edit). */
 	valuesByInstance: PageEditorValuesByInstance;
+	/** Last committed (remote) values; the "old" side of the changes diff. */
+	baselineValuesByInstance: PageEditorValuesByInstance;
 	updatedAt: string | null;
 	cachedAt: string;
 };

@@ -138,6 +138,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 			await savePageEditorDocumentToCache({
 				pageId,
 				valuesByInstance: remoteLoadResult.valuesByInstance,
+				baselineValuesByInstance: remoteLoadResult.valuesByInstance,
 				updatedAt: remoteLoadResult.updatedAt,
 			});
 			isSyncing = false;
@@ -172,6 +173,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 			await savePageEditorDocumentToCache({
 				pageId,
 				valuesByInstance: loadResult.valuesByInstance,
+				baselineValuesByInstance: loadResult.valuesByInstance,
 				updatedAt: loadResult.updatedAt,
 			});
 		}
@@ -216,9 +218,13 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		}
 
 		hasExistingDocument = true;
+		// A successful save commits the current values, so they become the new
+		// baseline and the page is no longer reported as having local changes.
+		const savedValues = context.getValuesByInstance();
 		await savePageEditorDocumentToCache({
 			pageId: context.getPageId(),
-			valuesByInstance: context.getValuesByInstance(),
+			valuesByInstance: savedValues,
+			baselineValuesByInstance: savedValues,
 			updatedAt: saveResult.updatedAt,
 		});
 		isSaving = false;
