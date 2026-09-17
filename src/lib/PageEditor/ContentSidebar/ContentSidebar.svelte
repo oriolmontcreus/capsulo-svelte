@@ -71,6 +71,7 @@
 					saveError={document.saveError}
 					isBlockingLoad={document.isBlockingLoad}
 					hasEntries={entries.length > 0}
+					remoteChangedWhileDirty={document.remoteChangedWhileDirty}
 				/>
 
 				{#if !document.isBlockingLoad && entries.length > 0}

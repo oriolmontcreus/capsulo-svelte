@@ -146,7 +146,13 @@ export async function loadAllPageEditorCacheDocuments(): Promise<PageEditorCache
 export async function savePageEditorDocumentToCache(input: {
 	pageId: string;
 	valuesByInstance: PageEditorValuesByInstance;
-	updatedAt: string | null;
+	/**
+	 * The remote `pages.updated_at` this row is based on. When omitted the stored
+	 * value is preserved: an autosaved draft still descends from the same remote
+	 * revision, and claiming otherwise makes the next load treat the remote as
+	 * newer and overwrite the draft.
+	 */
+	updatedAt?: string | null;
 	/**
 	 * When provided, sets the committed baseline (use on remote load and after a
 	 * successful commit). When omitted, the existing baseline is preserved so
@@ -154,17 +160,21 @@ export async function savePageEditorDocumentToCache(input: {
 	 */
 	baselineValuesByInstance?: PageEditorValuesByInstance;
 }): Promise<void> {
-	let baseline = input.baselineValuesByInstance;
-	if (!baseline) {
-		const existing = await loadPageEditorDocumentFromCache(input.pageId);
-		baseline = existing?.baselineValuesByInstance ?? input.valuesByInstance;
-	}
+	const needsExisting =
+		input.baselineValuesByInstance === undefined || input.updatedAt === undefined;
+	const existing = needsExisting ? await loadPageEditorDocumentFromCache(input.pageId) : null;
+
+	const baseline =
+		input.baselineValuesByInstance ??
+		existing?.baselineValuesByInstance ??
+		input.valuesByInstance;
+	const updatedAt = input.updatedAt === undefined ? (existing?.updatedAt ?? null) : input.updatedAt;
 
 	const document: PageEditorCachedDocument = {
 		pageId: input.pageId,
 		valuesByInstance: normalizeValuesForCache(input.valuesByInstance),
 		baselineValuesByInstance: normalizeValuesForCache(baseline),
-		updatedAt: input.updatedAt,
+		updatedAt,
 		cachedAt: new Date().toISOString()
 	};
 

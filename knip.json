@@ -6,6 +6,7 @@
   ],
   "entry": [
     "capsulo.config.ts",
+    "src/**/*.test-manual.ts",
     "svelte.config.js",
     "functions/**/*.{ts,js}",
     "src/components/capsules/**/capsule.definition.ts",

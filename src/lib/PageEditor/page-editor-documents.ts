@@ -78,6 +78,35 @@ export async function loadPageEditorDocumentMetadataFromDb(
 	};
 }
 
+/** Message recorded when a revision is written outside the Changes page. */
+const DEFAULT_COMMIT_MESSAGE = "Saved from editor";
+
+export type CreateCommitResult = {
+	commitId: string | null;
+	errorMessage: string | null;
+};
+
+/**
+ * Creates the commit row that groups every page revision written together, so
+ * the History page can show one entry per commit instead of one per touched page.
+ */
+export async function createCommit(
+	message: string,
+	userId: string
+): Promise<CreateCommitResult> {
+	const { data, error } = await supabase
+		.from("commits")
+		.insert({ message, created_by: userId })
+		.select("id")
+		.single();
+
+	if (error) {
+		return { commitId: null, errorMessage: error.message };
+	}
+
+	return { commitId: data?.id ?? null, errorMessage: null };
+}
+
 export type SavePageEditorDocumentInput = {
 	pageId: string;
 	userId: string;
@@ -85,6 +114,11 @@ export type SavePageEditorDocumentInput = {
 	hasExistingDocument: boolean;
 	/** Commit message recorded on the pages-history revision (Changes page). */
 	comment?: string;
+	/**
+	 * Groups this revision with the other pages committed in the same action.
+	 * When omitted a single-page commit is created, so no revision is ever orphaned.
+	 */
+	commitId?: string;
 };
 
 export type SavePageEditorDocumentResult = {
@@ -96,6 +130,22 @@ export async function savePageEditorDocumentToDb(
 	input: SavePageEditorDocumentInput
 ): Promise<SavePageEditorDocumentResult> {
 	const serializedContent = serializePageEditorValues(input.valuesByInstance);
+
+	// Resolved before the upsert on purpose: an empty commit row is harmless (the
+	// History page skips commits with no revisions), but updating `pages` without
+	// recording the revision would be a real gap in the audit trail.
+	let commitId = input.commitId ?? null;
+	if (!commitId) {
+		const createdCommit = await createCommit(
+			input.comment?.trim() || DEFAULT_COMMIT_MESSAGE,
+			input.userId
+		);
+		if (createdCommit.errorMessage) {
+			return { errorMessage: createdCommit.errorMessage, updatedAt: null };
+		}
+		commitId = createdCommit.commitId;
+	}
+
 	const documentPayload: {
 		page_id: string;
 		content: ReturnType<typeof serializePageEditorValues>;
@@ -128,7 +178,8 @@ export async function savePageEditorDocumentToDb(
 		content: serializedContent,
 		content_format_version: PAGE_EDITOR_CONTENT_FORMAT_VERSION,
 		created_by: input.userId,
-		comment: input.comment ?? null
+		comment: input.comment ?? null,
+		commit_id: commitId
 	});
 
 	if (revisionError) {

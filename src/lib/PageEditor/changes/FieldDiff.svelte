@@ -13,8 +13,8 @@
 	}: {
 		field: FieldDefinition;
 		change: FieldChange;
-		/** Placeholder for the future per-field Revert button (wired in Phase 6). */
-		action?: Snippet;
+		/** Per-field Revert (Changes page) or Recover (History page) control. */
+		action?: Snippet<[FieldChange]>;
 	} = $props();
 
 	const isInline = $derived(field.type === "text" || field.type === "textarea");
@@ -54,8 +54,12 @@
 	{/if}
 
 	{#if action}
-		<div class="absolute top-0 right-0 opacity-0 transition-opacity group-hover/field:opacity-100">
-			{@render action()}
+		<!-- focus-within keeps the control reachable for keyboard users, which the
+		     legacy hover-only implementation made impossible. -->
+		<div
+			class="absolute top-0 right-0 opacity-0 transition-opacity group-hover/field:opacity-100 focus-within:opacity-100"
+		>
+			{@render action(change)}
 		</div>
 	{/if}
 </div>

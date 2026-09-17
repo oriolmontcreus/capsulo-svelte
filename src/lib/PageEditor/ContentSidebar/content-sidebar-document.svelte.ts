@@ -11,6 +11,8 @@ import {
 	savePageEditorDocumentToDb,
 } from "$lib/PageEditor/page-editor-documents";
 import type { SchemaValues } from "$lib/form-builder/core/types";
+import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
+import { resolveInstanceDefaults } from "$lib/PageEditor/changes/schema-defaults";
 import { flushPendingUploads } from "$lib/form-builder/fields/FileUploadField/upload-staging";
 import type { PageEditorSaveControls } from "./types";
 
@@ -48,6 +50,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 	let hasExistingDocument = $state(false);
 	let loadError = $state<string | null>(null);
 	let saveError = $state<string | null>(null);
+	let remoteChangedWhileDirty = $state(false);
 	let schemaHydrationVersion = $state(0);
 	let latestLoadRunId = 0;
 
@@ -75,6 +78,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		hasCheckedAuth = false;
 		loadError = null;
 		saveError = null;
+		remoteChangedWhileDirty = false;
 		hasExistingDocument = false;
 
 		const cachedDocument = await loadPageEditorDocumentFromCache(pageId);
@@ -133,8 +137,34 @@ export function createContentSidebarDocument(context: DocumentContext) {
 			}
 
 			loadError = null;
-			applyHydratedValues(remoteLoadResult.valuesByInstance);
 			hasExistingDocument = remoteLoadResult.hasExistingDocument;
+
+			const draftHasPendingEdits =
+				countFieldChanges(
+					computePageChangeSet(
+						pageId,
+						cachedDocument.baselineValuesByInstance,
+						cachedDocument.valuesByInstance,
+						resolveInstanceDefaults,
+					),
+				) > 0;
+
+			if (draftHasPendingEdits) {
+				// The page was committed elsewhere while edits were pending here. Those
+				// edits only exist in this browser, so keep them and move the baseline
+				// forward instead - overwriting would silently destroy uncommitted work.
+				remoteChangedWhileDirty = true;
+				await savePageEditorDocumentToCache({
+					pageId,
+					valuesByInstance: cachedDocument.valuesByInstance,
+					baselineValuesByInstance: remoteLoadResult.valuesByInstance,
+					updatedAt: remoteLoadResult.updatedAt,
+				});
+				isSyncing = false;
+				return;
+			}
+
+			applyHydratedValues(remoteLoadResult.valuesByInstance);
 			await savePageEditorDocumentToCache({
 				pageId,
 				valuesByInstance: remoteLoadResult.valuesByInstance,
@@ -249,7 +279,6 @@ export function createContentSidebarDocument(context: DocumentContext) {
 				void savePageEditorDocumentToCache({
 					pageId,
 					valuesByInstance: context.getValuesByInstance(),
-					updatedAt: null,
 				});
 			}, CACHE_PERSIST_DEBOUNCE_MS);
 
@@ -295,6 +324,9 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		},
 		get saveError() {
 			return saveError;
+		},
+		get remoteChangedWhileDirty() {
+			return remoteChangedWhileDirty;
 		},
 		get schemaHydrationVersion() {
 			return schemaHydrationVersion;

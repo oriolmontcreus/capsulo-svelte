@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { Button } from "$lib/components/ui/button";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { listChangedPages, getPageChangeSet, type ChangedPageSummary } from "./changed-pages";
 	import { commitChanges, type CommitFailure } from "./commit";
-	import type { PageChangeSet } from "./diff-model";
+	import { applyFieldValueToDraft } from "./draft-write";
+	import type { FieldChange, PageChangeSet } from "./diff-model";
 	import ChangesSidebar from "./ChangesSidebar.svelte";
 	import CommitForm from "./CommitForm.svelte";
 	import PageDiff from "./PageDiff.svelte";
@@ -16,10 +18,39 @@
 	let isCommitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let failures = $state<CommitFailure[]>([]);
+	let revertError = $state<string | null>(null);
 
-	const changeSetPromise = $derived<Promise<PageChangeSet | null>>(
-		selectedPageId ? getPageChangeSet(selectedPageId) : Promise.resolve(null),
-	);
+	/** Bumped after a revert so the diff re-reads the draft it just changed. */
+	let draftRevision = $state(0);
+
+	const changeSetPromise = $derived.by<Promise<PageChangeSet | null>>(() => {
+		draftRevision;
+		return selectedPageId ? getPageChangeSet(selectedPageId) : Promise.resolve(null);
+	});
+
+	/** Discards one pending field edit by writing the committed value back. */
+	async function revertField(change: FieldChange): Promise<void> {
+		if (!selectedPageId) return;
+
+		revertError = null;
+		const result = await applyFieldValueToDraft(
+			selectedPageId,
+			{
+				instanceId: change.instanceId,
+				fieldName: change.fieldName,
+				locale: change.locale,
+			},
+			change.oldValue,
+		);
+
+		if (!result.ok) {
+			revertError = result.errorMessage ?? "Could not revert that field.";
+			return;
+		}
+
+		draftRevision += 1;
+		await refresh();
+	}
 
 	async function refresh(): Promise<void> {
 		changedPages = await listChangedPages();
@@ -86,11 +117,27 @@
 						</p>
 					</div>
 				{:else}
+					<div aria-live="polite" class="empty:hidden">
+						{#if revertError}
+							<p class="text-destructive mb-4 text-xs">{revertError}</p>
+						{/if}
+					</div>
 					{#await changeSetPromise then changeSet}
-						<PageDiff {changeSet} />
+						<PageDiff {changeSet} fieldAction={revertAction} />
 					{/await}
 				{/if}
 			</div>
 		</ScrollArea>
 	</section>
 </div>
+
+{#snippet revertAction(change: FieldChange)}
+	<Button
+		variant="ghost"
+		size="xs"
+		title="Discard this change and restore the committed value"
+		onclick={() => revertField(change)}
+	>
+		Revert
+	</Button>
+{/snippet}

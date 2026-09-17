@@ -6,6 +6,7 @@
 		saveError: string | null;
 		isBlockingLoad: boolean;
 		hasEntries: boolean;
+		remoteChangedWhileDirty?: boolean;
 	};
 
 	let {
@@ -15,6 +16,7 @@
 		saveError,
 		isBlockingLoad,
 		hasEntries,
+		remoteChangedWhileDirty = false,
 	}: Props = $props();
 </script>
 
@@ -28,6 +30,14 @@
 {#if loadError}
 	<div class="text-destructive rounded-md border p-3 text-xs">
 		Failed to load page content: {loadError}
+	</div>
+{/if}
+
+{#if remoteChangedWhileDirty}
+	<div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
+		This page was committed somewhere else while you had unsaved edits here. Your edits
+		were kept - review them on the
+		<a href="/admin/changes" class="underline">Changes page</a>.
 	</div>
 {/if}
 

@@ -2,14 +2,16 @@
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import GitCompareArrowsIcon from "@lucide/svelte/icons/git-compare-arrows";
+  import HistoryIcon from "@lucide/svelte/icons/history";
   import { onMount } from "svelte";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
   import type { ClassValue } from "clsx";
   import { cn } from "$lib/utils";
   import { listChangedPages } from "$lib/PageEditor/changes/changed-pages";
+  import { CHANGES_UPDATED_EVENT } from "$lib/PageEditor/changes/draft-write";
 
-  type AdminRoute = "page-editor" | "globals" | "changes";
+  type AdminRoute = "page-editor" | "globals" | "changes" | "history";
 
   type NavItem = {
     id: AdminRoute;
@@ -43,6 +45,13 @@
       icon: GitCompareArrowsIcon,
       matchPrefix: "/admin/changes",
     },
+    {
+      id: "history",
+      href: "/admin/history",
+      label: "History",
+      icon: HistoryIcon,
+      matchPrefix: "/admin/history",
+    },
   ];
 
   let pathname = $state("");
@@ -74,8 +83,13 @@
       syncPathname();
       void syncChangedCount();
     };
+    const onChangesUpdated = () => void syncChangedCount();
     document.addEventListener("astro:page-load", onPageLoad);
-    return () => document.removeEventListener("astro:page-load", onPageLoad);
+    window.addEventListener(CHANGES_UPDATED_EVENT, onChangesUpdated);
+    return () => {
+      document.removeEventListener("astro:page-load", onPageLoad);
+      window.removeEventListener(CHANGES_UPDATED_EVENT, onChangesUpdated);
+    };
   });
 </script>
 

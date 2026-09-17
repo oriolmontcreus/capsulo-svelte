@@ -5,6 +5,7 @@ import {
 	savePageEditorDocumentToCache
 } from "$lib/PageEditor/page-editor-cache";
 import {
+	createCommit,
 	loadPageEditorDocumentMetadataFromDb,
 	savePageEditorDocumentToDb
 } from "$lib/PageEditor/page-editor-documents";
@@ -34,11 +35,12 @@ async function resolveUserId(): Promise<string | null> {
 
 /**
  * Commits the local draft of each given page to Supabase under a single message.
- * Each page that actually changed is written to `pages` (+ a `pages-history`
- * revision carrying the commit message); its committed values then become the
- * new local baseline so it drops out of the Changes list. Per-page failures are
- * collected so a partial failure does not lose the message or the pages that
- * did commit.
+ * One `commits` row groups every page written by this action, so the History page
+ * shows "this commit touched pages A, B and C" as a single entry. Each page that
+ * actually changed is written to `pages` (+ a `pages-history` revision linked to
+ * that commit); its committed values then become the new local baseline so it
+ * drops out of the Changes list. Per-page failures are collected so a partial
+ * failure does not lose the message or the pages that did commit.
  *
  * ponytail: file-upload staging is intentionally NOT flushed here (deferred to a
  * later phase). The editor is unmounted on this route, so staged uploads would
@@ -63,6 +65,21 @@ export async function commitChanges(
 	const committedPageIds: string[] = [];
 	const failures: CommitFailure[] = [];
 
+	if (committable.length === 0) {
+		return { committedPageIds, failures, errorMessage: null };
+	}
+
+	// One commit row for the whole action; every revision below links to it.
+	const createdCommit = await createCommit(message.trim(), userId);
+	if (createdCommit.errorMessage || !createdCommit.commitId) {
+		return {
+			committedPageIds,
+			failures,
+			errorMessage: createdCommit.errorMessage ?? "Failed to create the commit."
+		};
+	}
+	const commitId = createdCommit.commitId;
+
 	for (const document of committable) {
 		const pageId = document.pageId;
 		const metadata = await loadPageEditorDocumentMetadataFromDb(pageId);
@@ -77,7 +94,8 @@ export async function commitChanges(
 			userId,
 			valuesByInstance: draftValues,
 			hasExistingDocument: metadata.hasExistingDocument,
-			comment: message
+			comment: message,
+			commitId
 		});
 
 		if (saveResult.errorMessage) {

@@ -1,0 +1,8 @@
+---
+import AdminLayout from "$/layouts/AdminLayout.astro";
+import HistoryPage from "$lib/PageEditor/history/HistoryPage.svelte";
+---
+
+<AdminLayout activeRoute="history" scrollable={false}>
+	<HistoryPage client:load />
+</AdminLayout>

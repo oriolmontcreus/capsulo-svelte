@@ -1,11 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from "svelte";
 	import { getCapsuleByKey } from "$lib/capsules/core/registry";
 	import type { FieldDefinition } from "$lib/form-builder/core/types";
-	import type { InstanceChange } from "./diff-model";
+	import type { FieldChange, InstanceChange } from "./diff-model";
 	import FieldDiff from "./FieldDiff.svelte";
 	import { capsuleKeyFromInstanceId } from "./schema-defaults";
 
-	let { instance }: { instance: InstanceChange } = $props();
+	let {
+		instance,
+		fieldAction,
+	}: {
+		instance: InstanceChange;
+		fieldAction?: Snippet<[FieldChange]>;
+	} = $props();
 
 	const capsuleKey = $derived(capsuleKeyFromInstanceId(instance.instanceId));
 	const capsule = $derived(getCapsuleByKey(capsuleKey));
@@ -25,6 +32,10 @@
 			<span class="rounded bg-green-600 px-1.5 py-0.5 text-[10px] font-medium text-white">
 				New
 			</span>
+		{:else if instance.isRemoved}
+			<span class="bg-destructive rounded px-1.5 py-0.5 text-[10px] font-medium text-white">
+				Removed
+			</span>
 		{/if}
 	</div>
 
@@ -32,7 +43,7 @@
 		{#each instance.fields as change (change.fieldName + "::" + change.locale)}
 			{@const field = findField(change.fieldName)}
 			{#if field}
-				<FieldDiff {field} {change} />
+				<FieldDiff {field} {change} action={fieldAction} />
 			{/if}
 		{/each}
 	</div>

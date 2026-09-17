@@ -6,6 +6,7 @@ CREATE TABLE public."pages-history" (
   comment text,
   created_by uuid REFERENCES auth.users (id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
+  commit_id uuid REFERENCES public.commits (id) ON DELETE SET NULL,
   CONSTRAINT pages_history_content_object_check
     CHECK (jsonb_typeof(content) = 'object')
 );
@@ -15,6 +16,9 @@ COMMENT ON TABLE public."pages-history" IS
 
 CREATE INDEX pages_history_page_created_at_idx
   ON public."pages-history" (page_id, created_at DESC);
+
+CREATE INDEX pages_history_commit_id_idx
+  ON public."pages-history" (commit_id);
 
 ALTER TABLE public."pages-history" ENABLE ROW LEVEL SECURITY;
 

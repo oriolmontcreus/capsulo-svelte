@@ -19,6 +19,8 @@ export type InstanceChange = {
 	instanceId: string;
 	/** True when the instance had no committed (baseline) values but has draft values. */
 	isNew: boolean;
+	/** True when the instance had committed values but none remain on the new side. */
+	isRemoved: boolean;
 	fields: FieldChange[];
 };
 
@@ -123,9 +125,13 @@ function computeInstanceChange(
 
 	if (fields.length === 0) return null;
 
+	const hadValues = instanceHasValues(oldInstance);
+	const hasValues = instanceHasValues(newInstance);
+
 	return {
 		instanceId,
-		isNew: !instanceHasValues(oldInstance) && instanceHasValues(newInstance),
+		isNew: !hadValues && hasValues,
+		isRemoved: hadValues && !hasValues,
 		fields
 	};
 }
