@@ -3,10 +3,11 @@
 	import type { FieldDefinition } from "$lib/form-builder/core/types";
 	import type { InstanceChange } from "./diff-model";
 	import FieldDiff from "./FieldDiff.svelte";
+	import { capsuleKeyFromInstanceId } from "./schema-defaults";
 
 	let { instance }: { instance: InstanceChange } = $props();
 
-	const capsuleKey = $derived(instance.instanceId.replace(/-\d+$/, ""));
+	const capsuleKey = $derived(capsuleKeyFromInstanceId(instance.instanceId));
 	const capsule = $derived(getCapsuleByKey(capsuleKey));
 	const title = $derived(
 		capsule?.meta?.displayName ?? capsule?.schema.name ?? capsuleKey,

@@ -9,6 +9,7 @@ import {
 	savePageEditorDocumentToDb
 } from "$lib/PageEditor/page-editor-documents";
 import { selectCommittableDocuments } from "./commit-selection";
+import { resolveInstanceDefaults } from "./schema-defaults";
 
 export type CommitFailure = {
 	pageId: string;
@@ -58,7 +59,7 @@ export async function commitChanges(
 
 	const documents = await loadAllPageEditorCacheDocuments();
 	// Guard against empty/duplicate revisions: only pages that really changed.
-	const committable = selectCommittableDocuments(documents, pageIds);
+	const committable = selectCommittableDocuments(documents, pageIds, resolveInstanceDefaults);
 	const committedPageIds: string[] = [];
 	const failures: CommitFailure[] = [];
 

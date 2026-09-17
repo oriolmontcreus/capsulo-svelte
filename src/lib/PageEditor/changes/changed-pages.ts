@@ -1,5 +1,6 @@
 import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
 import { computePageChangeSet, countFieldChanges, type PageChangeSet } from "./diff-model";
+import { resolveInstanceDefaults } from "./schema-defaults";
 
 export type ChangedPageSummary = {
 	pageId: string;
@@ -31,7 +32,8 @@ export async function listChangedPages(): Promise<ChangedPageSummary[]> {
 		const changeSet = computePageChangeSet(
 			document.pageId,
 			document.baselineValuesByInstance,
-			document.valuesByInstance
+			document.valuesByInstance,
+			resolveInstanceDefaults
 		);
 		const count = countFieldChanges(changeSet);
 		if (count === 0) continue;
@@ -57,6 +59,7 @@ export async function getPageChangeSet(pageId: string): Promise<PageChangeSet | 
 	return computePageChangeSet(
 		pageId,
 		document.baselineValuesByInstance,
-		document.valuesByInstance
+		document.valuesByInstance,
+		resolveInstanceDefaults
 	);
 }

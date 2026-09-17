@@ -1,5 +1,5 @@
 import type { PageEditorCachedDocument } from "$lib/PageEditor/persistence";
-import { computePageChangeSet, countFieldChanges } from "./diff-model";
+import { computePageChangeSet, countFieldChanges, type InstanceDefaultsResolver } from "./diff-model";
 
 /**
  * Pure selection of which requested pages actually have something to commit:
@@ -11,7 +11,8 @@ import { computePageChangeSet, countFieldChanges } from "./diff-model";
  */
 export function selectCommittableDocuments(
 	documents: PageEditorCachedDocument[],
-	pageIds: string[]
+	pageIds: string[],
+	resolveDefaults?: InstanceDefaultsResolver
 ): PageEditorCachedDocument[] {
 	const byId = new Map(documents.map((document) => [document.pageId, document]));
 	const committable: PageEditorCachedDocument[] = [];
@@ -22,7 +23,8 @@ export function selectCommittableDocuments(
 		const changeSet = computePageChangeSet(
 			pageId,
 			document.baselineValuesByInstance,
-			document.valuesByInstance
+			document.valuesByInstance,
+			resolveDefaults
 		);
 		if (countFieldChanges(changeSet) === 0) continue;
 		committable.push(document);

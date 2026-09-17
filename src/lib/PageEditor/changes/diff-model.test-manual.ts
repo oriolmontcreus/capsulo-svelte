@@ -91,4 +91,30 @@ function values(input: PageEditorValuesByInstance): PageEditorValuesByInstance {
 	assert.equal(cs.instances[0].fields[0].kind, "added");
 }
 
+// 7. Field missing from baseline but seeded with its schema default in the draft -> no change
+{
+	const defaults = () => ({
+		featured: { es: false },
+		active: { es: true },
+		richDescription: { es: "<p>Default</p>" }
+	});
+	const baseline = values({ "cap-01": { title: { es: "Hello" } } });
+	const draft = values({
+		"cap-01": {
+			title: { es: "Hello" },
+			featured: { es: false },
+			active: { es: true },
+			richDescription: { es: "<p>Default</p>" }
+		}
+	});
+	assert.equal(pageHasChanges(computePageChangeSet("home", baseline, draft, defaults)), false);
+
+	// A seeded field that was then edited is still reported, against its default.
+	const edited = values({ "cap-01": { title: { es: "Hello" }, active: { es: false } } });
+	const cs = computePageChangeSet("home", baseline, edited, defaults);
+	assert.equal(countFieldChanges(cs), 1);
+	assert.equal(cs.instances[0].fields[0].oldValue, true);
+	assert.equal(cs.instances[0].fields[0].newValue, false);
+}
+
 console.log("diff-model self-check passed");

@@ -22,6 +22,13 @@ export type InstanceChange = {
 	fields: FieldChange[];
 };
 
+/**
+ * Resolves the default (seeded) values for an instance's schema. A field/locale
+ * that is missing from one side is compared as if it held its default value,
+ * because that's what the editor fills in when it loads the content.
+ */
+export type InstanceDefaultsResolver = (instanceId: string) => SchemaValues | undefined;
+
 export type PageChangeSet = {
 	pageId: string;
 	instances: InstanceChange[];
@@ -84,7 +91,8 @@ function instanceHasValues(instance: SchemaValues | undefined): boolean {
 function computeInstanceChange(
 	instanceId: string,
 	oldInstance: SchemaValues | undefined,
-	newInstance: SchemaValues | undefined
+	newInstance: SchemaValues | undefined,
+	defaults: SchemaValues | undefined
 ): InstanceChange | null {
 	const fieldNames = new Set<string>();
 	if (oldInstance) for (const name of Object.keys(oldInstance)) fieldNames.add(name);
@@ -97,8 +105,9 @@ function computeInstanceChange(
 		const newField = newInstance?.[fieldName];
 
 		for (const locale of localeKeys(oldField, newField)) {
-			const oldValue = oldField?.[locale];
-			const newValue = newField?.[locale];
+			const defaultValue = defaults?.[fieldName]?.[locale];
+			const oldValue = oldField?.[locale] === undefined ? defaultValue : oldField[locale];
+			const newValue = newField?.[locale] === undefined ? defaultValue : newField[locale];
 			if (valuesEqual(oldValue, newValue)) continue;
 
 			fields.push({
@@ -129,7 +138,8 @@ function computeInstanceChange(
 export function computePageChangeSet(
 	pageId: string,
 	baselineValues: PageEditorValuesByInstance,
-	draftValues: PageEditorValuesByInstance
+	draftValues: PageEditorValuesByInstance,
+	resolveDefaults?: InstanceDefaultsResolver
 ): PageChangeSet {
 	const instanceIds = new Set<string>();
 	for (const id of Object.keys(baselineValues)) instanceIds.add(id);
@@ -140,7 +150,8 @@ export function computePageChangeSet(
 		const change = computeInstanceChange(
 			instanceId,
 			baselineValues[instanceId],
-			draftValues[instanceId]
+			draftValues[instanceId],
+			resolveDefaults?.(instanceId)
 		);
 		if (change) instances.push(change);
 	}
