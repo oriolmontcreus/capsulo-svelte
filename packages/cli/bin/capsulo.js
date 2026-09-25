@@ -2,6 +2,8 @@
 // @ts-check
 import * as p from "@clack/prompts";
 
+import { ExecError, isVerbose, tail } from "../src/lib/exec.js";
+
 const HELP = `capsulo <command>
 
 Commands:
@@ -31,6 +33,11 @@ if (!command || command === "--help" || command === "-h" || command === "help") 
 		await run(args);
 	} catch (error) {
 		p.log.error(error instanceof Error ? error.message : String(error));
+		// Output of hidden steps is only shown when they fail.
+		if (error instanceof ExecError && error.log.trim() && !isVerbose()) {
+			console.error(`\n${tail(error.log)}\n`);
+			p.log.info("Re-run with --verbose to see the full output.");
+		}
 		process.exitCode = 1;
 	}
 }

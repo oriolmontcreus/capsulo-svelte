@@ -27,13 +27,15 @@ npx capsulo deploy
 The first run takes a few minutes:
 
 1. Logs in to Cloudflare (`wrangler login`).
-2. Creates the D1 database and the KV namespace, and writes their ids into `wrangler.jsonc`.
+2. Creates the D1 database and the KV namespace, and writes their ids into `wrangler.jsonc`. It suggests `<project>-db` / `<project>-uploads`; answer "No" to pick your own names, or pass `--db-name` / `--kv-name`. An existing database or namespace with that name is reused.
 3. Applies the migrations, builds and deploys to `https://<name>.<account>.workers.dev`.
 4. Creates the first CMS user (your client) and prints their password once.
 5. Offers to create a private GitHub repo (`gh`) and commit the deploy settings.
 6. Walks you through **auto-publishing**. The repo connection and the Deploy Hook have to be created in the Cloudflare dashboard (there's no API for them yet); paste the hook URL and the CLI stores it as the `DEPLOY_HOOK_URL` secret.
 
 Later runs are safe: they skip what already exists, then pull, build and deploy.
+
+Output stays short: each step prints one line, and a failing step prints the end of its log. Other flags: `--verbose` shows the full wrangler/astro output, `-y` / `--yes` accepts the recommended names and defaults, and `--skip-build` deploys the existing `dist/`.
 
 ## CMS users
 

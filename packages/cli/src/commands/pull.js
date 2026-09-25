@@ -85,8 +85,9 @@ async function readRemote(siteUrl) {
  * @param {string} uploadsDir
  * @param {string[]} keys
  * @param {(key: string) => Promise<ArrayBuffer | null>} fetchUpload
+ * @param {(message: string) => void} notice
  */
-async function syncUploads(uploadsDir, keys, fetchUpload) {
+async function syncUploads(uploadsDir, keys, fetchUpload, notice) {
 	const invalid = keys.find((key) => !UPLOAD_KEY.test(key));
 	if (invalid) throw new Error(`Refusing to write unexpected upload key "${invalid}".`);
 	await mkdir(uploadsDir, { recursive: true });
@@ -97,7 +98,6 @@ async function syncUploads(uploadsDir, keys, fetchUpload) {
 
 	let pending = keys.filter((key) => !existsSync(path.join(uploadsDir, key)));
 	const deadline = Date.now() + RETRY_WINDOW_MS;
-	let downloaded = 0;
 	while (pending.length > 0) {
 		/** @type {string[]} */
 		const missing = [];
@@ -108,15 +108,60 @@ async function syncUploads(uploadsDir, keys, fetchUpload) {
 				continue;
 			}
 			await writeFile(path.join(uploadsDir, key), new Uint8Array(bytes));
-			downloaded++;
 		}
 		pending = missing;
 		if (pending.length === 0) break;
 		if (Date.now() > deadline) throw new Error(`Uploads not found: ${pending.join(", ")}`);
-		p.log.warn(`${pending.length} upload(s) not readable yet, retrying in ${RETRY_DELAY_MS / 1000}s...`);
+		notice(`${pending.length} upload(s) not readable yet, retrying in ${RETRY_DELAY_MS / 1000}s...`);
 		await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
 	}
-	return downloaded;
+}
+
+/**
+ * Writes the content snapshot and syncs uploads. Returns a one-line summary.
+ * @param {string} root
+ * @param {{ local?: boolean, from?: string, onNotice?: (message: string) => void }} [options]
+ */
+export async function pullContent(root, options = {}) {
+	const notice = options.onNotice ?? ((message) => p.log.warn(message));
+	const outDir = path.join(root, ".capsulo", "published");
+	const uploadsDir = path.join(root, "public", "uploads");
+	const siteUrl = options.from ?? process.env.CAPSULO_SITE_URL ?? (await readProjectState(root)).siteUrl;
+
+	let source;
+	let origin;
+	if (options.local) {
+		source = await readLocal(root);
+		origin = "the local database";
+	} else if (siteUrl) {
+		// A failed pull must fail the build: deploying without content would blank the live site.
+		source = await readRemote(siteUrl);
+		origin = siteUrl;
+	} else {
+		notice("Not deployed yet, so the site is built with schema defaults.");
+		source = { data: EMPTY_EXPORT, fetchUpload: async () => null, close: async () => {} };
+		origin = null;
+	}
+
+	try {
+		const { data } = source;
+		await mkdir(outDir, { recursive: true });
+		await writeFile(
+			path.join(outDir, "content.json"),
+			`${JSON.stringify({ formatVersion: data.formatVersion, pages: data.pages, globals: data.globals })}\n`,
+		);
+		await syncUploads(
+			uploadsDir,
+			data.uploads.map((upload) => upload.key),
+			source.fetchUpload,
+			notice,
+		);
+		const pages = Object.keys(data.pages).length;
+		const counts = `${pages} page${pages === 1 ? "" : "s"}, ${data.uploads.length} upload${data.uploads.length === 1 ? "" : "s"}`;
+		return origin ? `Content pulled from ${origin} (${counts})` : "Content snapshot written (nothing published yet)";
+	} finally {
+		await source.close();
+	}
 }
 
 /** @param {string[]} argv */
@@ -130,41 +175,5 @@ export async function pullCommand(argv) {
 		return;
 	}
 
-	const root = findProjectRoot();
-	const outDir = path.join(root, ".capsulo", "published");
-	const uploadsDir = path.join(root, "public", "uploads");
-	const siteUrl = values.from ?? process.env.CAPSULO_SITE_URL ?? (await readProjectState(root)).siteUrl;
-
-	let source;
-	if (values.local) {
-		source = await readLocal(root);
-		p.log.info("Pulling published content from the local database.");
-	} else if (siteUrl) {
-		// A failed pull must fail the build: deploying without content would blank the live site.
-		source = await readRemote(siteUrl);
-		p.log.info(`Pulling published content from ${siteUrl}.`);
-	} else {
-		p.log.warn("No siteUrl yet (the site was never deployed): building with schema defaults.");
-		source = { data: EMPTY_EXPORT, fetchUpload: async () => null, close: async () => {} };
-	}
-
-	try {
-		const { data } = source;
-		await mkdir(outDir, { recursive: true });
-		await writeFile(
-			path.join(outDir, "content.json"),
-			`${JSON.stringify({ formatVersion: data.formatVersion, pages: data.pages, globals: data.globals })}\n`,
-		);
-		const downloaded = await syncUploads(
-			uploadsDir,
-			data.uploads.map((upload) => upload.key),
-			source.fetchUpload,
-		);
-		p.log.success(
-			`Pulled ${Object.keys(data.pages).length} page(s), ${data.globals ? "globals" : "no globals"}, ` +
-				`${data.uploads.length} upload(s) (${downloaded} downloaded).`,
-		);
-	} finally {
-		await source.close();
-	}
+	p.log.success(await pullContent(findProjectRoot(), { local: values.local, from: values.from }));
 }

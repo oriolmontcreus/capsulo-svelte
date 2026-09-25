@@ -1,31 +1,20 @@
 // @ts-check
-import { spawn } from "node:child_process";
+import { execNodeBin } from "./exec.js";
 
 /**
- * Runs the project's wrangler. `capture` collects stdout (stderr still streams to the terminal).
+ * Runs the project's wrangler (no shell, no npx).
+ * - default: output hidden unless it fails or --verbose is on; returns stdout.
+ * - `json`:  stdout captured for parsing.
+ * - `interactive`: wrangler owns the terminal (e.g. `wrangler login`).
  * @param {string} root
  * @param {string[]} args
- * @param {{ capture?: boolean, input?: string }} [options]
+ * @param {{ json?: boolean, interactive?: boolean, input?: string }} [options]
  * @returns {Promise<string>}
  */
-export function runWrangler(root, args, options = {}) {
-	return new Promise((resolve, reject) => {
-		const child = spawn("npx", ["--no-install", "wrangler", ...args], {
-			cwd: root,
-			// Captured runs get no terminal input, so wrangler never waits on a prompt nobody sees.
-			stdio: [options.input !== undefined ? "pipe" : options.capture ? "ignore" : "inherit", options.capture ? "pipe" : "inherit", "inherit"],
-			shell: process.platform === "win32",
-			env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
-		});
-		let stdout = "";
-		child.stdout?.on("data", (chunk) => (stdout += chunk));
-		if (options.input !== undefined) child.stdin?.end(options.input);
-		child.on("error", reject);
-		child.on("close", (code) => {
-			if (code === 0) resolve(stdout);
-			else reject(new Error(`wrangler ${args.join(" ")} exited with code ${code}.`));
-		});
-	});
+export async function runWrangler(root, args, options = {}) {
+	const mode = options.interactive ? "inherit" : options.json ? "json" : "quiet";
+	const { stdout } = await execNodeBin(root, "wrangler", "wrangler", args, { mode, input: options.input });
+	return stdout;
 }
 
 /**
@@ -44,7 +33,7 @@ export function parseJsonOutput(output) {
  */
 export async function whoami(root) {
 	try {
-		return parseJsonOutput(await runWrangler(root, ["whoami", "--json"], { capture: true }));
+		return parseJsonOutput(await runWrangler(root, ["whoami", "--json"], { json: true }));
 	} catch {
 		return { loggedIn: false, accounts: [] };
 	}
@@ -55,7 +44,7 @@ export async function whoami(root) {
  * @param {string} root
  */
 export async function apiToken(root) {
-	const result = parseJsonOutput(await runWrangler(root, ["auth", "token", "--json"], { capture: true }));
+	const result = parseJsonOutput(await runWrangler(root, ["auth", "token", "--json"], { json: true }));
 	if (!result.token) throw new Error("Use CLOUDFLARE_API_TOKEN or `wrangler login`; API keys are not supported.");
 	return /** @type {string} */ (result.token);
 }
