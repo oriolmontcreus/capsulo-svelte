@@ -5,7 +5,7 @@ A static-first site + CMS that runs on **one free Cloudflare account** (no credi
 - **Public pages** are prerendered by Astro and served as static assets, which are free and unlimited on Workers.
 - **The CMS** (`/admin`) talks to a small API on the same Worker (`src/pages/api/capsulo`):
   - **D1** stores pages, history, globals, users and sessions.
-  - **Workers KV** stores uploaded files.
+  - **Workers KV** stores uploaded files by default (up to 25 MB each). A project can use **R2** instead for bigger files; see [File storage](#file-storage).
 - **Publishing:** a CMS commit fires a Workers Builds Deploy Hook. The build pulls the published content and uploads, and bakes them into the static site.
 
 ## Start a new project
@@ -27,7 +27,7 @@ npx capsulo deploy
 The first run takes a few minutes:
 
 1. Logs in to Cloudflare (`wrangler login`).
-2. Creates the D1 database and the KV namespace, and writes their ids into `wrangler.jsonc`. It suggests `<project>-db` / `<project>-uploads`; answer "No" to pick your own names, or pass `--db-name` / `--kv-name`. An existing database or namespace with that name is reused.
+2. Creates the D1 database and the upload storage (a KV namespace, or an R2 bucket for R2 projects), and writes their ids into `wrangler.jsonc`. It suggests `<project>-db` / `<project>-uploads`; answer "No" to pick your own names, or pass `--db-name` / `--kv-name`. An existing database or namespace with that name is reused.
 3. Applies the migrations, builds and deploys to `https://<name>.<account>.workers.dev`.
 4. Creates the first CMS user (your client) and prints their password once.
 5. Offers to create a private GitHub repo (`gh`) and commit the deploy settings.
@@ -36,6 +36,27 @@ The first run takes a few minutes:
 Later runs are safe: they skip what already exists, then pull, build and deploy.
 
 Output stays short: each step prints one line, and a failing step prints the end of its log. Other flags: `--verbose` shows the full wrangler/astro output, `-y` / `--yes` accepts the recommended names and defaults, and `--skip-build` deploys the existing `dist/`.
+
+## File storage
+
+Files uploaded in the CMS go to one of two places. `npm create capsulo` asks which (or pass `--storage kv|r2`):
+
+| | Workers KV (default) | R2 |
+|---|---|---|
+| Max file size | 25 MB | 100 MB (the Worker request limit) |
+| Free storage | 1 GB | 10 GB |
+| Setup | Nothing extra | Cloudflare asks for a payment method once to enable R2, even for the free tier |
+
+Either way, the public site serves copies baked into the static build, so visitor traffic never reads from KV or R2.
+
+To move an existing project from KV to R2 (for example to upload videos):
+
+```sh
+npx capsulo storage       # shows where uploads are stored
+npx capsulo storage r2    # moves them to R2
+```
+
+`capsulo storage r2` guides you through enabling R2 (adding the payment method is the one manual step), creates the bucket, adds it to `wrangler.jsonc`, deploys so new uploads go to R2, then copies every existing file. The KV namespace stays bound as a read-only fallback, so no file breaks while they are copied; the command explains how to remove it afterwards. It is safe to re-run. Before the project is deployed, or with `--local`, it only moves the files of your local dev storage.
 
 ## CMS users
 
@@ -71,12 +92,13 @@ These are per Cloudflare account and shared by every project in it:
 |---|---|---|
 | Worker requests | 100k / day | Only the CMS API and builds use them; public pages are static |
 | D1 databases | 10 | One per project, so about 10 client projects per account |
-| KV storage | 1 GB, 1k writes / day | For uploads; compress images before uploading |
+| KV storage | 1 GB, 1k writes / day | Default upload storage; compress images before uploading |
+| R2 storage | 10 GB, 1M writes / month | Optional upload storage; needs a payment method on file |
 | Workers Builds | 3,000 min / month | Deploy Hooks dedupe bursts of commits |
 
 ## Repository layout
 
 - `src/`: the Astro site, CMS admin and API (`src/pages/api/capsulo`, `src/lib/server`).
 - `migrations/`: D1 schema.
-- `packages/cli`: the `capsulo` CLI (`deploy`, `users`, `pull`).
+- `packages/cli`: the `capsulo` CLI (`deploy`, `users`, `pull`, `storage`).
 - `packages/create-capsulo`: `npm create capsulo`. To test it against this checkout, run `node packages/create-capsulo/bin/create-capsulo.js ../test-site --template .`

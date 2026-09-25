@@ -45,7 +45,7 @@ You own your content and control every aspect of how it works:
 - **Type Safety**: Built with TypeScript and Zod for automatic type inference and runtime validation. If you define an Input type as "email", Capsulo won't let you save anything other than a valid email.
 - **No Lock-in**: Your content is stored in your repository as markdown and JSON. Switch frameworks or platforms anytime without losing your work.
 
-> **Note on image storage**: You need somewhere to host your images. Capsulo is powered by Cloudflare R2 by default but can be switched to any other storage provider.
+> **Note on file storage**: Uploaded files are stored in Cloudflare Workers KV by default, which needs no payment method and takes files up to 25 MB. Projects can use Cloudflare R2 instead for bigger files: pick it in `npm create capsulo`, or move an existing project with `npx capsulo storage r2`. The public site serves copies baked into the static build either way.
 
 ### 3. Performance
 
@@ -198,7 +198,7 @@ Content creators can now edit the Hero component directly at `/admin` with a bea
 | **Validation** | Zod |
 | **Storage (Dev)** | Local filesystem |
 | **Storage (Prod)** | GitHub API |
-| **Image Storage** | Cloudflare R2 (default, swappable) |
+| **File Storage** | Cloudflare Workers KV (default) or Cloudflare R2 |
 | **Authentication** | GitHub OAuth via Cloudflare Worker |
 | **Deployment** | Any static host (Vercel, Cloudflare Pages, Netlify, GitHub Pages) |
 | **Schema Definition** | React/TSX with Fluent API |

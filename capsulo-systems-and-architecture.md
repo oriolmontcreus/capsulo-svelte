@@ -513,6 +513,8 @@ FileUpload("gallery")
 FileUpload("banner").label("Cover Banner").coverImage();
 ```
 
+**Where files are stored:** a file uploads as soon as it is picked, and the field stores its key. The Worker keeps the bytes in Cloudflare Workers KV (the `UPLOADS` binding, files up to 25 MB) or, when the project has one, in an R2 bucket (the `UPLOADS_BUCKET` binding, files up to 100 MB). KV is the default because it needs no payment method; `npx capsulo storage r2` moves a project to R2. The build copies the files the published content uses into `public/uploads/`, so visitors never read them from KV or R2.
+
 ---
 
 ## Layout System
@@ -1087,11 +1089,6 @@ interface CapsuloConfig {
     fallbackLocale?: string;  // Fallback locale for missing translations
   };
 
-  // Storage configuration
-  storage?: {
-    uploadWorkerUrl?: string; // URL for file upload worker (Cloudflare R2)
-  };
-
   // Cache configuration
   cache?: {
     dbName?: string;          // IndexedDB database name for CMS storage
@@ -1122,7 +1119,7 @@ interface CapsuloConfig {
 | **Runtime Validation** | Zod |
 | **Storage (Dev)** | Local filesystem |
 | **Storage (Prod)** | GitHub API |
-| **Image Storage** | Cloudflare R2 (default, swappable) |
+| **File Storage** | Cloudflare Workers KV (default) or Cloudflare R2 |
 | **Authentication** | GitHub OAuth via Cloudflare Worker |
 | **Deployment** | Any static host (Vercel, Cloudflare Pages, Netlify, GitHub Pages) |
 | **Schema Definition** | React/TSX with Fluent API |
