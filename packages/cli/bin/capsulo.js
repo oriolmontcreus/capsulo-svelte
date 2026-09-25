@@ -10,6 +10,7 @@ Commands:
   deploy   Create the Cloudflare resources, build and deploy (safe to re-run)
   users    Manage the people who can sign in to the CMS
   pull     Snapshot published content for the static build (runs before \`astro build\`)
+  storage  Show where uploads are stored, or move them from KV to R2 (\`capsulo storage r2\`)
 
 Run \`capsulo <command> --help\` for details.`;
 
@@ -20,6 +21,7 @@ const commands = {
 	deploy: async () => (await import("../src/commands/deploy.js")).deployCommand,
 	users: async () => (await import("../src/commands/users.js")).usersCommand,
 	pull: async () => (await import("../src/commands/pull.js")).pullCommand,
+	storage: async () => (await import("../src/commands/storage.js")).storageCommand,
 };
 
 if (!command || command === "--help" || command === "-h" || command === "help") {
