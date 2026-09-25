@@ -24,6 +24,6 @@
     "@clack/prompts": "^1.3.0"
   },
   "peerDependencies": {
-    "wrangler": "^4.140.0"
+    "wrangler": "4.139.0"
   }
 }
