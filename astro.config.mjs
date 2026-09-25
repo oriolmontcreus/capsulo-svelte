@@ -65,5 +65,13 @@ export default defineConfig({
       },
       dedupe: ['astro'],
     },
+    server: {
+      // Dev only. Vite serves pre-bundled deps (`/node_modules/.vite/deps/*?v=…`) as `immutable`,
+      // but an entry like `svelte.js?v=…` keeps its URL while the shared chunks it imports get a
+      // new `?v=` whenever deps are re-optimized (e.g. after switching branches). The browser then
+      // mixes cached and fresh files, loads two Svelte runtimes and hydration crashes
+      // (`node.remove is not a function`). `no-cache` makes it revalidate by ETag (cheap 304s).
+      headers: { 'Cache-Control': 'no-cache' },
+    },
   },
 });
