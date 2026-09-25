@@ -1,10 +1,30 @@
-import { env } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 import type { ReadableStream as WorkersReadableStream } from "@cloudflare/workers-types/index.ts";
 
 import { HttpError } from "./http";
 
 /** Workers KV's per-value limit. */
 const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Files upload as soon as an editor picks them and only become content once a draft
+ * referencing them is committed. Drafts live in the browser, so the server cannot see
+ * them: an unreferenced upload is only removed after this grace period, which gives
+ * editors time to commit (or recover) a draft.
+ */
+const UNUSED_UPLOAD_GRACE_MS = 30 * 24 * 60 * 60 * 1000;
+/** Keeps each cleanup well inside the free plan's per-request subrequest budget. */
+const UNUSED_UPLOADS_PER_CLEANUP = 25;
+
+/**
+ * SQL condition that is true when upload `u` is referenced by published content.
+ * Keys are unique and never need JSON escaping, so a substring match on the stored
+ * JSON is exact.
+ */
+const REFERENCED_BY_CONTENT = `(
+	EXISTS (SELECT 1 FROM pages WHERE instr(pages.content, u.key) > 0)
+	OR EXISTS (SELECT 1 FROM globals WHERE instr(globals.content, u.key) > 0)
+)`;
 
 type UploadMetadata = { contentType: string; fileName: string };
 
@@ -41,7 +61,7 @@ export async function storeUpload(request: Request, userId: string): Promise<str
 	return key;
 }
 
-export async function deleteUploads(keys: string[]): Promise<void> {
+async function deleteUploads(keys: string[]): Promise<void> {
 	const validKeys = keys.filter(isUploadKey);
 	if (validKeys.length === 0) return;
 	await Promise.all(validKeys.map((key) => env.UPLOADS.delete(key)));
@@ -63,4 +83,31 @@ export async function readUpload(key: string): Promise<Response | null> {
 			"Content-Security-Policy": "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox"
 		}
 	});
+}
+
+/** Upload keys the published pages and globals use: what the static build has to ship. */
+export const PUBLISHED_UPLOADS_QUERY = `SELECT key, content_type FROM uploads u WHERE ${REFERENCED_BY_CONTENT} ORDER BY key`;
+
+/**
+ * Deletes uploads that are past the grace period and referenced by neither published
+ * content nor any page revision (so recovering an old revision keeps its files).
+ */
+async function deleteUnusedUploads(): Promise<void> {
+	const cutoff = new Date(Date.now() - UNUSED_UPLOAD_GRACE_MS).toISOString();
+	const { results } = await env.DB.prepare(
+		`SELECT key FROM uploads u
+		 WHERE u.created_at < ?
+		   AND NOT ${REFERENCED_BY_CONTENT}
+		   AND NOT EXISTS (SELECT 1 FROM pages_history WHERE instr(pages_history.content, u.key) > 0)
+		 ORDER BY u.created_at
+		 LIMIT ?`
+	)
+		.bind(cutoff, UNUSED_UPLOADS_PER_CLEANUP)
+		.all<{ key: string }>();
+	await deleteUploads(results.map((row) => row.key));
+}
+
+/** Runs the unused-upload cleanup after the response, without failing the request. */
+export function scheduleUnusedUploadCleanup(): void {
+	waitUntil(deleteUnusedUploads().catch((error) => console.error("[capsulo] Upload cleanup failed:", error)));
 }

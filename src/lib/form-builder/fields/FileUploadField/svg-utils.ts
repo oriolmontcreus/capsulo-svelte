@@ -2,12 +2,6 @@ export function isSvgPath(path: string): boolean {
 	return /\.svg$/i.test(path);
 }
 
-export function isSvgFile(file: File): boolean {
-	return (
-		file.type === "image/svg+xml" || file.name.toLowerCase().endsWith(".svg")
-	);
-}
-
 // Pretty-prints an SVG string with consistent indentation. Returns the original
 // string untouched if it cannot be parsed.
 export function formatSvg(svgString: string): string {

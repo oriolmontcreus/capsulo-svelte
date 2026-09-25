@@ -27,7 +27,6 @@
   interface Props {
     open: boolean;
     fileName: string;
-    file?: File;
     url?: string;
     onSave: (content: string) => Promise<void>;
   }
@@ -35,7 +34,6 @@
   let {
     open = $bindable(false),
     fileName,
-    file,
     url,
     onSave,
   }: Props = $props();
@@ -62,10 +60,9 @@
     `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
   );
 
-  // Load the SVG source whenever the modal opens for a new file/url.
+  // Load the SVG source whenever the modal opens for a new url.
   $effect(() => {
     if (!open) return;
-    const currentFile = file;
     const currentUrl = url;
 
     let cancelled = false;
@@ -74,16 +71,10 @@
 
     void (async () => {
       try {
-        let content: string;
-        if (currentFile) {
-          content = await currentFile.text();
-        } else if (currentUrl) {
-          const response = await fetch(currentUrl);
-          if (!response.ok) throw new Error("Failed to load SVG");
-          content = await response.text();
-        } else {
-          throw new Error("No SVG source provided");
-        }
+        if (!currentUrl) throw new Error("No SVG source provided");
+        const response = await fetch(currentUrl);
+        if (!response.ok) throw new Error("Failed to load SVG");
+        const content = await response.text();
 
         if (cancelled) return;
 

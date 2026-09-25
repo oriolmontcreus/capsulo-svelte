@@ -9,7 +9,6 @@ import {
 	setGlobalsValues,
 } from "$lib/globals/globals-store.svelte";
 import { saveGlobalsDocumentToDb } from "$lib/globals/globals-documents";
-import { flushPendingUploads } from "$lib/form-builder/fields/FileUploadField/upload-staging";
 import { session, syncSession } from "$lib/stores/session";
 
 type DocumentContext = {
@@ -82,19 +81,6 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		saveError = null;
 		syncSaveState();
 
-		// Apply any staged FileUpload changes (bucket uploads/deletes) and commit
-		// their resolved values into the form state before persisting.
-		try {
-			await flushPendingUploads();
-		} catch (flushError) {
-			saveError =
-				flushError instanceof Error
-					? flushError.message
-					: "Failed to apply file changes.";
-			context.setIsSaving(false);
-			syncSaveState();
-			return;
-		}
 
 		const saveResult = await saveGlobalsDocumentToDb({
 			userId: currentUserId,

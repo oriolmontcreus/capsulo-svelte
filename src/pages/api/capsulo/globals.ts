@@ -2,6 +2,7 @@ import { requireUser } from "$lib/server/auth";
 import { getGlobals, saveGlobals } from "$lib/server/content";
 import { HttpError, handle, isRecord, json, readJson } from "$lib/server/http";
 import { requestRebuild } from "$lib/server/publish";
+import { scheduleUnusedUploadCleanup } from "$lib/server/uploads";
 
 export const prerender = false;
 
@@ -16,5 +17,6 @@ export const PUT = handle(async (context) => {
 	if (!isRecord(body)) throw new HttpError(400, "Expected a JSON object.");
 
 	const result = await saveGlobals(user.id, body.content);
+	scheduleUnusedUploadCleanup();
 	return json({ ...result, rebuildRequested: requestRebuild() });
 });

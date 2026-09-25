@@ -41,9 +41,8 @@ async function resolveUserId(): Promise<string | null> {
  * Workers Builds to rebuild the static site. Committed values become the new local
  * baseline so the pages drop out of the Changes list.
  *
- * ponytail: file-upload staging is intentionally NOT flushed here (deferred to a
- * later phase). The editor is unmounted on this route, so staged uploads would
- * be a no-op anyway; this commit only persists what is already in the draft cache.
+ * File-upload fields need nothing special here: files are uploaded when picked and
+ * the draft already holds their keys.
  */
 export async function commitChanges(
 	message: string,

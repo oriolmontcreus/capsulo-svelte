@@ -43,7 +43,13 @@ async function readLocal(root) {
 	const db = await openDatabase(root, { remote: false });
 	const pages = await db.all("SELECT page_id, content FROM pages ORDER BY page_id");
 	const [globals] = await db.all("SELECT content FROM globals WHERE id = 'globals'");
-	const uploads = await db.all("SELECT key, content_type FROM uploads ORDER BY key");
+	// Same filter as the Worker's export: only files the published content uses.
+	const uploads = await db.all(
+		`SELECT key, content_type FROM uploads u
+		 WHERE EXISTS (SELECT 1 FROM pages WHERE instr(pages.content, u.key) > 0)
+		    OR EXISTS (SELECT 1 FROM globals WHERE instr(globals.content, u.key) > 0)
+		 ORDER BY key`,
+	);
 	return {
 		data: {
 			formatVersion: 1,

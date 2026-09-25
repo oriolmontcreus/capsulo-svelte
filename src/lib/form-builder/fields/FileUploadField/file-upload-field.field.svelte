@@ -7,9 +7,8 @@
     FieldLabel,
   } from "$lib/components/ui/field";
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
-  import { fileNameFromPath, mediaUrl, removeFiles, uploadFile } from "./storage";
-  import { registerUploadFlusher } from "./upload-staging";
-  import { isSvgFile, isSvgPath } from "./svg-utils";
+  import { fileNameFromPath, mediaUrl, uploadFile } from "./storage";
+  import { isSvgPath } from "./svg-utils";
   import ImageZoomModal from "./ImageZoomModal.svelte";
   import SvgEditorModal from "./SvgEditorModal.svelte";
 
@@ -20,32 +19,31 @@
     error?: string;
   }
 
-  interface StagedFile {
+  /** A picked file whose upload is still running. */
+  interface PendingUpload {
     id: string;
-    file: File;
+    name: string;
     previewUrl: string;
     isImage: boolean;
+    controller: AbortController;
   }
 
   let { field, value, onValueChange, error }: Props = $props();
 
-  const committedPaths = $derived(Array.isArray(value) ? value : []);
+  // Files upload as soon as they are picked and their keys go straight into the
+  // value, so they land in the local draft and are reviewed and committed like
+  // any other field. Removing a file only drops it from the value: the bytes
+  // stay because committed revisions may still reference them, and the server
+  // cleans up uploads nothing references.
+  const paths = $derived(Array.isArray(value) ? value : []);
   const multiple = $derived(field.multiple ?? false);
   const maxFiles = $derived(multiple ? field.maxFiles : 1);
 
-  let stagedFiles = $state<StagedFile[]>([]);
-  let removedPaths = $state<string[]>([]);
+  let pending = $state<PendingUpload[]>([]);
   let isDragging = $state(false);
   let localError = $state<string | null>(null);
-  let isFlushing = $state(false);
 
-  const visibleCommitted = $derived(
-    committedPaths.filter((path) => !removedPaths.includes(path)),
-  );
-  const totalCount = $derived(visibleCommitted.length + stagedFiles.length);
-  const hasPendingChanges = $derived(
-    stagedFiles.length > 0 || removedPaths.length > 0,
-  );
+  const totalCount = $derived(paths.length + pending.length);
 
   let inputEl = $state<HTMLInputElement | null>(null);
 
@@ -76,22 +74,64 @@
     });
   }
 
-  const fileUrls = $derived(
-    Object.fromEntries(visibleCommitted.map((path) => [path, mediaUrl(path)])),
-  );
+  function currentPaths(): string[] {
+    return Array.isArray(value) ? value : [];
+  }
 
-  $effect(() => {
-    const unregister = registerUploadFlusher(flush);
-    return unregister;
-  });
+  function releasePending(id: string): void {
+    const target = pending.find((upload) => upload.id === id);
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    pending = pending.filter((upload) => upload.id !== id);
+  }
 
+  // Leaving the editor mid-upload cancels it; nothing was written to the value yet.
   $effect(() => {
     return () => {
-      for (const staged of stagedFiles) URL.revokeObjectURL(staged.previewUrl);
+      for (const upload of pending) {
+        upload.controller.abort();
+        URL.revokeObjectURL(upload.previewUrl);
+      }
     };
   });
 
-  function addFiles(files: File[]): void {
+  // Closing or reloading the tab mid-upload would lose the file silently.
+  $effect(() => {
+    if (pending.length === 0) return;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  });
+
+  function startUpload(file: File): PendingUpload {
+    const upload: PendingUpload = {
+      id: crypto.randomUUID(),
+      name: file.name,
+      previewUrl: URL.createObjectURL(file),
+      isImage: file.type.startsWith("image/"),
+      controller: new AbortController(),
+    };
+    pending = [...pending, upload];
+    return upload;
+  }
+
+  /** Uploads `file`; resolves to its key, or null if it was cancelled or failed. */
+  async function runUpload(file: File, upload: PendingUpload): Promise<string | null> {
+    try {
+      return await uploadFile(file, upload.controller.signal);
+    } catch (uploadError) {
+      if (!upload.controller.signal.aborted) {
+        localError =
+          uploadError instanceof Error ? uploadError.message : `Failed to upload "${file.name}".`;
+      }
+      return null;
+    } finally {
+      releasePending(upload.id);
+    }
+  }
+
+  async function addFiles(files: File[]): Promise<void> {
     localError = null;
     if (files.length === 0) return;
 
@@ -111,57 +151,54 @@
     if (accepted.length === 0) return;
 
     if (!multiple) {
-      // Single mode: the newest pick replaces everything else.
-      for (const staged of stagedFiles) URL.revokeObjectURL(staged.previewUrl);
-      removedPaths = [...committedPaths];
-      stagedFiles = [createStagedFile(accepted[accepted.length - 1])];
+      // Single mode: the newest pick replaces the current file and any upload
+      // still running for an earlier pick.
+      for (const upload of pending) upload.controller.abort();
+      const file = accepted[accepted.length - 1];
+      const upload = startUpload(file);
+      const key = await runUpload(file, upload);
+      if (key && !upload.controller.signal.aborted) onValueChange([key]);
       return;
     }
 
-    let next = [...stagedFiles];
+    const queued: { file: File; upload: PendingUpload }[] = [];
     for (const file of accepted) {
-      if (maxFiles && visibleCommitted.length + next.length >= maxFiles) {
+      if (maxFiles && totalCount >= maxFiles) {
         localError = `You can upload at most ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`;
         break;
       }
-      next = [...next, createStagedFile(file)];
+      queued.push({ file, upload: startUpload(file) });
     }
-    stagedFiles = next;
+
+    // One at a time, so the files keep the order they were picked in. Each key
+    // is appended to the value as it arrives, so a slow file never holds back
+    // the ones before it.
+    for (const { file, upload } of queued) {
+      if (upload.controller.signal.aborted) continue;
+      const key = await runUpload(file, upload);
+      if (key && !upload.controller.signal.aborted) onValueChange([...currentPaths(), key]);
+    }
   }
 
-  function createStagedFile(file: File): StagedFile {
-    return {
-      id: crypto.randomUUID(),
-      file,
-      previewUrl: URL.createObjectURL(file),
-      isImage: file.type.startsWith("image/"),
-    };
+  function cancelPending(id: string): void {
+    pending.find((upload) => upload.id === id)?.controller.abort();
+    releasePending(id);
   }
 
-  function removeStaged(id: string): void {
-    const target = stagedFiles.find((staged) => staged.id === id);
-    if (target) URL.revokeObjectURL(target.previewUrl);
-    stagedFiles = stagedFiles.filter((staged) => staged.id !== id);
-  }
-
-  function removeCommitted(path: string): void {
-    if (!removedPaths.includes(path)) removedPaths = [...removedPaths, path];
-  }
-
-  function restoreCommitted(path: string): void {
-    removedPaths = removedPaths.filter((removed) => removed !== path);
+  function removePath(path: string): void {
+    onValueChange(currentPaths().filter((current) => current !== path));
   }
 
   function onInputChange(event: Event): void {
     const target = event.currentTarget as HTMLInputElement;
-    if (target.files) addFiles(Array.from(target.files));
+    if (target.files) void addFiles(Array.from(target.files));
     target.value = "";
   }
 
   function onDrop(event: DragEvent): void {
     event.preventDefault();
     isDragging = false;
-    if (event.dataTransfer?.files) addFiles(Array.from(event.dataTransfer.files));
+    if (event.dataTransfer?.files) void addFiles(Array.from(event.dataTransfer.files));
   }
 
   function onDragOver(event: DragEvent): void {
@@ -177,35 +214,6 @@
     inputEl?.click();
   }
 
-  async function flush(): Promise<void> {
-    if (!hasPendingChanges) return;
-
-    isFlushing = true;
-    try {
-      const uploadedPaths: string[] = [];
-      for (const staged of stagedFiles) {
-        uploadedPaths.push(await uploadFile(staged.file));
-      }
-
-      if (removedPaths.length > 0) {
-        await removeFiles(removedPaths);
-      }
-
-      const finalPaths = [
-        ...committedPaths.filter((path) => !removedPaths.includes(path)),
-        ...uploadedPaths,
-      ];
-
-      onValueChange(finalPaths);
-
-      for (const staged of stagedFiles) URL.revokeObjectURL(staged.previewUrl);
-      stagedFiles = [];
-      removedPaths = [];
-    } finally {
-      isFlushing = false;
-    }
-  }
-
   // In single mode the picker stays available so a new pick can replace the
   // current file; in multiple mode it hides once maxFiles is reached.
   const canAddMore = $derived(
@@ -213,28 +221,13 @@
   );
 
   // Image zoom + SVG editing.
-  type SvgEditing =
-    | { kind: "committed"; path: string }
-    | { kind: "staged"; id: string }
-    | null;
-
   let zoomSrc = $state<string | null>(null);
-  let svgEditing = $state<SvgEditing>(null);
+  let svgEditingPath = $state<string | null>(null);
   let svgEditorOpen = $state(false);
 
-  const editingStagedFile = $derived(
-    svgEditing?.kind === "staged"
-      ? stagedFiles.find((staged) => staged.id === svgEditing.id)
-      : undefined,
-  );
-  const svgEditorFile = $derived(editingStagedFile?.file);
-  const svgEditorUrl = $derived(
-    svgEditing?.kind === "committed" ? fileUrls[svgEditing.path] : undefined,
-  );
+  const svgEditorUrl = $derived(svgEditingPath ? mediaUrl(svgEditingPath) : undefined);
   const svgEditorName = $derived(
-    svgEditing?.kind === "committed"
-      ? fileNameFromPath(svgEditing.path)
-      : (editingStagedFile?.file.name ?? "SVG"),
+    svgEditingPath ? fileNameFromPath(svgEditingPath) : "SVG",
   );
 
   function openZoom(src: string): void {
@@ -245,54 +238,33 @@
     zoomSrc = null;
   }
 
-  function editCommittedSvg(path: string): void {
-    svgEditing = { kind: "committed", path };
-    svgEditorOpen = true;
-  }
-
-  function editStagedSvg(id: string): void {
-    svgEditing = { kind: "staged", id };
+  function editSvg(path: string): void {
+    svgEditingPath = path;
     svgEditorOpen = true;
   }
 
   // Clear the editing target once the modal is fully closed.
   $effect(() => {
-    if (!svgEditorOpen) svgEditing = null;
+    if (!svgEditorOpen) svgEditingPath = null;
   });
 
-  // SVG edits follow the deferred-save model: edited committed files are staged
-  // anew and the original path is marked for removal; edited staged files are
-  // replaced in place.
+  // Uploads are immutable, so an edited SVG is uploaded as a new file that takes
+  // the original's place in the value. The modal shows errors and stays open if
+  // this throws.
   async function handleSaveSvg(content: string): Promise<void> {
-    const blob = new Blob([content], { type: "image/svg+xml" });
-
-    if (svgEditing?.kind === "committed") {
-      const path = svgEditing.path;
-      const file = new File([blob], fileNameFromPath(path), {
-        type: "image/svg+xml",
-      });
-      stagedFiles = [...stagedFiles, createStagedFile(file)];
-      if (!removedPaths.includes(path)) removedPaths = [...removedPaths, path];
-    } else if (svgEditing?.kind === "staged") {
-      const id = svgEditing.id;
-      const target = stagedFiles.find((staged) => staged.id === id);
-      if (target) {
-        URL.revokeObjectURL(target.previewUrl);
-        const file = new File([blob], target.file.name, {
-          type: "image/svg+xml",
-        });
-        stagedFiles = stagedFiles.map((staged) =>
-          staged.id === id
-            ? {
-                ...staged,
-                file,
-                previewUrl: URL.createObjectURL(file),
-                isImage: true,
-              }
-            : staged,
-        );
-      }
-    }
+    const path = svgEditingPath;
+    if (!path) return;
+    const file = new File([content], fileNameFromPath(path), {
+      type: "image/svg+xml",
+    });
+    const key = await uploadFile(file);
+    const current = currentPaths();
+    const index = current.indexOf(path);
+    onValueChange(
+      index >= 0
+        ? current.map((existing, i) => (i === index ? key : existing))
+        : [...current, key],
+    );
   }
 </script>
 
@@ -338,38 +310,35 @@
     </button>
   {/if}
 
-  {#if visibleCommitted.length > 0 || stagedFiles.length > 0}
+  {#if paths.length > 0 || pending.length > 0}
     <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
-      {#each visibleCommitted as path (path)}
-        {@const committedSvg = isSvgPath(path)}
+      {#each paths as path (path)}
+        {@const url = mediaUrl(path)}
+        {@const isSvg = isSvgPath(path)}
         <li
           class="group bg-muted relative aspect-square overflow-hidden rounded-md border"
         >
-          {#if isImagePath(path) && fileUrls[path]}
-            {#if committedSvg}
+          {#if isImagePath(path)}
+            {#if isSvg}
               <img
-                src={fileUrls[path]}
+                src={url}
                 alt={fileNameFromPath(path)}
                 class="size-full object-cover"
               />
             {:else}
               <button
                 type="button"
-                onclick={() => openZoom(fileUrls[path])}
+                onclick={() => openZoom(url)}
                 aria-label="Zoom {fileNameFromPath(path)}"
                 class="size-full cursor-zoom-in"
               >
                 <img
-                  src={fileUrls[path]}
+                  src={url}
                   alt={fileNameFromPath(path)}
                   class="size-full object-cover"
                 />
               </button>
             {/if}
-          {:else if isImagePath(path)}
-            <div class="flex size-full items-center justify-center">
-              <Loader2 class="text-muted-foreground size-4 animate-spin" />
-            </div>
           {:else}
             <div
               class="flex size-full flex-col items-center justify-center gap-1 p-1 text-center"
@@ -383,10 +352,10 @@
           <div
             class="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            {#if committedSvg && fileUrls[path]}
+            {#if isSvg}
               <button
                 type="button"
-                onclick={() => editCommittedSvg(path)}
+                onclick={() => editSvg(path)}
                 aria-label="Edit {fileNameFromPath(path)}"
                 class="bg-background/80 hover:bg-background rounded-full p-1"
               >
@@ -395,7 +364,7 @@
             {/if}
             <button
               type="button"
-              onclick={() => removeCommitted(path)}
+              onclick={() => removePath(path)}
               aria-label="Remove {fileNameFromPath(path)}"
               class="bg-background/80 hover:bg-background rounded-full p-1"
             >
@@ -405,64 +374,37 @@
         </li>
       {/each}
 
-      {#each stagedFiles as staged (staged.id)}
-        {@const stagedSvg = isSvgFile(staged.file)}
+      {#each pending as upload (upload.id)}
         <li
-          class="group border-primary relative aspect-square overflow-hidden rounded-md border-2"
+          class="group bg-muted relative aspect-square overflow-hidden rounded-md border"
+          aria-busy="true"
         >
-          {#if staged.isImage}
-            {#if stagedSvg}
-              <img
-                src={staged.previewUrl}
-                alt={staged.file.name}
-                class="size-full object-cover"
-              />
-            {:else}
-              <button
-                type="button"
-                onclick={() => openZoom(staged.previewUrl)}
-                aria-label="Zoom {staged.file.name}"
-                class="size-full cursor-zoom-in"
-              >
-                <img
-                  src={staged.previewUrl}
-                  alt={staged.file.name}
-                  class="size-full object-cover"
-                />
-              </button>
-            {/if}
+          {#if upload.isImage}
+            <img
+              src={upload.previewUrl}
+              alt={upload.name}
+              class="size-full object-cover opacity-50"
+            />
           {:else}
             <div
               class="flex size-full flex-col items-center justify-center gap-1 p-1 text-center"
             >
               <ImageIcon class="text-muted-foreground size-4" />
               <span class="text-muted-foreground truncate text-[10px]">
-                {staged.file.name}
+                {upload.name}
               </span>
             </div>
           {/if}
-          <span
-            class="bg-primary text-primary-foreground absolute bottom-1 left-1 rounded px-1 text-[10px]"
-          >
-            new
-          </span>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <Loader2 class="text-foreground size-5 animate-spin" />
+          </div>
           <div
             class="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            {#if stagedSvg}
-              <button
-                type="button"
-                onclick={() => editStagedSvg(staged.id)}
-                aria-label="Edit {staged.file.name}"
-                class="bg-background/80 hover:bg-background rounded-full p-1"
-              >
-                <Pencil class="size-3.5" />
-              </button>
-            {/if}
             <button
               type="button"
-              onclick={() => removeStaged(staged.id)}
-              aria-label="Remove {staged.file.name}"
+              onclick={() => cancelPending(upload.id)}
+              aria-label="Cancel upload of {upload.name}"
               class="bg-background/80 hover:bg-background rounded-full p-1"
             >
               <X class="size-3.5" />
@@ -471,34 +413,6 @@
         </li>
       {/each}
     </ul>
-  {/if}
-
-  {#if removedPaths.length > 0}
-    <div class="text-muted-foreground space-y-1 text-xs">
-      {#each removedPaths as path (path)}
-        <div class="flex items-center gap-2">
-          <span class="text-destructive line-through">{fileNameFromPath(path)}</span>
-          <button
-            type="button"
-            class="text-foreground underline"
-            onclick={() => restoreCommitted(path)}
-          >
-            undo
-          </button>
-        </div>
-      {/each}
-    </div>
-  {/if}
-
-  {#if hasPendingChanges}
-    <p class="text-muted-foreground flex items-center gap-1.5 text-xs">
-      {#if isFlushing}
-        <Loader2 class="size-3 animate-spin" />
-        Applying changes…
-      {:else}
-        Pending changes — apply by clicking Save.
-      {/if}
-    </p>
   {/if}
 
   {#if field.description}
@@ -521,7 +435,6 @@
 <SvgEditorModal
   bind:open={svgEditorOpen}
   fileName={svgEditorName}
-  file={svgEditorFile}
   url={svgEditorUrl}
   onSave={handleSaveSvg}
 />

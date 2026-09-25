@@ -1,11 +1,10 @@
 <script lang="ts">
 	import type { FieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
-	import { fileNameFromPath } from "$lib/form-builder/fields/FileUploadField/storage";
+	import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
 
 	let { field, value }: { field: FieldDefinition; value: unknown } = $props();
 
 	const asArray = $derived(Array.isArray(value) ? (value as string[]) : []);
-	const fileNames = $derived(asArray.map((path) => fileNameFromPath(path)));
 	const stringValue = $derived(typeof value === "string" ? value : "");
 
 	function selectLabel(optionValue: string): string {
@@ -43,10 +42,20 @@
 		<span class="text-muted-foreground text-sm italic">empty</span>
 	{/if}
 {:else if field.type === "file-upload"}
-	{#if fileNames.length > 0}
-		<ul class="space-y-0.5">
-			{#each fileNames as name, index (index)}
-				<li class="text-sm font-mono">{name}</li>
+	{#if asArray.length > 0}
+		<ul class="space-y-1">
+			{#each asArray as path, index (index)}
+				<li class="flex items-center gap-2">
+					{#if /\.(png|jpe?g|webp|gif|avif|svg)$/i.test(path)}
+						<img
+							src={mediaUrl(path)}
+							alt=""
+							loading="lazy"
+							class="bg-muted size-8 shrink-0 rounded border object-cover"
+						/>
+					{/if}
+					<span class="font-mono text-sm">{fileNameFromPath(path)}</span>
+				</li>
 			{/each}
 		</ul>
 	{:else}

@@ -13,7 +13,6 @@ import {
 import type { SchemaValues } from "$lib/form-builder/core/types";
 import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
 import { resolveInstanceDefaults } from "$lib/PageEditor/changes/schema-defaults";
-import { flushPendingUploads } from "$lib/form-builder/fields/FileUploadField/upload-staging";
 import type { PageEditorSaveControls } from "./types";
 
 const CACHE_PERSIST_DEBOUNCE_MS = 250;
@@ -219,19 +218,6 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		saveError = null;
 		syncSaveControls();
 
-		// Apply any staged FileUpload changes (bucket uploads/deletes) and commit
-		// their resolved values into the form state before persisting.
-		try {
-			await flushPendingUploads();
-		} catch (flushError) {
-			saveError =
-				flushError instanceof Error
-					? flushError.message
-					: "Failed to apply file changes.";
-			isSaving = false;
-			syncSaveControls();
-			return;
-		}
 
 		const saveResult = await savePageEditorDocumentToDb({
 			pageId: context.getPageId(),

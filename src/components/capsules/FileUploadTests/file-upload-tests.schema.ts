@@ -7,7 +7,7 @@ export const fileUploadTestsSchema = createSchema<FieldDefinition>({
   name: "File Upload Tests",
   key: "file-upload-tests",
   description:
-    "Test capsule for the FileUpload field. Changes only apply on Save.",
+    "Test capsule for the FileUpload field. Files upload when picked and publish on commit.",
   fields: [
     // ─── 1. Single image ───
     FileUpload("avatar")
@@ -40,7 +40,7 @@ export const fileUploadTestsSchema = createSchema<FieldDefinition>({
       .images()
       .multiple(),
 
-    // ─── Separator: Text field to verify mixed forms + Save ───
+    // ─── Separator: Text field to verify mixed forms + commit ───
     Text("caption")
       .label("Caption")
       .placeholder("A caption to verify form integration...")
