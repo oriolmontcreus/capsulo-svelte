@@ -38,6 +38,7 @@ const HELP = `npm create capsulo@latest [directory] [-- --locales es,en --defaul
 Options:
   --locales <list>        Comma-separated locale codes (default: prompt)
   --default-locale <code>
+  --storage <kv|r2>       Where uploaded files are stored (default: prompt, recommended kv)
   --template <dir>        Use a local Capsulo checkout instead of GitHub (for Capsulo contributors)
   --no-install            Skip installing dependencies
   --no-git                Skip git init`;
@@ -125,11 +126,31 @@ async function copyTemplate(target, localTemplate) {
 	});
 }
 
+/** @type {Record<"kv" | "r2", { label: string, hint: string }>} */
+const STORAGE_OPTIONS = {
+	kv: { label: "Workers KV (recommended)", hint: "free, no card needed, files up to 25 MB" },
+	r2: { label: "R2", hint: "files up to 100 MB and 10 GB free, but Cloudflare asks for a card to enable it" },
+};
+
+/**
+ * Swaps the template's KV upload binding for an R2 bucket.
+ * @param {string} wrangler wrangler.jsonc source
+ * @param {string} slug
+ */
+function useR2Storage(wrangler, slug) {
+	const kvBlock = /("kv_namespaces"\s*:\s*\[)[\s\S]*?"binding"\s*:\s*"UPLOADS"[\s\S]*?\]/;
+	if (!kvBlock.test(wrangler)) throw new Error("Could not find the UPLOADS binding in wrangler.jsonc.");
+	return wrangler.replace(
+		kvBlock,
+		`"r2_buckets": [\n\t\t{\n\t\t\t"binding": "UPLOADS_BUCKET",\n\t\t\t"bucket_name": "${slug}-uploads"\n\t\t}\n\t]`,
+	);
+}
+
 /**
  * @param {string} target
- * @param {{ slug: string, locales: string[], defaultLocale: string, cliSpec: string }} options
+ * @param {{ slug: string, locales: string[], defaultLocale: string, cliSpec: string, storage: "kv" | "r2" }} options
  */
-async function personalize(target, { slug, locales, defaultLocale, cliSpec }) {
+async function personalize(target, { slug, locales, defaultLocale, cliSpec, storage }) {
 	await Promise.all(TEMPLATE_ONLY.map((entry) => rm(path.join(target, entry), { recursive: true, force: true })));
 
 	const packageFile = path.join(target, "package.json");
@@ -149,15 +170,12 @@ async function personalize(target, { slug, locales, defaultLocale, cliSpec }) {
 	}
 
 	const wranglerFile = path.join(target, "wrangler.jsonc");
-	const wrangler = await readFile(wranglerFile, "utf8");
-	await writeFile(
-		wranglerFile,
-		wrangler
-			.replace(/("name"\s*:\s*)"[^"]*"/, `$1"${slug}"`)
-			.replace(/("database_name"\s*:\s*)"[^"]*"/, `$1"${slug}-db"`)
-			.replace(/("database_id"\s*:\s*)"[^"]*"/, `$1"00000000-0000-0000-0000-000000000000"`)
-			.replace(/("binding"\s*:\s*"UPLOADS",\s*"id"\s*:\s*)"[^"]*"/, `$1"00000000000000000000000000000000"`),
-	);
+	const wrangler = (await readFile(wranglerFile, "utf8"))
+		.replace(/("name"\s*:\s*)"[^"]*"/, `$1"${slug}"`)
+		.replace(/("database_name"\s*:\s*)"[^"]*"/, `$1"${slug}-db"`)
+		.replace(/("database_id"\s*:\s*)"[^"]*"/, `$1"00000000-0000-0000-0000-000000000000"`)
+		.replace(/("binding"\s*:\s*"UPLOADS",\s*"id"\s*:\s*)"[^"]*"/, `$1"00000000000000000000000000000000"`);
+	await writeFile(wranglerFile, storage === "r2" ? useR2Storage(wrangler, slug) : wrangler);
 
 	await writeFile(
 		path.join(target, "capsulo.config.ts"),
@@ -183,6 +201,7 @@ A [Capsulo](https://github.com/${TEMPLATE_REPO}) site with its CMS.
 - \`${detectPackageManager()} run dev\`: site at http://localhost:4321, CMS at http://localhost:4321/admin (signed in automatically in dev)
 - \`npx capsulo deploy\`: deploy to Cloudflare (free plan; first run sets everything up)
 - \`npx capsulo users add client@example.com --name "Client"\`: give someone access to the CMS
+- Uploaded files are stored in ${storage === "r2" ? "R2" : "Workers KV (files up to 25 MB). \`npx capsulo storage r2\` moves them to R2 for bigger files"}.
 `,
 	);
 }
@@ -194,6 +213,7 @@ async function main() {
 		options: {
 			locales: { type: "string" },
 			"default-locale": { type: "string" },
+			storage: { type: "string" },
 			template: { type: "string" },
 			"no-install": { type: "boolean" },
 			"no-git": { type: "boolean" },
@@ -256,11 +276,25 @@ async function main() {
 				));
 	if (!locales.includes(defaultLocale)) throw new Error(`The default locale must be one of: ${locales.join(", ")}.`);
 
+	if (values.storage !== undefined && values.storage !== "kv" && values.storage !== "r2") {
+		throw new Error(`--storage must be "kv" or "r2", not "${values.storage}".`);
+	}
+	const storage = /** @type {"kv" | "r2"} */ (
+		values.storage ??
+			exitIfCancelled(
+				await p.select({
+					message: "Where should uploaded files be stored?",
+					initialValue: "kv",
+					options: Object.entries(STORAGE_OPTIONS).map(([value, option]) => ({ value, ...option })),
+				}),
+			)
+	);
+
 	const spinner = p.spinner();
 	spinner.start(values.template ? "Copying the template" : "Downloading the template");
 	await copyTemplate(target, values.template);
 	const cliSpec = values.template ? `file:${path.resolve(values.template, "packages", "cli")}` : CLI_VERSION;
-	await personalize(target, { slug, locales, defaultLocale, cliSpec });
+	await personalize(target, { slug, locales, defaultLocale, cliSpec, storage });
 	spinner.stop("Project created.");
 
 	const packageManager = detectPackageManager();

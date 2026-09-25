@@ -37,7 +37,10 @@ async function openLocal(root) {
 		},
 		uploads: {
 			async get(key) {
-				return env.UPLOADS.get(key, "arrayBuffer");
+				// R2 first; a project moved to R2 keeps KV as a fallback (see project.js).
+				const object = await env.UPLOADS_BUCKET?.get(key);
+				if (object) return object.arrayBuffer();
+				return env.UPLOADS ? env.UPLOADS.get(key, "arrayBuffer") : null;
 			},
 		},
 		close: () => dispose(),

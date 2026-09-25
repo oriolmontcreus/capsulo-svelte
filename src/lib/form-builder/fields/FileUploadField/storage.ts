@@ -1,7 +1,7 @@
 import { CAPSULO_API_BASE, capsuloFetch } from "$lib/api/capsulo-client";
 
 /**
- * Uploads a single file (stored in the project's KV namespace) and returns its key,
+ * Uploads a single file (stored in the project's KV namespace or R2 bucket) and returns its key,
  * `<32 hex chars>-<file name>`. The key is what gets persisted in the form value.
  *
  * Files are uploaded as soon as they are picked, so the key can live in the local

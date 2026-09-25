@@ -12,7 +12,7 @@ export const PULL_HELP = `Snapshot the published CMS content for the static buil
 
 Usage:
   capsulo pull            from the deployed site (siteUrl in .capsulo/project.json)
-  capsulo pull --local    from the local D1/KV that \`astro dev\` uses
+  capsulo pull --local    from the local D1 and upload storage that \`astro dev\` uses
   capsulo pull --from <url>
 
 Writes .capsulo/published/content.json and copies uploaded files to public/uploads/.

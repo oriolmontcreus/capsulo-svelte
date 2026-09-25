@@ -3,8 +3,16 @@ import type { ReadableStream as WorkersReadableStream } from "@cloudflare/worker
 
 import { HttpError } from "./http";
 
-/** Workers KV's per-value limit. */
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+/**
+ * Uploaded files live in an R2 bucket (`UPLOADS_BUCKET`) when the project has one, and
+ * in the KV namespace (`UPLOADS`) otherwise. KV is the default because it needs no
+ * payment method on the Cloudflare account; R2 takes much bigger files. A project moved
+ * with `capsulo storage r2` keeps its KV binding, which is then only read as a fallback
+ * for files that were not copied yet.
+ */
+function storage() {
+	return { bucket: env.UPLOADS_BUCKET, namespace: env.UPLOADS };
+}
 
 /**
  * Files upload as soon as an editor picks them and only become content once a draft
@@ -38,11 +46,14 @@ function isUploadKey(key: string): boolean {
 	return /^[0-9a-f]{32}-[a-z0-9.\-_]+$/.test(key);
 }
 
-/** Streams the request body into KV and records it in D1. Returns the new key. */
+/** Streams the request body into the upload storage and records it in D1. Returns the new key. */
 export async function storeUpload(request: Request, userId: string): Promise<string> {
 	const size = Number(request.headers.get("Content-Length") ?? NaN);
 	if (!Number.isFinite(size) || size <= 0) throw new HttpError(411, "Content-Length is required.");
-	if (size > MAX_UPLOAD_BYTES) throw new HttpError(413, "Files are limited to 25 MB.");
+	const { bucket, namespace } = storage();
+	// KV's per-value limit, or the Workers request body limit on the Free and Pro plans.
+	const maxMb = bucket ? 100 : 25;
+	if (size > maxMb * 1024 * 1024) throw new HttpError(413, `Files are limited to ${maxMb} MB.`);
 	if (!request.body) throw new HttpError(400, "Empty upload.");
 
 	const rawName = decodeURIComponent(request.headers.get("X-File-Name") ?? "file");
@@ -52,7 +63,14 @@ export async function storeUpload(request: Request, userId: string): Promise<str
 
 	const metadata: UploadMetadata = { contentType, fileName: rawName.slice(0, 200) };
 	// Same stream at runtime; the DOM and Workers typings just disagree.
-	await env.UPLOADS.put(key, request.body as unknown as WorkersReadableStream, { metadata });
+	const body = request.body as unknown as WorkersReadableStream;
+	if (bucket) {
+		await bucket.put(key, body, { httpMetadata: { contentType }, customMetadata: { fileName: metadata.fileName } });
+	} else if (namespace) {
+		await namespace.put(key, body, { metadata });
+	} else {
+		throw new HttpError(500, "No upload storage is configured (UPLOADS or UPLOADS_BUCKET).");
+	}
 	await env.DB.prepare(
 		"INSERT INTO uploads (key, file_name, content_type, size, created_by) VALUES (?, ?, ?, ?, ?)"
 	)
@@ -64,19 +82,34 @@ export async function storeUpload(request: Request, userId: string): Promise<str
 async function deleteUploads(keys: string[]): Promise<void> {
 	const validKeys = keys.filter(isUploadKey);
 	if (validKeys.length === 0) return;
-	await Promise.all(validKeys.map((key) => env.UPLOADS.delete(key)));
+	const { bucket, namespace } = storage();
+	await Promise.all([
+		bucket?.delete(validKeys),
+		...(namespace ? validKeys.map((key) => namespace.delete(key)) : [])
+	]);
 	await env.DB.prepare("DELETE FROM uploads WHERE key IN (SELECT value FROM json_each(?))")
 		.bind(JSON.stringify(validKeys))
 		.run();
 }
 
+async function readStoredFile(key: string): Promise<{ body: ReadableStream; contentType?: string } | null> {
+	const { bucket, namespace } = storage();
+	const object = await bucket?.get(key);
+	if (object) {
+		return { body: object.body as unknown as ReadableStream, contentType: object.httpMetadata?.contentType };
+	}
+	if (!namespace) return null;
+	const { value, metadata } = await namespace.getWithMetadata<UploadMetadata>(key, "stream");
+	return value ? { body: value as unknown as ReadableStream, contentType: metadata?.contentType } : null;
+}
+
 export async function readUpload(key: string): Promise<Response | null> {
 	if (!isUploadKey(key)) return null;
-	const { value, metadata } = await env.UPLOADS.getWithMetadata<UploadMetadata>(key, "stream");
-	if (!value) return null;
-	return new Response(value as unknown as ReadableStream, {
+	const file = await readStoredFile(key);
+	if (!file) return null;
+	return new Response(file.body, {
 		headers: {
-			"Content-Type": metadata?.contentType ?? "application/octet-stream",
+			"Content-Type": file.contentType ?? "application/octet-stream",
 			// Keys are unique per upload and never rewritten.
 			"Cache-Control": "public, max-age=31536000, immutable",
 			"X-Content-Type-Options": "nosniff",

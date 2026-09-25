@@ -18,6 +18,7 @@ import {
 	replaceWranglerValue,
 	updateProjectState,
 } from "../lib/project.js";
+import { ensureR2Bucket } from "../lib/r2.js";
 import { parseJsonOutput, runWrangler, whoami } from "../lib/wrangler.js";
 import { generatePassword } from "../password.js";
 import { pullContent } from "./pull.js";
@@ -31,11 +32,13 @@ Usage:
 Options:
   --db-name <name>   D1 database name for a new project (default: <project>-db)
   --kv-name <name>   KV namespace for uploads (default: <project>-uploads)
+                     Projects that store uploads in R2 use the bucket named in wrangler.jsonc
   -y, --yes          Accept the recommended names and default answers
   --skip-build       Deploy the existing dist/ without pulling or building
   --verbose          Show the full output of wrangler and astro
 
-First run: logs in to Cloudflare, creates the D1 database and KV namespace, applies
+First run: logs in to Cloudflare, creates the D1 database and the upload storage
+(a KV namespace, or an R2 bucket if the project uses R2), applies
 migrations, deploys, creates the first editor and walks you through auto-publishing
 (Workers Builds + Deploy Hook). Later runs just pull, build and deploy.`;
 
@@ -96,7 +99,7 @@ function git(root, args) {
 }
 
 /** @param {string} root */
-async function ensureLogin(root) {
+export async function ensureLogin(root) {
 	let user = await whoami(root);
 	if (!user.loggedIn) {
 		p.log.step("Log in to Cloudflare (free account, no card needed). A browser window will open.");
@@ -124,6 +127,13 @@ async function ensureLogin(root) {
 	process.env.CLOUDFLARE_ACCOUNT_ID = account.id;
 	p.log.info(`Cloudflare account: ${account.name}`);
 	return account.id;
+}
+
+/** @param {string} root */
+async function ensureAccountId(root) {
+	const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? (await readProjectState(root)).accountId;
+	if (!accountId) throw new Error("No Cloudflare account selected.");
+	return accountId;
 }
 
 /**
@@ -170,7 +180,15 @@ async function chooseResourceNames({ needDb, needKv, dbDefault, kvDefault }, fla
 async function ensureResources(root, flags) {
 	const config = await readProjectConfig(root);
 	const needDb = !isRealD1Id(config.d1.database_id);
-	const needKv = !isRealKvId(config.uploads.id);
+	const needKv = Boolean(config.kv && !isRealKvId(config.kv.id));
+
+	if (config.r2) {
+		await ensureR2Bucket(root, {
+			accountId: await ensureAccountId(root),
+			bucketName: config.r2.bucket_name,
+			yes: flags.yes ?? false,
+		});
+	}
 
 	if (needDb || needKv) {
 		const { dbName, kvName } = await chooseResourceNames(
@@ -243,7 +261,7 @@ async function countHtmlPages(dir) {
  * @param {string} root
  * @param {boolean} skipBuild
  */
-async function buildAndDeploy(root, skipBuild) {
+export async function buildAndDeploy(root, skipBuild) {
 	if (!skipBuild) {
 		/** @type {string[]} */
 		const notices = [];
@@ -341,7 +359,7 @@ async function ensureGitRemote(root, yes) {
  * @param {string} root
  * @param {boolean} yes
  */
-async function commitDeployState(root, yes) {
+export async function commitDeployState(root, yes) {
 	const status = await git(root, ["status", "--porcelain", "--", ...DEPLOY_STATE_FILES]).catch(() => "");
 	if (!status) return;
 
