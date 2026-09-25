@@ -32,11 +32,10 @@ const publishedJson =
 		<ClientRouter fallback="swap" />
 		<script is:inline>
 			(function() {
-				function applyMode() {
+				function applyMode(rootEl) {
 					try {
 						const mode = localStorage.getItem("mode-watcher-mode") || "system";
 						const light = mode === "light" || (mode === "system" && window.matchMedia("(prefers-color-scheme: light)").matches);
-						const rootEl = document.documentElement;
 						if (light) {
 							rootEl.classList.remove("dark");
 						} else {
@@ -45,8 +44,11 @@ const publishedJson =
 						rootEl.style.colorScheme = light ? "light" : "dark";
 					} catch (e) {}
 				}
-				applyMode();
-				document.addEventListener("astro:after-swap", applyMode);
+				applyMode(document.documentElement);
+				// Set the mode on the incoming document before the router copies its <html>
+				// attributes over. Re-adding it after the swap leaves a window where the page
+				// is styled as light, and anything with a color transition fades in from white.
+				document.addEventListener("astro:before-swap", (event) => applyMode(event.newDocument.documentElement));
 			})();
 		</script>
 	</head>
