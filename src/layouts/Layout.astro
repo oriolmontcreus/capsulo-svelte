@@ -46,6 +46,15 @@ const publishedJson =
 					} catch (e) {}
 				}
 				applyMode();
+				// The ClientRouter swap copies <html> attributes from the incoming page, which is
+				// rendered without the theme class. Carry it over before the swap so persisted
+				// elements (e.g. the theme toggle icon) never see the class drop and re-animate.
+				document.addEventListener("astro:before-swap", (event) => {
+					const current = document.documentElement;
+					const next = event.newDocument.documentElement;
+					next.classList.toggle("dark", current.classList.contains("dark"));
+					next.style.colorScheme = current.style.colorScheme;
+				});
 				document.addEventListener("astro:after-swap", applyMode);
 			})();
 		</script>
