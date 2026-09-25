@@ -1,12 +1,7 @@
-import { supabase } from "$/db/supabase";
+import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
 import type { SchemaValues } from "$lib/form-builder/core/types";
 
-import {
-	GLOBALS_CONTENT_FORMAT_VERSION,
-	GLOBALS_DOCUMENT_ID,
-	deserializeGlobalsValues,
-	serializeGlobalsValues
-} from "./globals-persistence";
+import { deserializeGlobalsValues, serializeGlobalsValues } from "./globals-persistence";
 
 export type LoadGlobalsDocumentResult = {
 	values: SchemaValues;
@@ -16,6 +11,7 @@ export type LoadGlobalsDocumentResult = {
 };
 
 export type SaveGlobalsDocumentInput = {
+	/** Kept for call-site compatibility; the server records the signed-in user. */
 	userId: string;
 	values: SchemaValues;
 	hasExistingDocument: boolean;
@@ -27,34 +23,20 @@ export type SaveGlobalsDocumentResult = {
 };
 
 export async function loadGlobalsDocumentFromDb(): Promise<LoadGlobalsDocumentResult> {
-	const { data, error } = await supabase
-		.from("globals")
-		.select("content, updated_at")
-		.eq("id", GLOBALS_DOCUMENT_ID)
-		.maybeSingle();
+	const { data, error } = await capsuloFetch<{ globals: { content: unknown; updatedAt: string } | null }>(
+		"/globals"
+	);
 
-	if (error) {
-		return {
-			values: {},
-			hasExistingDocument: false,
-			updatedAt: null,
-			errorMessage: error.message
-		};
-	}
+	if (error !== null) return { values: {}, hasExistingDocument: false, updatedAt: null, errorMessage: error };
 
-	if (!data?.content) {
-		return {
-			values: {},
-			hasExistingDocument: false,
-			updatedAt: data?.updated_at ?? null,
-			errorMessage: null
-		};
+	if (!data.globals?.content) {
+		return { values: {}, hasExistingDocument: false, updatedAt: null, errorMessage: null };
 	}
 
 	return {
-		values: deserializeGlobalsValues(data.content),
+		values: deserializeGlobalsValues(data.globals.content),
 		hasExistingDocument: true,
-		updatedAt: data.updated_at ?? null,
+		updatedAt: data.globals.updatedAt,
 		errorMessage: null
 	};
 }
@@ -62,29 +44,11 @@ export async function loadGlobalsDocumentFromDb(): Promise<LoadGlobalsDocumentRe
 export async function saveGlobalsDocumentToDb(
 	input: SaveGlobalsDocumentInput
 ): Promise<SaveGlobalsDocumentResult> {
-	const serializedContent = serializeGlobalsValues(input.values);
-	const documentPayload: {
-		id: string;
-		content: ReturnType<typeof serializeGlobalsValues>;
-		content_format_version: number;
-		updated_by: string;
-		created_by?: string;
-	} = {
-		id: GLOBALS_DOCUMENT_ID,
-		content: serializedContent,
-		content_format_version: GLOBALS_CONTENT_FORMAT_VERSION,
-		updated_by: input.userId
-	};
+	const { data, error } = await capsuloFetch<{ updatedAt: string }>("/globals", {
+		method: "PUT",
+		body: jsonBody({ content: serializeGlobalsValues(input.values) })
+	});
 
-	if (!input.hasExistingDocument) documentPayload.created_by = input.userId;
-
-	const { data: upsertedDocument, error: upsertError } = await supabase
-		.from("globals")
-		.upsert(documentPayload, { onConflict: "id" })
-		.select("updated_at")
-		.single();
-
-	if (upsertError) return { errorMessage: upsertError.message, updatedAt: null };
-
-	return { errorMessage: null, updatedAt: upsertedDocument?.updated_at ?? null };
+	if (error !== null) return { errorMessage: error, updatedAt: null };
+	return { errorMessage: null, updatedAt: data.updatedAt };
 }

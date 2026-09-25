@@ -5,7 +5,9 @@ import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 export const cmsStore = $state({
 	active: false,
 	pageId: "",
-	locale: DEFAULT_LOCALE,
+	// Read from the URL at load so islands that hydrate before CmsPump already use the
+	// page's locale (the server render sets it the same way in Layout.astro).
+	locale: typeof window === "undefined" ? DEFAULT_LOCALE : getLocaleFromPathname(window.location.pathname),
 	valuesByInstance: {} as PageEditorValuesByInstance
 });
 

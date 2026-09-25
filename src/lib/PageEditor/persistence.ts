@@ -1,7 +1,5 @@
 import type { SchemaValues } from "$lib/form-builder/core/types";
 
-export const PAGE_EDITOR_CONTENT_FORMAT_VERSION = 1;
-
 export type PageEditorValuesByInstance = Record<string, SchemaValues>;
 
 export type PageEditorInstance = {

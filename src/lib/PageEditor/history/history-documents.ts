@@ -1,4 +1,4 @@
-import { supabase } from "$/db/supabase";
+import { capsuloFetch } from "$lib/api/capsulo-client";
 import {
 	deserializePageEditorValues,
 	type PageEditorValuesByInstance
@@ -32,8 +32,8 @@ const EMPTY_PAGE: Omit<LoadCommitPageResult, "errorMessage"> = {
  * Loads one page of commits, newest first, with the pages each one touched and
  * the authors' display names.
  *
- * Three queries regardless of how many commits or pages come back - no per-commit
- * or per-page round trip. Content is deliberately not selected here; it is fetched
+ * One request (three D1 queries) regardless of how many commits or pages come back -
+ * no per-commit or per-page round trip. Content is deliberately not selected here; it is fetched
  * only for the page the user actually opens (see loadRevisionWithParent).
  *
  * Pagination is keyset (`created_at < cursor`) rather than offset, so a commit
@@ -43,52 +43,21 @@ export async function loadCommitPage(
 	cursor: string | null = null,
 	limit: number = COMMIT_PAGE_SIZE
 ): Promise<LoadCommitPageResult> {
-	let commitQuery = supabase
-		.from("commits")
-		.select("id, message, created_by, created_at")
-		.order("created_at", { ascending: false })
-		.limit(limit);
+	const params = new URLSearchParams({ limit: String(limit) });
+	if (cursor) params.set("cursor", cursor);
 
-	if (cursor) commitQuery = commitQuery.lt("created_at", cursor);
-
-	const { data: commitData, error: commitError } = await commitQuery;
-	if (commitError) return { ...EMPTY_PAGE, errorMessage: commitError.message };
-
-	const commits = (commitData ?? []) as CommitRow[];
-	if (commits.length === 0) return { ...EMPTY_PAGE, errorMessage: null };
-
-	const { data: revisionData, error: revisionError } = await supabase
-		.from("pages-history")
-		.select("id, page_id, created_at, commit_id")
-		.in(
-			"commit_id",
-			commits.map((commit) => commit.id)
-		);
-
-	if (revisionError) return { ...EMPTY_PAGE, errorMessage: revisionError.message };
-
-	const authorIds = [
-		...new Set(
-			commits
-				.map((commit) => commit.created_by)
-				.filter((id): id is string => typeof id === "string" && id.length > 0)
-		)
-	];
-
-	let profiles: ProfileRow[] = [];
-	if (authorIds.length > 0) {
-		const { data: profileData, error: profileError } = await supabase
-			.from("user_profiles")
-			.select("id, name, avatar_url")
-			.in("id", authorIds);
-		// Author names are cosmetic; losing them must not hide the history itself.
-		if (!profileError) profiles = (profileData ?? []) as ProfileRow[];
-	}
+	const { data, error } = await capsuloFetch<{
+		commits: CommitRow[];
+		revisions: RevisionRow[];
+		authors: ProfileRow[];
+	}>(`/commits?${params}`);
+	if (error !== null) return { ...EMPTY_PAGE, errorMessage: error };
+	if (data.commits.length === 0) return { ...EMPTY_PAGE, errorMessage: null };
 
 	return {
-		commits: buildCommitEntries(commits, (revisionData ?? []) as RevisionRow[], profiles),
-		nextCursor: nextCommitCursor(commits),
-		hasMore: commits.length === limit,
+		commits: buildCommitEntries(data.commits, data.revisions, data.authors),
+		nextCursor: nextCommitCursor(data.commits),
+		hasMore: data.commits.length === limit,
 		errorMessage: null
 	};
 }
@@ -122,23 +91,18 @@ export async function loadRevisionWithParent(
 	pageId: string,
 	revisionId: number
 ): Promise<LoadRevisionResult> {
-	const { data, error } = await supabase
-		.from("pages-history")
-		.select("id, content")
-		.eq("page_id", pageId)
-		.lte("id", revisionId)
-		.order("id", { ascending: false })
-		.limit(2);
+	const params = new URLSearchParams({ pageId, revisionId: String(revisionId) });
+	const { data, error } = await capsuloFetch<{ revisions: { id: number; content: unknown }[] }>(
+		`/revisions?${params}`
+	);
+	if (error !== null) return { ...EMPTY_REVISION, errorMessage: error };
 
-	if (error) return { ...EMPTY_REVISION, errorMessage: error.message };
-
-	const rows = (data ?? []) as { id: number; content: unknown }[];
-	const revision = rows.find((row) => row.id === revisionId);
+	const revision = data.revisions.find((row) => row.id === revisionId);
 	if (!revision) {
 		return { ...EMPTY_REVISION, errorMessage: "That revision is no longer available." };
 	}
 
-	const parent = rows.find((row) => row.id !== revisionId) ?? null;
+	const parent = data.revisions.find((row) => row.id !== revisionId) ?? null;
 
 	return {
 		revisionValues: deserializePageEditorValues(revision.content),

@@ -80,10 +80,10 @@ In **preview mode**, the Page Editor can still override `cmsStore.locale` via `s
 | | Preview (`?pageEditorPreview=1`) | Normal visit / static build |
 |--|----------------------------------|-----------------------------|
 | `CmsPump` | Syncs URL locale, starts runtime, listens to editor | Syncs URL locale only; `cmsStore.active = false` |
-| `getCmsData()` | Resolves draft values for `instanceId` + locale | Schema default values for current URL locale |
-| Capsule UI | Shows editor draft | Defaults until published content is wired separately |
+| `getCmsData()` | Resolves draft values for `instanceId` + locale | Published values for the current URL locale, else schema defaults |
+| Capsule UI | Shows editor draft | Shows the last committed (published) content |
 
-The preview listener and heavy sync logic only run when the preview query is present. The site build stays **static**; there is no server runtime for CMS.
+The preview listener and heavy sync logic only run when the preview query is present. The site build stays **static**: published values are baked in at build time (`capsulo pull` snapshots them, `src/middleware.ts` seeds each page before it prerenders, and `Layout.astro` embeds them as JSON for hydration).
 
 ## Writing a Svelte capsule
 
@@ -172,7 +172,6 @@ After the iframe sends **`ready`**, the editor calls `postSyncState()` so the if
 
 - React / Vue / Preact / Solid adapters (`useCmsData`-style per framework).
 - Live preview for **pure `.astro`** markup without a hydrated island.
-- Injecting **published** CMS content at static build time (preview is editor-draft only for now).
 
 For pure `.astro` capsules, the intended direction is either a thin `client:load` wrapper around a framework view or a future build-time strategy—not manual `data-cms-*` on every field.
 
@@ -182,7 +181,7 @@ For pure `.astro` capsules, the intended direction is either a thin `client:load
 2. Open `admin/page-editor/<page-slug>` (e.g. `capsule-prototype`).
 3. Edit fields in the Content Sidebar → preview updates without iframe reload.
 4. Change preview locale → translatable fields follow the selected locale; iframe URL uses `/es/...` or `/en/...`.
-5. Open `/en/<page-slug>` without preview → `cmsStore.locale` is `en` (defaults until published content exists).
+5. Open `/en/<page-slug>` without preview → `cmsStore.locale` is `en` and capsules show the committed content (or defaults).
 6. Visiting `/capsule-prototype` (no prefix) → redirects to `/es/capsule-prototype`.
 6. Open the public page **without** `pageEditorPreview=1` → no preview listener, no errors.
 7. `pnpm build` → static output succeeds; `/en/...` routes are generated.

@@ -1,61 +1,54 @@
-import type { Session } from "@supabase/supabase-js";
 import { writable } from "svelte/store";
-import { supabase } from "$/db/supabase";
+import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
 
-export type UserProfile = {
+/** The signed-in editor, as returned by `/api/capsulo/auth/me`. */
+export type SessionUser = {
 	id: string;
+	login: string;
+	email: string | null;
 	name: string | null;
-	avatar_url: string | null;
-	created_at: string;
-	updated_at: string;
-	deleted_at: string | null;
+	avatarUrl: string | null;
 };
 
+export type Session = { user: SessionUser };
+
 export const session = writable<Session | null>(null);
-export const userProfile = writable<UserProfile | null>(null);
 
-export function sessionDisplayName(profile: UserProfile | null | undefined): string {
-	const n = profile?.name;
-	return typeof n === "string" ? n.trim() : "";
-}
-
-async function refreshUserProfile(next: Session | null): Promise<void> {
-	if (!next?.user?.id) {
-		userProfile.set(null);
-		return;
-	}
-	const { data, error } = await supabase
-		.from("user_profiles")
-		.select("*")
-		.eq("id", next.user.id)
-		.maybeSingle();
-	if (error) {
-		console.warn("[session] user_profiles:", error.message);
-		userProfile.set(null);
-		return;
-	}
-	userProfile.set(data as UserProfile | null);
-}
-
-const AUTH_LISTENER_GUARD = "__capsuloSupabaseAuthListener";
-
-function attachAuthListeners() {
-	//*** Guard to avoid attaching multiple listeners.
-	if (typeof window === "undefined") return;
-	const g = globalThis as typeof globalThis & { [AUTH_LISTENER_GUARD]?: boolean };
-	if (g[AUTH_LISTENER_GUARD]) return;
-	g[AUTH_LISTENER_GUARD] = true;
-	//***
-
-	supabase.auth.onAuthStateChange((_event, next) => {
-		session.set(next);
-		void refreshUserProfile(next);
-	});
+export function sessionDisplayName(user: SessionUser | null | undefined): string {
+	return user?.name?.trim() || user?.login || "";
 }
 
 export async function syncSession(): Promise<void> {
-	attachAuthListeners();
-	const { data } = await supabase.auth.getSession();
-	session.set(data.session);
-	await refreshUserProfile(data.session);
+	const { data } = await capsuloFetch<{ user: SessionUser | null }>("/auth/me");
+	session.set(data?.user ? { user: data.user } : null);
+}
+
+export type SignInResult = { user: SessionUser; error: null } | { user: null; error: string };
+
+/**
+ * Password sign-in. The password is stretched here (PBKDF2, the parameters come from
+ * the challenge) so the Worker only has to do one cheap hash; see `capsulo/password`.
+ */
+export async function signIn(login: string, password: string): Promise<SignInResult> {
+	const challenge = await capsuloFetch<{ salt: string; iterations: number }>("/auth/challenge", {
+		method: "POST",
+		body: jsonBody({ login })
+	});
+	if (challenge.error !== null) return { user: null, error: challenge.error };
+
+	const { stretchPassword } = await import("capsulo/password");
+	const key = await stretchPassword(password, challenge.data.salt, challenge.data.iterations);
+	const result = await capsuloFetch<{ user: SessionUser }>("/auth/login", {
+		method: "POST",
+		body: jsonBody({ login, key })
+	});
+	if (result.error !== null) return { user: null, error: result.error };
+
+	session.set({ user: result.data.user });
+	return { user: result.data.user, error: null };
+}
+
+export async function signOut(): Promise<void> {
+	await capsuloFetch("/auth/logout", { method: "POST" });
+	session.set(null);
 }

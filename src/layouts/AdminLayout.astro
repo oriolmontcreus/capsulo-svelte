@@ -12,6 +12,14 @@ const { activeRoute, scrollable = true } = Astro.props as Props;
 ---
 
 <Layout fontFamily="geist">
+	<script is:inline>
+		// Admin pages are static; the API is the security boundary. This only avoids
+		// flashing the editor to someone who is not signed in (the hint cookie is set
+		// next to the HttpOnly session cookie and carries no secret).
+		if (!document.cookie.split("; ").some((cookie) => cookie.startsWith("capsulo_signed_in="))) {
+			location.replace("/admin/login?next=" + encodeURIComponent(location.pathname + location.search));
+		}
+	</script>
 	<div class="flex h-dvh w-full overflow-hidden bg-neutral-100 dark:bg-[oklch(0.205_0_0)]">
 		<AdminNav {activeRoute} client:load transition:persist="admin-nav" />
 		<div class="min-h-0 min-w-0 flex-1 overflow-hidden">

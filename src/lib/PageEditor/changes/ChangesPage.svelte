@@ -18,6 +18,7 @@
 	let isCommitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let failures = $state<CommitFailure[]>([]);
+	let publishNotice = $state<string | null>(null);
 	let revertError = $state<string | null>(null);
 
 	/** Bumped after a revert so the diff re-reads the draft it just changed. */
@@ -65,6 +66,7 @@
 		isCommitting = true;
 		errorMessage = null;
 		failures = [];
+		publishNotice = null;
 
 		const result = await commitChanges(
 			message,
@@ -73,6 +75,7 @@
 
 		errorMessage = result.errorMessage;
 		failures = result.failures;
+		publishNotice = result.publishNotice;
 		if (!result.errorMessage && result.failures.length === 0) {
 			message = "";
 		}
@@ -100,6 +103,7 @@
 			{isCommitting}
 			{errorMessage}
 			{failures}
+			{publishNotice}
 			oncommit={commit}
 		/>
 	</aside>

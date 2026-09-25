@@ -4,11 +4,7 @@ import {
 	loadAllPageEditorCacheDocuments,
 	savePageEditorDocumentToCache
 } from "$lib/PageEditor/page-editor-cache";
-import {
-	createCommit,
-	loadPageEditorDocumentMetadataFromDb,
-	savePageEditorDocumentToDb
-} from "$lib/PageEditor/page-editor-documents";
+import { commitPageEditorDocuments } from "$lib/PageEditor/page-editor-documents";
 import { selectCommittableDocuments } from "./commit-selection";
 import { resolveInstanceDefaults } from "./schema-defaults";
 
@@ -22,7 +18,13 @@ export type CommitResult = {
 	failures: CommitFailure[];
 	/** Top-level error that aborted the whole commit (e.g. not authenticated). */
 	errorMessage: string | null;
+	/** Shown after a successful commit: when the live site will reflect it. */
+	publishNotice: string | null;
 };
+
+const REBUILD_NOTICE = "Committed. The live site updates in about 1-2 minutes.";
+const NO_REBUILD_NOTICE =
+	"Committed. Auto-publish is not set up yet, so run `capsulo deploy` to update the live site.";
 
 async function resolveUserId(): Promise<string | null> {
 	let userId = get(session)?.user?.id ?? null;
@@ -34,13 +36,10 @@ async function resolveUserId(): Promise<string | null> {
 }
 
 /**
- * Commits the local draft of each given page to Supabase under a single message.
- * One `commits` row groups every page written by this action, so the History page
- * shows "this commit touched pages A, B and C" as a single entry. Each page that
- * actually changed is written to `pages` (+ a `pages-history` revision linked to
- * that commit); its committed values then become the new local baseline so it
- * drops out of the Changes list. Per-page failures are collected so a partial
- * failure does not lose the message or the pages that did commit.
+ * Commits the local draft of each given page under a single message. The API writes
+ * the commit row, every page and one history revision per page atomically, then asks
+ * Workers Builds to rebuild the static site. Committed values become the new local
+ * baseline so the pages drop out of the Changes list.
  *
  * ponytail: file-upload staging is intentionally NOT flushed here (deferred to a
  * later phase). The editor is unmounted on this route, so staged uploads would
@@ -55,64 +54,44 @@ export async function commitChanges(
 		return {
 			committedPageIds: [],
 			failures: [],
-			errorMessage: "You must be signed in to commit changes."
+			errorMessage: "You must be signed in to commit changes.",
+			publishNotice: null
 		};
 	}
 
 	const documents = await loadAllPageEditorCacheDocuments();
 	// Guard against empty/duplicate revisions: only pages that really changed.
 	const committable = selectCommittableDocuments(documents, pageIds, resolveInstanceDefaults);
-	const committedPageIds: string[] = [];
-	const failures: CommitFailure[] = [];
-
 	if (committable.length === 0) {
-		return { committedPageIds, failures, errorMessage: null };
+		return { committedPageIds: [], failures: [], errorMessage: null, publishNotice: null };
 	}
 
-	// One commit row for the whole action; every revision below links to it.
-	const createdCommit = await createCommit(message.trim(), userId);
-	if (createdCommit.errorMessage || !createdCommit.commitId) {
-		return {
-			committedPageIds,
-			failures,
-			errorMessage: createdCommit.errorMessage ?? "Failed to create the commit."
-		};
+	const result = await commitPageEditorDocuments(
+		message,
+		committable.map((document) => ({
+			pageId: document.pageId,
+			valuesByInstance: document.valuesByInstance
+		}))
+	);
+	if (result.errorMessage) {
+		return { committedPageIds: [], failures: [], errorMessage: result.errorMessage, publishNotice: null };
 	}
-	const commitId = createdCommit.commitId;
 
+	// The committed values are now the truth: reset the baseline so the pages no
+	// longer report local changes.
 	for (const document of committable) {
-		const pageId = document.pageId;
-		const metadata = await loadPageEditorDocumentMetadataFromDb(pageId);
-		if (metadata.errorMessage) {
-			failures.push({ pageId, message: metadata.errorMessage });
-			continue;
-		}
-
-		const draftValues = document.valuesByInstance;
-		const saveResult = await savePageEditorDocumentToDb({
-			pageId,
-			userId,
-			valuesByInstance: draftValues,
-			hasExistingDocument: metadata.hasExistingDocument,
-			comment: message,
-			commitId
-		});
-
-		if (saveResult.errorMessage) {
-			failures.push({ pageId, message: saveResult.errorMessage });
-			continue;
-		}
-
-		// The committed values are now the truth: reset the baseline so the page
-		// no longer reports local changes.
 		await savePageEditorDocumentToCache({
-			pageId,
-			valuesByInstance: draftValues,
-			baselineValuesByInstance: draftValues,
-			updatedAt: saveResult.updatedAt
+			pageId: document.pageId,
+			valuesByInstance: document.valuesByInstance,
+			baselineValuesByInstance: document.valuesByInstance,
+			updatedAt: result.updatedAt
 		});
-		committedPageIds.push(pageId);
 	}
 
-	return { committedPageIds, failures, errorMessage: null };
+	return {
+		committedPageIds: committable.map((document) => document.pageId),
+		failures: [],
+		errorMessage: null,
+		publishNotice: result.rebuildRequested ? REBUILD_NOTICE : NO_REBUILD_NOTICE
+	};
 }

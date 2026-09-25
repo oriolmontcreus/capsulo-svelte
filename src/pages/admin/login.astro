@@ -1,14 +1,9 @@
 ---
 import Layout from "$/layouts/Layout.astro";
-import LoginMagicLink from "$lib/LoginMagicLink.svelte";
+import LoginPassword from "$lib/LoginPassword.svelte";
 import GlitterCloth from "$lib/motion-core/glitter-cloth/GlitterCloth.svelte";
 import LightSwitch from "$lib/components/LightSwitch.svelte";
 ---
-<!-- Hola meló, et deixo el que es pot anar fent:
- 1. Modificar el MagicLink per OTP
- 2. Preparar un mail més maco pel OTP
- 3. Al entrar la pàgina llegir el clipboard per veure si hi ha un OTP i si és així introduir-lo automàticament (per exemple com passa amb supercell id que es posa automàtic.
- -->
 <Layout>
 	<style>
 		/*
@@ -60,14 +55,14 @@ import LightSwitch from "$lib/components/LightSwitch.svelte";
 				<h1 class="text-2xl font-normal text-white">Capsulo</h1>
 			</div>
 			<div class="mt-auto rounded-t-2xl bg-background p-6">
-				<LoginMagicLink client:load />
+				<LoginPassword client:load />
 			</div>
 		</div>
 
 		<!-- Desktop form -->
 		<div class="relative z-10 hidden min-h-dvh grow items-center justify-center md:flex md:overflow-y-auto">
 			<div class="w-full max-w-[320px]">
-				<LoginMagicLink client:load />
+				<LoginPassword client:load />
 			</div>
 		</div>
 	</div>

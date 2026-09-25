@@ -1,7 +1,8 @@
 <script lang="ts">
   import { getCmsData } from "$lib/cms/get-cms-data";
+  import { cmsStore } from "$lib/cms/cms-store.svelte";
   import * as Card from "$lib/components/ui/card";
-  import { fileNameFromPath, runSignedUrlResolver } from "$lib/form-builder/fields/FileUploadField/storage";
+  import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
 
   import { fileUploadTestsSchema } from "./file-upload-tests.schema";
   import type { FileUploadTestsData } from "./file-upload-tests.schema.d";
@@ -23,24 +24,9 @@
     fileUploadTestsSchema.fields.filter((field) => field.type === "file-upload"),
   );
 
-  const allPaths = $derived(
-    fileFields.flatMap((field) => {
-      const value = data[field.name as keyof typeof data];
-      return Array.isArray(value) ? (value as string[]) : [];
-    }),
-  );
-
-  let signedUrls = $state<Record<string, string>>({});
-
-  $effect(() =>
-    runSignedUrlResolver(
-      () => allPaths,
-      () => signedUrls,
-      (next) => {
-        signedUrls = next;
-      },
-    ),
-  );
+  // The editor preview shows files uploaded since the last build, so it reads them
+  // through the Worker; the live site uses the copies baked into the static build.
+  const mediaSource = $derived(cmsStore.active ? "live" : "published");
 
   function pathsFor(fieldName: string): string[] {
     const value = data[fieldName as keyof typeof data];
@@ -83,19 +69,11 @@
                     <li
                       class="bg-muted relative aspect-square overflow-hidden rounded-md border"
                     >
-                      {#if signedUrls[path]}
-                        <img
-                          src={signedUrls[path]}
-                          alt={fileNameFromPath(path)}
-                          class="size-full object-cover"
-                        />
-                      {:else}
-                        <div
-                          class="text-muted-foreground flex size-full items-center justify-center text-[10px]"
-                        >
-                          loading…
-                        </div>
-                      {/if}
+                      <img
+                        src={mediaUrl(path, mediaSource)}
+                        alt={fileNameFromPath(path)}
+                        class="size-full object-cover"
+                      />
                     </li>
                   {/each}
                 </ul>

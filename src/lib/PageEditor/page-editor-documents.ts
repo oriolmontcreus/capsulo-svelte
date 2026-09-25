@@ -1,6 +1,5 @@
-import { supabase } from "$/db/supabase";
+import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
 import {
-	PAGE_EDITOR_CONTENT_FORMAT_VERSION,
 	deserializePageEditorValues,
 	serializePageEditorValues,
 	type PageEditorValuesByInstance
@@ -19,37 +18,34 @@ export type LoadPageEditorDocumentMetadataResult = {
 	errorMessage: string | null;
 };
 
+type PageResponse = { page: { content?: unknown; updatedAt: string } | null };
+
+function pagePath(pageId: string): string {
+	return `/pages/${pageId.split("/").map(encodeURIComponent).join("/")}`;
+}
+
 export async function loadPageEditorDocumentFromDb(
 	pageId: string
 ): Promise<LoadPageEditorDocumentResult> {
-	const { data, error } = await supabase
-		.from("pages")
-		.select("content, updated_at")
-		.eq("page_id", pageId)
-		.maybeSingle();
+	const { data, error } = await capsuloFetch<PageResponse>(pagePath(pageId));
 
-	if (error) {
-		return {
-			valuesByInstance: {},
-			hasExistingDocument: false,
-			updatedAt: null,
-			errorMessage: error.message
-		};
+	if (error !== null) {
+		return { valuesByInstance: {}, hasExistingDocument: false, updatedAt: null, errorMessage: error };
 	}
 
-	if (!data?.content) {
+	if (!data.page?.content) {
 		return {
 			valuesByInstance: {},
 			hasExistingDocument: false,
-			updatedAt: data?.updated_at ?? null,
+			updatedAt: data.page?.updatedAt ?? null,
 			errorMessage: null
 		};
 	}
 
 	return {
-		valuesByInstance: deserializePageEditorValues(data.content),
+		valuesByInstance: deserializePageEditorValues(data.page.content),
 		hasExistingDocument: true,
-		updatedAt: data.updated_at ?? null,
+		updatedAt: data.page.updatedAt,
 		errorMessage: null
 	};
 }
@@ -57,23 +53,13 @@ export async function loadPageEditorDocumentFromDb(
 export async function loadPageEditorDocumentMetadataFromDb(
 	pageId: string
 ): Promise<LoadPageEditorDocumentMetadataResult> {
-	const { data, error } = await supabase
-		.from("pages")
-		.select("updated_at")
-		.eq("page_id", pageId)
-		.maybeSingle();
+	const { data, error } = await capsuloFetch<PageResponse>(`${pagePath(pageId)}?meta=1`);
 
-	if (error) {
-		return {
-			updatedAt: null,
-			hasExistingDocument: false,
-			errorMessage: error.message
-		};
-	}
+	if (error !== null) return { updatedAt: null, hasExistingDocument: false, errorMessage: error };
 
 	return {
-		updatedAt: data?.updated_at ?? null,
-		hasExistingDocument: Boolean(data),
+		updatedAt: data.page?.updatedAt ?? null,
+		hasExistingDocument: data.page !== null,
 		errorMessage: null
 	};
 }
@@ -81,44 +67,53 @@ export async function loadPageEditorDocumentMetadataFromDb(
 /** Message recorded when a revision is written outside the Changes page. */
 const DEFAULT_COMMIT_MESSAGE = "Saved from editor";
 
-export type CreateCommitResult = {
+export type CommitPageEditorDocumentsResult = {
 	commitId: string | null;
+	updatedAt: string | null;
+	/** False when the site has no Deploy Hook, so it won't rebuild by itself. */
+	rebuildRequested: boolean;
 	errorMessage: string | null;
 };
 
 /**
- * Creates the commit row that groups every page revision written together, so
- * the History page can show one entry per commit instead of one per touched page.
+ * Commits several pages under one message in a single atomic write: the commit, the
+ * current documents and one history revision per page either all land or none do.
  */
-export async function createCommit(
+export async function commitPageEditorDocuments(
 	message: string,
-	userId: string
-): Promise<CreateCommitResult> {
-	const { data, error } = await supabase
-		.from("commits")
-		.insert({ message, created_by: userId })
-		.select("id")
-		.single();
+	pages: { pageId: string; valuesByInstance: PageEditorValuesByInstance }[]
+): Promise<CommitPageEditorDocumentsResult> {
+	const { data, error } = await capsuloFetch<{ commitId: string; updatedAt: string; rebuildRequested: boolean }>(
+		"/commits",
+		{
+			method: "POST",
+			body: jsonBody({
+				message: message.trim() || DEFAULT_COMMIT_MESSAGE,
+				pages: pages.map((page) => ({
+					pageId: page.pageId,
+					content: serializePageEditorValues(page.valuesByInstance)
+				}))
+			})
+		}
+	);
 
-	if (error) {
-		return { commitId: null, errorMessage: error.message };
-	}
-
-	return { commitId: data?.id ?? null, errorMessage: null };
+	if (error !== null) return { commitId: null, updatedAt: null, rebuildRequested: false, errorMessage: error };
+	return {
+		commitId: data.commitId,
+		updatedAt: data.updatedAt,
+		rebuildRequested: data.rebuildRequested,
+		errorMessage: null
+	};
 }
 
 export type SavePageEditorDocumentInput = {
 	pageId: string;
+	/** Kept for call-site compatibility; the server records the signed-in user. */
 	userId: string;
 	valuesByInstance: PageEditorValuesByInstance;
 	hasExistingDocument: boolean;
-	/** Commit message recorded on the pages-history revision (Changes page). */
+	/** Commit message recorded on the revision. */
 	comment?: string;
-	/**
-	 * Groups this revision with the other pages committed in the same action.
-	 * When omitted a single-page commit is created, so no revision is ever orphaned.
-	 */
-	commitId?: string;
 };
 
 export type SavePageEditorDocumentResult = {
@@ -126,65 +121,12 @@ export type SavePageEditorDocumentResult = {
 	updatedAt: string | null;
 };
 
+/** Saves one page as its own single-page commit. */
 export async function savePageEditorDocumentToDb(
 	input: SavePageEditorDocumentInput
 ): Promise<SavePageEditorDocumentResult> {
-	const serializedContent = serializePageEditorValues(input.valuesByInstance);
-
-	// Resolved before the upsert on purpose: an empty commit row is harmless (the
-	// History page skips commits with no revisions), but updating `pages` without
-	// recording the revision would be a real gap in the audit trail.
-	let commitId = input.commitId ?? null;
-	if (!commitId) {
-		const createdCommit = await createCommit(
-			input.comment?.trim() || DEFAULT_COMMIT_MESSAGE,
-			input.userId
-		);
-		if (createdCommit.errorMessage) {
-			return { errorMessage: createdCommit.errorMessage, updatedAt: null };
-		}
-		commitId = createdCommit.commitId;
-	}
-
-	const documentPayload: {
-		page_id: string;
-		content: ReturnType<typeof serializePageEditorValues>;
-		content_format_version: number;
-		updated_by: string;
-		created_by?: string;
-	} = {
-		page_id: input.pageId,
-		content: serializedContent,
-		content_format_version: PAGE_EDITOR_CONTENT_FORMAT_VERSION,
-		updated_by: input.userId
-	};
-
-	if (!input.hasExistingDocument) {
-		documentPayload.created_by = input.userId;
-	}
-
-	const { data: upsertedDocument, error: upsertError } = await supabase
-		.from("pages")
-		.upsert(documentPayload, { onConflict: "page_id" })
-		.select("updated_at")
-		.single();
-
-	if (upsertError) {
-		return { errorMessage: upsertError.message, updatedAt: null };
-	}
-
-	const { error: revisionError } = await supabase.from("pages-history").insert({
-		page_id: input.pageId,
-		content: serializedContent,
-		content_format_version: PAGE_EDITOR_CONTENT_FORMAT_VERSION,
-		created_by: input.userId,
-		comment: input.comment ?? null,
-		commit_id: commitId
-	});
-
-	if (revisionError) {
-		return { errorMessage: revisionError.message, updatedAt: null };
-	}
-
-	return { errorMessage: null, updatedAt: upsertedDocument?.updated_at ?? null };
+	const result = await commitPageEditorDocuments(input.comment ?? DEFAULT_COMMIT_MESSAGE, [
+		{ pageId: input.pageId, valuesByInstance: input.valuesByInstance }
+	]);
+	return { errorMessage: result.errorMessage, updatedAt: result.updatedAt };
 }

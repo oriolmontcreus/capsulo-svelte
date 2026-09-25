@@ -3,6 +3,7 @@ import "../styles/global.css";
 import CmsPump from "$lib/cms/CmsPump.svelte";
 import ModeWatcherClient from "$lib/components/ModeWatcherClient.svelte";
 import { getLocaleFromPathname } from "$lib/i18n/routing";
+import { PUBLISHED_ELEMENT_ID, getPublishedValues } from "$lib/cms/published";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -11,6 +12,12 @@ interface Props {
 
 const { fontFamily = "sans" } = Astro.props as Props;
 const locale = getLocaleFromPathname(Astro.url.pathname);
+
+// Published CMS values for this page (seeded by src/middleware.ts), embedded for hydration.
+const isAdminPage = Astro.url.pathname.startsWith("/admin");
+const publishedValues = isAdminPage ? {} : getPublishedValues();
+const publishedJson =
+	Object.keys(publishedValues).length > 0 ? JSON.stringify(publishedValues).replaceAll("<", "\\u003c") : null;
 ---
 
 <!doctype html>
@@ -44,6 +51,7 @@ const locale = getLocaleFromPathname(Astro.url.pathname);
 		</script>
 	</head>
 	<body>
+		{publishedJson && <script is:inline type="application/json" id={PUBLISHED_ELEMENT_ID} set:html={publishedJson} />}
 		<slot />
 		<CmsPump client:load />
 		<ModeWatcherClient client:load transition:persist="mode-watcher" />
