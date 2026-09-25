@@ -1,0 +1,31 @@
+---
+import { Folder as FolderIcon, FolderOpen } from '@lucide/astro';
+
+interface Props {
+  name: string;
+  defaultOpen?: boolean;
+}
+const { name, defaultOpen = false } = Astro.props;
+const state = defaultOpen ? 'open' : 'closed';
+---
+
+<div data-state={state} data-files-folder>
+  <button
+    type="button"
+    data-state={state}
+    data-files-folder-trigger
+    class="group flex flex-row items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-fd-accent hover:text-fd-accent-foreground [&_svg]:size-4 w-full"
+  >
+    <FolderOpen class="group-data-[state=closed]:hidden" />
+    <FolderIcon class="group-data-[state=open]:hidden" />
+    {name}
+  </button>
+  <div
+    data-state={state}
+    data-collapsible-content
+    hidden={!defaultOpen}
+    class="overflow-hidden data-animated:data-[state=closed]:animate-fd-collapsible-up data-animated:data-[state=open]:animate-fd-collapsible-down"
+  >
+    <div class="ms-2 flex flex-col border-l ps-2"><slot /></div>
+  </div>
+</div>

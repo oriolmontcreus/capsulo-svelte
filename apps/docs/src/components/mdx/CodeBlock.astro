@@ -1,0 +1,50 @@
+---
+import Icon from '@/components/Icon.astro';
+
+interface Props {
+  style?: string | Record<string, string>;
+  class?: string;
+  'data-language'?: string;
+  [attr: string]: unknown;
+}
+
+// Wraps Shiki's <pre> in Fumadocs' code block frame (square corners, as on the old site).
+// Shiki's inline style holds the --shiki-light/--shiki-dark colors; move them to the frame.
+const { style = '', class: className, ...rest } = Astro.props;
+// MDX may hand the style over as a string or as an object.
+const rules =
+  typeof style === 'string'
+    ? style.split(';').map((rule) => rule.trim())
+    : Object.entries(style).map(([key, value]) => `${key}:${value}`);
+const vars = rules.filter((rule) => rule.startsWith('--shiki')).join(';');
+const isShiki = className?.includes('astro-code');
+---
+
+{
+  isShiki ? (
+    <figure
+      class="my-4 bg-fd-card shiki relative border shadow-sm outline-none not-prose overflow-hidden text-sm rounded-none"
+      style={vars}
+    >
+      <div class="empty:hidden absolute top-2 right-2 z-2 backdrop-blur-lg rounded-lg text-fd-muted-foreground">
+        <button
+          type="button"
+          data-copy-code
+          class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring p-1 [&_svg]:size-4 hover:text-fd-accent-foreground data-[checked]:text-fd-accent-foreground"
+          aria-label="Copy Text"
+        >
+          <Icon name="Clipboard" class="in-data-[checked]:hidden" />
+          <Icon name="Check" class="hidden in-data-[checked]:block" />
+        </button>
+      </div>
+      <div
+        class="text-[13px] py-3.5 overflow-auto max-h-[600px] fd-scroll-container"
+        style="--padding-right:calc(var(--spacing) * 8)"
+      >
+        <pre class="min-w-full w-max *:flex *:flex-col rounded-none" {...rest}><slot /></pre>
+      </div>
+    </figure>
+  ) : (
+    <pre class={className} style={style as never} {...rest}><slot /></pre>
+  )
+}

@@ -1,0 +1,27 @@
+---
+// Callout from the old docs (capsulo-docs/src/components/callout.tsx).
+type CalloutType = 'info' | 'warn' | 'warning' | 'error' | 'success';
+
+interface Props {
+  title?: string;
+  type?: CalloutType;
+  class?: string;
+}
+
+const { title, type = 'info', class: className } = Astro.props;
+
+const styles = {
+  info: { border: 'border-blue-500/30', bg: 'bg-blue-500/10', iconColor: 'text-blue-500 fill-blue-500', accent: 'bg-blue-500/50' },
+  warning: { border: 'border-amber-500/30', bg: 'bg-amber-500/10', iconColor: 'text-amber-500 fill-amber-500', accent: 'bg-amber-500/50' },
+  error: { border: 'border-red-500/30', bg: 'bg-red-500/10', iconColor: 'text-red-500 fill-red-500', accent: 'bg-red-500/50' },
+  success: { border: 'border-green-500/30', bg: 'bg-green-500/10', iconColor: 'text-green-500 fill-green-500', accent: 'bg-green-500/50' },
+}[type === 'warn' ? 'warning' : type];
+---
+
+<div class:list={['flex gap-2 my-4 rounded-none border p-3 ps-1 text-sm shadow-md', styles.bg, styles.border, className]}>
+  <div role="none" class:list={['w-0.5 rounded-sm shrink-0', styles.accent]}></div>
+  <div class="flex flex-col gap-2 min-w-0 flex-1">
+    {title && <p class:list={['font-medium !my-0', styles.iconColor]}>{title}</p>}
+    <div class="text-foreground/80 prose-no-margin empty:hidden"><slot /></div>
+  </div>
+</div>

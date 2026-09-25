@@ -1,0 +1,181 @@
+---
+title: Introduction
+description: Getting to know the basics
+---
+
+import { Code, Cloud, Users, Database, Globe, Package } from '@lucide/astro';
+
+<GithubInfo owner="oriolmontcreus" repo="capsulo-svelte" />
+
+## What is Capsulo?
+
+Capsulo is a **CMS framework** <span class="text-fd-muted-foreground text-sm">(also known as a [CMF](https://en.wikipedia.org/wiki/Content_management_framework))</span> that lets you define content structures as code and manage them through a beautiful interface. Built for developers who want full control without sacrificing ease of use.
+
+A Capsulo project is an [Astro](https://astro.build/) site with its CMS built in. You build components with Svelte (or any framework Astro supports), describe their editable fields with a schema, and your client edits them at `/admin`.
+
+## Key features
+
+<Cards>
+  <Card title="Schema-Based Architecture" href="/docs/what-is-capsulo/#1-simplicity">
+    <Code slot="icon" />
+    Define content structures as code with a Fluent API. Capsules are detected automatically, no registration needed.
+  </Card>
+  <Card title="Static & Free to Host" href="/docs/what-is-capsulo/#3-performance">
+    <Cloud slot="icon" />
+    Public pages are prerendered to static HTML. The site and its CMS run on one free Cloudflare account, no credit card needed.
+  </Card>
+  <Card title="100% Open Source" href="https://github.com/oriolmontcreus/capsulo-svelte">
+    <Users slot="icon" />
+    Love the recipe but hate my seasoning? Fork it to make it yours, or submit a
+    PR to teach me how to cook. Either way, the kitchen is yours
+  </Card>
+  <Card title="Your Content, Your Account" href="/docs/what-is-capsulo/#2-control">
+    <Database slot="icon" />
+    Pages, drafts and history live in Cloudflare D1, and uploads in Workers KV (or R2), all in your own Cloudflare account.
+  </Card>
+  <Card title="Built-in Translations" href="/docs/what-is-capsulo/#1-simplicity">
+    <Globe slot="icon" />
+    Translations supported out of the box. Mark a field as translatable and edit every locale in the CMS.
+  </Card>
+  <Card title="Global Variables" href="/docs/what-is-capsulo/#1-simplicity">
+    <Package slot="icon" />
+    Define and use global variables. Modify them once and they change everywhere.
+  </Card>
+</Cards>
+
+<Callout>
+  Want to understand the philosophy behind Capsulo? Check out [What is
+  Capsulo](/docs/what-is-capsulo/) for a deep dive into our approach.
+</Callout>
+
+## Quick start
+
+<Steps>
+
+<Step>
+
+### Create a project
+
+Capsulo needs Node.js 22.12 or newer. Create a new site and start it:
+
+```bash
+npm create capsulo@latest my-site
+cd my-site
+pnpm dev
+```
+
+The site runs on `http://localhost:4321` and the CMS on `http://localhost:4321/admin`. You don't need any account or `.env` file to develop: `pnpm dev` creates a local database and signs you in to `/admin` as a local "Developer" user.
+
+</Step>
+
+<Step>
+
+### Define your schema
+
+Each capsule (a content component) describes its editable fields with a schema, written with the Fluent API:
+
+```ts
+// src/components/capsules/Hero/hero.schema.ts
+import { createSchema } from '$lib/form-builder/core/create-schema';
+import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
+import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+
+export const heroSchema = createSchema({
+  name: 'Hero',
+  key: 'hero',
+  fields: [
+    Text('title').label('Hero title').required().translatable().defaultValue('Welcome'),
+    Textarea('subtitle').label('Subtitle').rows(3).translatable(),
+  ],
+});
+```
+
+</Step>
+
+<Step>
+
+### Use it in your component
+
+Read the published values with `getCmsData`. The `HeroData` type is generated from the schema for you:
+
+```svelte
+<!-- src/components/capsules/Hero/Hero.svelte -->
+<script lang="ts">
+  import { getCmsData } from '$lib/cms/get-cms-data';
+  import { heroSchema } from './hero.schema';
+  import type { HeroData } from './hero.schema.d';
+
+  let { instanceId }: { instanceId: string } = $props();
+
+  const data = $derived(getCmsData<HeroData & Record<string, unknown>>(instanceId, heroSchema));
+</script>
+
+<section>
+  <h1>{data.title}</h1>
+  <p>{data.subtitle}</p>
+</section>
+```
+
+</Step>
+
+<Step>
+
+### Edit in the CMS
+
+Add the capsule to a page and open `/admin`. Capsulo detects it on that page and shows an auto-generated form for it. No code required for your client!
+
+</Step>
+
+<Step>
+
+### Deploy
+
+When you're ready, deploy to your own Cloudflare account:
+
+```bash
+npx capsulo deploy
+```
+
+It sets up the database and the upload storage, deploys the site to `https://<name>.<account>.workers.dev` and creates the first CMS user for your client.
+
+</Step>
+
+</Steps>
+
+## Perfect for
+
+<InfoCards>
+  <InfoCard title="Landing pages">
+    Fast, conversion-focused pages with editable content
+  </InfoCard>
+  <InfoCard title="Blogs">
+    Personal or company blogs with easy content management
+  </InfoCard>
+  <InfoCard title="Portfolios">
+    Showcase your work with a beautiful, manageable interface
+  </InfoCard>
+  <InfoCard title="Marketing websites">
+    Multi-page sites with frequently updated content
+  </InfoCard>
+  <InfoCard title="Product pages">
+    SaaS product sites with dynamic content sections
+  </InfoCard>
+  <InfoCard title="Agency websites">
+    Client projects requiring non-technical content updates
+  </InfoCard>
+</InfoCards>
+
+<Callout>
+  **Free Hosting**: public pages are static files, which Cloudflare serves for
+  free and without limits. The CMS runs on the same free Worker, so one free
+  Cloudflare account covers the whole project.
+</Callout>
+
+<Callout type="warn">
+  Capsulo is currently in active development. Some features may change before
+  the stable release.
+</Callout>
+
+## Next steps
+
+Read [What is Capsulo](/docs/what-is-capsulo/) to learn more about the philosophy and design decisions.

@@ -1,0 +1,27 @@
+---
+import type { MarkdownHeading } from 'astro';
+import { tocItem, tocItemIndent } from '@/lib/classes';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+---
+
+{
+  headings.length === 0 ? (
+    <div class="rounded-lg border bg-fd-card p-3 text-xs text-fd-muted-foreground">No Headings</div>
+  ) : (
+    <>
+      <div role="none" data-toc-thumb class="absolute top-(--fd-top) h-(--fd-height) w-px bg-fd-primary transition-all" />
+      <div data-toc-items class="flex flex-col border-s border-fd-foreground/10">
+        {headings.map((heading) => (
+          <a data-active="false" href={`#${heading.slug}`} class:list={[tocItem, tocItemIndent(heading.depth)]}>
+            {heading.text}
+          </a>
+        ))}
+      </div>
+    </>
+  )
+}

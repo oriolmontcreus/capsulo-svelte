@@ -1,0 +1,54 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '@/styles/global.css';
+import MobileNav from '@/components/layout/MobileNav.astro';
+import SearchDialog from '@/components/layout/SearchDialog.astro';
+import Sidebar from '@/components/layout/Sidebar.astro';
+import type { DocNode } from '@/lib/page-tree';
+import { site } from '@/lib/site';
+
+interface Props {
+  title: string;
+  description?: string;
+  tree: DocNode[];
+  currentUrl: string;
+}
+
+const { title, description, tree, currentUrl } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title === site.title ? title : `${title} | ${site.title}`}</title>
+    <meta name="description" content={description ?? site.description} />
+    <script is:inline>
+      // Same behaviour as next-themes on the old site: stored choice, else the system theme.
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem('theme');
+        } catch {}
+        const dark = theme === 'dark' || ((theme === null || theme === 'system') && matchMedia('(prefers-color-scheme: dark)').matches);
+        const root = document.documentElement;
+        root.classList.add(dark ? 'dark' : 'light');
+        root.style.colorScheme = dark ? 'dark' : 'light';
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body class="flex flex-col min-h-screen">
+    <MobileNav />
+    <main id="nd-docs-layout" class="flex flex-1 flex-col pt-(--fd-nav-height) transition-[padding] fd-default-layout md:[&_#nd-page_article]:pt-12 xl:[&_#nd-page_article]:px-8 md:[--fd-sidebar-width:268px] lg:[--fd-sidebar-width:286px]">
+      <Sidebar tree={tree} currentUrl={currentUrl} />
+      <slot />
+    </main>
+    <SearchDialog />
+    <script>
+      import '@/scripts/docs';
+      import '@/scripts/search';
+    </script>
+  </body>
+</html>

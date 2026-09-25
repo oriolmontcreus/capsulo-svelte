@@ -1,0 +1,15 @@
+---
+import DocsLayout from '@/layouts/DocsLayout.astro';
+import { getPageTree } from '@/lib/page-tree';
+
+const tree = await getPageTree();
+---
+
+<DocsLayout title="Not Found" tree={tree} currentUrl="">
+  <div id="nd-page" class="flex flex-1 w-full mx-auto max-w-(--fd-page-width) pt-(--fd-tocnav-height)">
+    <article class="flex min-w-0 w-full flex-col gap-4 pt-8 px-4 md:px-6 md:mx-auto">
+      <h1 class="text-[1.75em] font-semibold">Not Found</h1>
+      <p class="mb-8 text-lg text-fd-muted-foreground">This page doesn't exist. Try the search or the sidebar.</p>
+    </article>
+  </div>
+</DocsLayout>

@@ -1,0 +1,68 @@
+---
+// "Copy Markdown" and the "Open" menu under the page title (old docs: page-actions.tsx).
+import Icon from '@/components/Icon.astro';
+import { brandIcons } from '@/lib/brand-icons';
+import { site } from '@/lib/site';
+
+interface Props {
+  /** Path of this page's Markdown, e.g. /llms.mdx/docs/capsules.md */
+  markdownPath: string;
+  /** Path of the MDX source inside the repository. */
+  sourcePath: string;
+}
+
+const { markdownPath, sourcePath } = Astro.props;
+const markdownUrl = Astro.site ? new URL(markdownPath, Astro.site).href : markdownPath;
+const q = `Read ${markdownUrl}, I want to ask questions about it.`;
+
+const items = [
+  { title: 'Open in GitHub', href: `${site.githubUrl}/blob/main/${sourcePath}`, icon: brandIcons.GitHub },
+  { title: 'Open in Scira AI', href: `https://scira.ai/?${new URLSearchParams({ q })}`, icon: brandIcons.Scira },
+  { title: 'Open in ChatGPT', href: `https://chatgpt.com/?${new URLSearchParams({ hints: 'search', q })}`, icon: brandIcons.OpenAI },
+  { title: 'Open in Claude', href: `https://claude.ai/new?${new URLSearchParams({ q })}`, icon: brandIcons.Anthropic },
+  { title: 'Open in Cursor', href: `https://cursor.com/link/prompt?${new URLSearchParams({ text: q })}`, icon: brandIcons.Cursor },
+];
+
+// shadcn Button variant="secondary" size="sm", as rendered on the old site.
+const button =
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer bg-secondary text-secondary-foreground hover:bg-secondary/80 h-8 rounded-md px-3 has-[>svg]:px-2.5 gap-2";
+---
+
+<div class="flex flex-row gap-2 items-center border-b -mt-8 pb-6">
+  <button
+    type="button"
+    data-copy-markdown={markdownPath}
+    class:list={[button, '[&_svg]:size-3.5 [&_svg]:text-fd-muted-foreground']}
+  >
+    <Icon name="Copy" class="lucide-copy in-data-[checked]:hidden" />
+    <Icon name="Check" class="hidden in-data-[checked]:block" />
+    Copy Markdown
+  </button>
+  <div class="relative" data-popover>
+    <button type="button" data-state="closed" data-popover-trigger class={button}>
+      Open
+      <Icon name="ChevronDown" class="size-3.5 text-fd-muted-foreground" />
+    </button>
+    <div
+      data-state="closed"
+      data-popover-content
+      hidden
+      class="absolute left-1/2 top-full mt-1 -translate-x-1/2 bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 slide-in-from-top-2 z-50 w-72 origin-top rounded-md border p-4 shadow-md outline-hidden flex flex-col"
+    >
+      {
+        items.map((item) => (
+          <a
+            href={item.href}
+            rel="noreferrer noopener"
+            target="_blank"
+            class="text-sm p-2 rounded-lg inline-flex items-center gap-2 hover:text-fd-accent-foreground hover:bg-fd-accent [&_svg]:size-4"
+          >
+            <Fragment set:html={item.icon} />
+            {item.title}
+            <Icon name="ExternalLink" class="text-fd-muted-foreground size-3.5 ms-auto" />
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>

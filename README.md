@@ -101,4 +101,15 @@ These are per Cloudflare account and shared by every project in it:
 - `src/`: the Astro site, CMS admin and API (`src/pages/api/capsulo`, `src/lib/server`).
 - `migrations/`: D1 schema.
 - `packages/cli`: the `capsulo` CLI (`deploy`, `users`, `pull`, `storage`).
+- `apps/docs`: the public docs site (see below).
 - `packages/create-capsulo`: `npm create capsulo`. To test it against this checkout, run `node packages/create-capsulo/bin/create-capsulo.js ../test-site --template .`
+
+## Docs site
+
+`apps/docs` is the public documentation, an Astro site that looks like the old Fumadocs docs. Pages are MDX files in `apps/docs/src/content/docs`; each folder becomes a sidebar group, and an optional `meta.json` sets its title and order.
+
+```sh
+pnpm --filter capsulo-docs dev      # http://localhost:4322/docs/
+pnpm --filter capsulo-docs check    # type check
+pnpm --filter capsulo-docs deploy   # build and deploy to Cloudflare (static assets only)
+```

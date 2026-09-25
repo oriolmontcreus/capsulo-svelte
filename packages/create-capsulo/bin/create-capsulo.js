@@ -18,6 +18,7 @@ const TEMPLATE_ONLY = [
 	".cursor",
 	".fallowrc.json",
 	"packages",
+	"apps",
 	"docs",
 	"DESIGN.md",
 	"capsulo-overview.md",

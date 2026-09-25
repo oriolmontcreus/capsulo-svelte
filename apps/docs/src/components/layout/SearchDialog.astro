@@ -1,0 +1,47 @@
+---
+import Icon from '@/components/Icon.astro';
+// Fumadocs' default search dialog. Results are filled in by scripts/search.ts.
+---
+
+<div data-search-dialog hidden>
+  <div
+    data-state="closed"
+    data-search-overlay
+    class="fixed inset-0 z-50 backdrop-blur-xs bg-fd-overlay data-[state=open]:animate-fd-fade-in data-[state=closed]:animate-fd-fade-out"
+  >
+  </div>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label="Search"
+    data-state="closed"
+    data-search-content
+    class="fixed left-1/2 top-4 md:top-[calc(50%-250px)] z-50 w-[calc(100%-1rem)] max-w-screen-sm -translate-x-1/2 rounded-xl border bg-fd-popover text-fd-popover-foreground shadow-2xl shadow-black/50 overflow-hidden data-[state=closed]:animate-fd-dialog-out data-[state=open]:animate-fd-dialog-in *:border-b *:has-[+:last-child[data-empty=true]]:border-b-0 *:data-[empty=true]:border-b-0 *:last:border-b-0"
+  >
+    <div class="flex flex-row items-center gap-2 p-3">
+      <Icon name="Search" class="size-5 text-fd-muted-foreground data-loading:animate-pulse data-loading:duration-400" data-search-icon />
+      <input
+        data-search-input
+        placeholder="Search"
+        autocomplete="off"
+        spellcheck="false"
+        class="w-0 flex-1 bg-transparent text-lg placeholder:text-fd-muted-foreground focus-visible:outline-none"
+      />
+      <button
+        type="button"
+        data-search-close
+        class="inline-flex items-center justify-center rounded-md p-2 text-sm font-medium transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fd-ring border hover:bg-fd-accent hover:text-fd-accent-foreground gap-1 px-2 py-1.5 text-xs font-mono text-fd-muted-foreground"
+      >
+        ESC
+      </button>
+    </div>
+    <div data-empty="true" data-search-list class="overflow-hidden h-(--fd-animated-height) transition-[height]">
+      <div data-search-viewport class="w-full flex flex-col overflow-y-auto max-h-[460px] p-1 hidden"></div>
+    </div>
+  </div>
+</div>
+
+<template data-search-icons>
+  <Icon name="ChevronRight" class="size-4" data-icon="chevron" />
+  <Icon name="Hash" class="inline me-1 size-4 text-fd-muted-foreground" data-icon="hash" />
+</template>

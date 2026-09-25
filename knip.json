@@ -46,6 +46,19 @@
       "entry": [
         "bin/*.js"
       ]
+    },
+    "apps/docs": {
+      "entry": [
+        "src/pages/**/*.{astro,ts}",
+        "src/scripts/*.ts",
+        "src/styles/**/*.css"
+      ],
+      "project": [
+        "src/**/*.{ts,astro}"
+      ],
+      "ignoreDependencies": [
+        "postcss-selector-parser"
+      ]
     }
   },
   "ignoreDependencies": [

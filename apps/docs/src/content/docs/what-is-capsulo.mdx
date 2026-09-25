@@ -1,0 +1,87 @@
+---
+title: What is Capsulo
+description: A deep dive into Capsulo's philosophy, architecture, and the problems it solves.
+---
+
+## The story
+
+Hey! I'm Oriol M, the creator of Capsulo.
+Everything started because I was tired of:
+
+- Having to [reinvent the wheel](https://en.wikipedia.org/wiki/Reinventing_the_wheel) every time I wanted to build a content-driven website.
+- The hassle of deploying the project when it was all done.
+- Those platforms who force you into their way of doing things, with little flexibility, or that even worse, you have to pay a fortune for basic features.
+
+Capsulo aims to solve these problems by providing a flexible, type-safe CMS framework that makes your life easier by already handling the common tasks for you.
+
+Never build a translations system again, don't worry about databases or "where I will host this". Don't worry about performance. **Just focus on building your website.**
+
+## Philosophy
+
+Capsulo is built on three core principles that guide every design decision:
+
+### 1. Simplicity
+
+Building content-driven websites shouldn't require complex configuration or learning curves. Capsulo embraces simplicity by:
+
+- **Schema-as-Code**: Write your content schemas in TypeScript with a Fluent API. Capsulo turns them into the CMS forms, the validation and the TypeScript types of your components.
+
+```ts
+createSchema({
+  name: 'Hero',
+  key: 'hero',
+  fields: [
+    Text('title')
+      .label('Hero title')
+      .description('The main headline')
+      .required()
+      .translatable()
+      .defaultValue('Welcome to Capsulo'),
+
+    Textarea('subtitle')
+      .label('Subtitle')
+      .rows(3)
+      .translatable()
+      .defaultValue('A content management system for developers'),
+
+    Select('ctaLinkType')
+      .label('CTA link type')
+      .options([
+        { label: 'Internal Page', value: 'internal' },
+        { label: 'External URL', value: 'external' },
+      ])
+      .defaultValue('internal'),
+  ],
+});
+```
+
+- **Auto discovery**: Import a capsule into a page and Capsulo detects it, so the CMS shows its form on that page. Nothing to register.
+- **Built-in translations and global variables**: Mark a field as `.translatable()` to edit it in every locale, and keep site-wide values (like the site name or contact details) in one place.
+- **Zero servers to manage**: Everything runs on Cloudflare. `npx capsulo deploy` creates what the project needs in your account and deploys it.
+- **100% Open Source**: Capsulo is fully open source. Anyone can fork it and use it as a template to build a custom CMS that perfectly fits their specific requirements.
+
+### 2. Control
+
+You own your content and control every aspect of how it works. Capsulo gives you:
+
+- **Full Customization**: Write schemas as code, not through restrictive UIs. You decide the exact shape of your data and how it integrates with your components.
+- **Type Safety**: Built with TypeScript and Zod. Every field comes with its own Zod validator, and the types your components read are generated from the schema. <span class="text-fd-muted-foreground">Ex: add a `Toggle` field and your component gets a `boolean`; make a `Text` field required and it becomes a `string` instead of `string | undefined`.</span>
+- **Your data, your account**: Pages, drafts, history and CMS users live in a Cloudflare D1 database in your own account. No third-party CMS service sits between you and your content.
+- **Safe publishing**: Edits are saved as drafts in the browser while you work. Nothing reaches the public site until you publish them from the Changes page, and every publish is kept in the history.
+
+<Callout type="info" title="Note">
+  Uploaded files are stored in Cloudflare Workers KV by default, which needs no
+  payment method and takes files up to 25 MB. Projects can use Cloudflare R2
+  instead for bigger files. Either way, the public site serves copies baked
+  into the static build.
+</Callout>
+
+### 3. Performance
+
+Speed matters for both developers and end users. Capsulo delivers performance through:
+
+- **Static-First Architecture**: Unlike traditional server-dependent CMS platforms, Capsulo uses a static-first approach powered by [Astro](https://astro.build/). This also translates into better SEO.
+- **Free to host**: Public pages are static assets, which are free and unlimited on Cloudflare. Only the CMS uses the Worker, so a whole project fits in one free Cloudflare account, no credit card needed.
+- **Flexibility**: <span class="underline underline-offset-2 dark:decoration-neutral-600 decoration-neutral-400">While it's static by default, you aren't locked in.</span> It's an Astro project, so you can add server routes, your own APIs or other services if your project grows beyond static needs.
+- **Build-Time Optimization**: When you publish, the site is rebuilt with the new content baked into the pages, so at the end you just have a bunch of static HTML and CSS. By default we don't ship any JS to the client unless you explicitly want to. <br /> <span class="text-fd-muted-foreground">Learn more here:</span> [Astro feature: Zero JS by default](https://docs.astro.build/en/concepts/why-astro/#features)
+- **Blazing Fast**: Visitors never wait for a database query. Pages come straight from Cloudflare's CDN.

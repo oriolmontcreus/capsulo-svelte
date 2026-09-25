@@ -1,0 +1,14 @@
+---
+interface Props {
+  href?: string;
+  [attr: string]: unknown;
+}
+
+const props = Astro.props;
+---
+
+<a
+  {...props}
+  class="font-medium underline decoration-primary dark:decoration-primary hover:decoration-blue-300 hover:dark:decoration-blue-800 underline-offset-2 transition-colors"
+  ><slot /></a
+>

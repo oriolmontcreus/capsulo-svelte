@@ -4,6 +4,9 @@
 @import "@fontsource-variable/inter";
 @import "@fontsource-variable/geist";
 
+/* The docs site (apps/docs) has its own styles; keep its classes out of the app's CSS. */
+@source not "../../apps";
+
 /* motion-core:tokens:start */
 @variant dark (&:where(.dark, .dark *));
 
