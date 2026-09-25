@@ -2,13 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Dev",
+			"label": "run dev",
 			"type": "shell",
-			"command": "pnpm dev:astro-back",
+			"command": "pnpm dev",
 			"options": {
 				"cwd": "${workspaceFolder}"
 			},
-			"detail": "Astro con HMR en 127.0.0.1:4322 (detrás del proxy). Abre la app en **127.0.0.1:4321** junto con Auth middleware.",
+			"detail": "Astro + the CMS API in workerd with a local D1/KV. Open http://localhost:4321/admin (signed in automatically).",
 			"icon": {
 				"id": "server-process",
 				"color": "terminal.ansiBlue"
@@ -20,51 +20,14 @@
 				"background": {
 					"activeOnStart": true,
 					"beginsPattern": ".",
-					"endsPattern": "(127\\.0\\.0\\.1:4322|localhost:4322)"
+					"endsPattern": "localhost:4321"
 				}
 			},
 			"presentation": {
 				"reveal": "always",
 				"panel": "dedicated",
-				"group": "capsulo-astro-dev",
 				"showReuseMessage": false
 			}
-		},
-		{
-			"label": "Auth middleware",
-			"type": "shell",
-			"command": "pnpm dev:pages-front",
-			"options": {
-				"cwd": "${workspaceFolder}"
-			},
-			"detail": "Pages dev en **127.0.0.1:4321** con middleware; proxy a Astro :4322. Ejecuta `pnpm build` antes si falta dist/. `--proxy` está deprecado pero sigue siendo la forma práctica de unificar URL.",
-			"icon": {
-				"id": "shield",
-				"color": "terminal.ansiMagenta"
-			},
-			"isBackground": true,
-			"problemMatcher": {
-				"owner": "wrangler",
-				"pattern": { "regexp": "^$" },
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": ".",
-					"endsPattern": "Ready on"
-				}
-			},
-			"presentation": {
-				"reveal": "always",
-				"panel": "dedicated",
-				"group": "capsulo-pages-auth",
-				"showReuseMessage": false
-			}
-		},
-		{
-			"label": "run dev",
-			"dependsOn": ["Dev", "Auth middleware"],
-			"dependsOrder": "parallel",
-			"problemMatcher": [],
-			"detail": "Navega en http://127.0.0.1:4321 (middleware + Astro vía proxy). Magic Link puede usar esa misma URL."
 		}
 	]
 }

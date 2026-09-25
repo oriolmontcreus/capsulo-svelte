@@ -1,0 +1,25 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "capsulo-svelte",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"compatibility_date": "2026-04-15",
+	"compatibility_flags": ["nodejs_compat"],
+	// `capsulo deploy` creates these and writes the real ids. Local dev uses local copies.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "capsulo-svelte-db",
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			"migrations_dir": "migrations"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "UPLOADS",
+			"id": "00000000000000000000000000000000"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
+}

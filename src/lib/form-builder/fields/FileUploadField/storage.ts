@@ -1,105 +1,43 @@
-import { supabase } from "$/db/supabase";
-
-export const UPLOADS_BUCKET = "uploads";
-
-const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
-
-function sanitizeFileName(name: string): string {
-	const trimmed = name.trim().toLowerCase();
-	const safe = trimmed.replace(/[^a-z0-9.\-_]+/g, "-").replace(/-+/g, "-");
-	return safe.replace(/^-+|-+$/g, "") || "file";
-}
-
-async function getCurrentUserId(): Promise<string> {
-	const { data, error } = await supabase.auth.getUser();
-	if (error || !data.user) {
-		throw new Error("You must be signed in to upload files.");
-	}
-	return data.user.id;
-}
+import { CAPSULO_API_BASE, capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
 
 /**
- * Uploads a single file to `uploads/<userId>/<uuid>-<filename>` and returns the
- * stored object path. The path is what gets persisted in the form value.
+ * Uploads a single file (stored in the project's KV namespace) and returns its key,
+ * `<32 hex chars>-<file name>`. The key is what gets persisted in the form value.
  */
 export async function uploadFile(file: File): Promise<string> {
-	const userId = await getCurrentUserId();
-	const path = `${userId}/${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
-
-	const { error } = await supabase.storage
-		.from(UPLOADS_BUCKET)
-		.upload(path, file, {
-			cacheControl: "3600",
-			contentType: file.type || undefined,
-			upsert: false,
-		});
-
-	if (error) {
-		throw new Error(`Failed to upload "${file.name}": ${error.message}`);
-	}
-
-	return path;
+	const { data, error } = await capsuloFetch<{ key: string }>("/uploads", {
+		method: "POST",
+		body: file,
+		headers: {
+			"Content-Type": file.type || "application/octet-stream",
+			"X-File-Name": encodeURIComponent(file.name)
+		}
+	});
+	if (error !== null) throw new Error(`Failed to upload "${file.name}": ${error}`);
+	return data.key;
 }
 
 /**
- * Permanently removes objects from the bucket. Missing paths are ignored.
+ * Permanently removes uploads. Unknown keys are ignored.
  */
 export async function removeFiles(paths: string[]): Promise<void> {
 	if (paths.length === 0) return;
-
-	const { error } = await supabase.storage.from(UPLOADS_BUCKET).remove(paths);
-	if (error) {
-		throw new Error(`Failed to remove files: ${error.message}`);
-	}
+	const { error } = await capsuloFetch("/uploads", { method: "DELETE", body: jsonBody({ keys: paths }) });
+	if (error !== null) throw new Error(`Failed to remove files: ${error}`);
 }
 
 /**
- * Resolves a list of object paths into short-lived signed URLs for display
- * (the bucket is private). Returns a path -> signed URL map; paths that fail to
- * resolve are simply omitted.
+ * URL for an uploaded file. The public site uses the copy baked into the static build
+ * (`/uploads/<key>`, free to serve); the admin and the editor preview read it through
+ * the Worker, because a just-uploaded file is not in the deployed build yet.
  */
-async function getSignedUrls(
-	paths: string[],
-): Promise<Record<string, string>> {
-	if (paths.length === 0) return {};
-
-	const { data, error } = await supabase.storage
-		.from(UPLOADS_BUCKET)
-		.createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
-
-	if (error || !data) {
-		return {};
-	}
-
-	const result: Record<string, string> = {};
-	for (const item of data) {
-		if (item.signedUrl && item.path) {
-			result[item.path] = item.signedUrl;
-		}
-	}
-	return result;
+export function mediaUrl(path: string, source: "live" | "published" = "live"): string {
+	const encoded = encodeURIComponent(path);
+	return source === "published" ? `/uploads/${encoded}` : `${CAPSULO_API_BASE}/media/${encoded}`;
 }
 
 export function fileNameFromPath(path: string): string {
 	const last = path.split("/").pop() ?? path;
 	const dashIndex = last.indexOf("-");
 	return dashIndex >= 0 ? last.slice(dashIndex + 1) : last;
-}
-
-/** ponytail: Svelte $effect body — call from `$effect(() => runSignedUrlResolver(...))` */
-export function runSignedUrlResolver(
-	getPaths: () => string[],
-	getCache: () => Record<string, string>,
-	setCache: (cache: Record<string, string>) => void,
-): (() => void) | undefined {
-	const pathsToResolve = getPaths().filter((path) => !(path in getCache()));
-	if (pathsToResolve.length === 0) return;
-
-	let cancelled = false;
-	void getSignedUrls(pathsToResolve).then((resolved) => {
-		if (cancelled) return;
-		setCache({ ...getCache(), ...resolved });
-	});
-
-	return () => cancelled = true;
 }

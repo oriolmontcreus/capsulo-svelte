@@ -3,6 +3,7 @@
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import GitCompareArrowsIcon from "@lucide/svelte/icons/git-compare-arrows";
   import HistoryIcon from "@lucide/svelte/icons/history";
+  import LogOutIcon from "@lucide/svelte/icons/log-out";
   import { onMount } from "svelte";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
@@ -10,6 +11,7 @@
   import { cn } from "$lib/utils";
   import { listChangedPages } from "$lib/PageEditor/changes/changed-pages";
   import { CHANGES_UPDATED_EVENT } from "$lib/PageEditor/changes/draft-write";
+  import { signOut } from "$lib/stores/session";
 
   type AdminRoute = "page-editor" | "globals" | "changes" | "history";
 
@@ -76,6 +78,11 @@
     return activeRoute === item.id;
   }
 
+  async function handleSignOut() {
+    await signOut();
+    window.location.replace("/admin/login");
+  }
+
   onMount(() => {
     syncPathname();
     void syncChangedCount();
@@ -136,8 +143,28 @@
       {/each}
     </nav>
 
-    <div class="mt-auto pb-2 flex items-center justify-center">
+    <div class="mt-auto pb-2 flex flex-col items-center justify-center gap-2">
       <LightSwitch variant="ghost" class="size-8" />
+      <Tooltip.Root>
+        <Tooltip.Trigger>
+          {#snippet child({ props })}
+            {@const { class: triggerClass, ...triggerProps } = props}
+            <button
+              type="button"
+              {...triggerProps}
+              onclick={handleSignOut}
+              class={cn(
+                triggerClass as ClassValue,
+                "text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
+              )}
+            >
+              <LogOutIcon class="size-3.5" aria-hidden="true" />
+              <span class="sr-only">Sign out</span>
+            </button>
+          {/snippet}
+        </Tooltip.Trigger>
+        <Tooltip.Content side="right">Sign out</Tooltip.Content>
+      </Tooltip.Root>
     </div>
   </aside>
 </Tooltip.Provider>

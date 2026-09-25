@@ -11,6 +11,7 @@
 		isCommitting,
 		errorMessage = null,
 		failures = [],
+		publishNotice = null,
 		oncommit,
 	}: {
 		message?: string;
@@ -18,6 +19,7 @@
 		isCommitting: boolean;
 		errorMessage?: string | null;
 		failures?: CommitFailure[];
+		publishNotice?: string | null;
 		oncommit: () => void;
 	} = $props();
 
@@ -42,6 +44,10 @@
 
 	{#if errorMessage}
 		<p class="text-destructive text-xs">{errorMessage}</p>
+	{/if}
+
+	{#if publishNotice}
+		<p class="text-muted-foreground text-xs" aria-live="polite">{publishNotice}</p>
 	{/if}
 
 	{#if failures.length > 0}

@@ -1,7 +1,6 @@
 import type { SchemaValues } from "$lib/form-builder/core/types";
 
-export const GLOBALS_CONTENT_FORMAT_VERSION = 1;
-export const GLOBALS_DOCUMENT_ID = "globals";
+const GLOBALS_CONTENT_FORMAT_VERSION = 1;
 
 export type GlobalsPersistedContentV1 = {
 	formatVersion: 1;

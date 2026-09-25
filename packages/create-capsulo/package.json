@@ -1,0 +1,19 @@
+{
+  "name": "create-capsulo",
+  "version": "0.1.0",
+  "description": "Create a Capsulo site + CMS: `npm create capsulo@latest`.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "bin": {
+    "create-capsulo": "./bin/create-capsulo.js"
+  },
+  "files": [
+    "bin"
+  ],
+  "dependencies": {
+    "@clack/prompts": "^1.3.0"
+  }
+}

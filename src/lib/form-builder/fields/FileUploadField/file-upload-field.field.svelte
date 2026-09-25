@@ -7,7 +7,7 @@
     FieldLabel,
   } from "$lib/components/ui/field";
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
-  import { fileNameFromPath, removeFiles, runSignedUrlResolver, uploadFile } from "./storage";
+  import { fileNameFromPath, mediaUrl, removeFiles, uploadFile } from "./storage";
   import { registerUploadFlusher } from "./upload-staging";
   import { isSvgFile, isSvgPath } from "./svg-utils";
   import ImageZoomModal from "./ImageZoomModal.svelte";
@@ -35,7 +35,6 @@
 
   let stagedFiles = $state<StagedFile[]>([]);
   let removedPaths = $state<string[]>([]);
-  let signedUrls = $state<Record<string, string>>({});
   let isDragging = $state(false);
   let localError = $state<string | null>(null);
   let isFlushing = $state(false);
@@ -77,14 +76,8 @@
     });
   }
 
-  $effect(() =>
-    runSignedUrlResolver(
-      () => visibleCommitted,
-      () => signedUrls,
-      (next) => {
-        signedUrls = next;
-      },
-    ),
+  const fileUrls = $derived(
+    Object.fromEntries(visibleCommitted.map((path) => [path, mediaUrl(path)])),
   );
 
   $effect(() => {
@@ -236,7 +229,7 @@
   );
   const svgEditorFile = $derived(editingStagedFile?.file);
   const svgEditorUrl = $derived(
-    svgEditing?.kind === "committed" ? signedUrls[svgEditing.path] : undefined,
+    svgEditing?.kind === "committed" ? fileUrls[svgEditing.path] : undefined,
   );
   const svgEditorName = $derived(
     svgEditing?.kind === "committed"
@@ -352,22 +345,22 @@
         <li
           class="group bg-muted relative aspect-square overflow-hidden rounded-md border"
         >
-          {#if isImagePath(path) && signedUrls[path]}
+          {#if isImagePath(path) && fileUrls[path]}
             {#if committedSvg}
               <img
-                src={signedUrls[path]}
+                src={fileUrls[path]}
                 alt={fileNameFromPath(path)}
                 class="size-full object-cover"
               />
             {:else}
               <button
                 type="button"
-                onclick={() => openZoom(signedUrls[path])}
+                onclick={() => openZoom(fileUrls[path])}
                 aria-label="Zoom {fileNameFromPath(path)}"
                 class="size-full cursor-zoom-in"
               >
                 <img
-                  src={signedUrls[path]}
+                  src={fileUrls[path]}
                   alt={fileNameFromPath(path)}
                   class="size-full object-cover"
                 />
@@ -390,7 +383,7 @@
           <div
             class="absolute top-1 right-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100"
           >
-            {#if committedSvg && signedUrls[path]}
+            {#if committedSvg && fileUrls[path]}
               <button
                 type="button"
                 onclick={() => editCommittedSvg(path)}

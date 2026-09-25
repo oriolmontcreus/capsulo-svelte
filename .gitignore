@@ -30,3 +30,7 @@ pnpm-debug.log*
 # local developer utilities
 smart-commit.sh
 .fallow/
+
+# capsulo: content snapshot + uploads pulled for the static build (`capsulo pull`)
+.capsulo/published/
+public/uploads/

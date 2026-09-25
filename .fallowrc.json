@@ -6,7 +6,6 @@
   "entry": [
     "capsulo.config.ts",
     "svelte.config.js",
-    "functions/**/*.{ts,js}",
     "src/components/capsules/**/capsule.definition.ts",
     "src/lib/capsules/core/define-capsule.ts",
     "src/config/**/*.ts",

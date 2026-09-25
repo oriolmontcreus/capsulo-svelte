@@ -1,33 +1,57 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "tags": ["-lintignore"],
-  "ignore": [
-    "src/lib/components/ui/dropdown-menu/**"
-  ],
-  "entry": [
-    "capsulo.config.ts",
-    "src/**/*.test-manual.ts",
-    "svelte.config.js",
-    "functions/**/*.{ts,js}",
-    "src/components/capsules/**/capsule.definition.ts",
-    "src/lib/capsules/core/define-capsule.ts",
-    "src/config/**/*.ts",
-    "src/styles/**/*.css",
-    "src/lib/form-builder/demo/**/*.{ts,svelte}",
-    "src/lib/form-builder/core/schema-to-zod.ts",
-    "src/lib/form-builder/fields/**/*.zod.ts",
-    "src/lib/form-builder/schemas/**/*.ts"
-  ],
-  "project": [
-    "src/**/*.{ts,tsx,svelte,astro}",
-    "functions/**/*.{ts,js}",
-    "scripts/**/*.ts"
+  "tags": [
+    "-lintignore"
   ],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
   },
   "ignoreIssues": {
-    "src/lib/components/ui/**/index.ts": ["exports", "types", "enumMembers"]
-  }
+    "src/lib/components/ui/**/index.ts": [
+      "exports",
+      "types",
+      "enumMembers"
+    ]
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        "capsulo.config.ts",
+        "src/**/*.test-manual.ts",
+        "src/components/capsules/**/capsule.definition.ts",
+        "src/lib/capsules/core/define-capsule.ts",
+        "src/config/**/*.ts",
+        "src/styles/**/*.css",
+        "src/lib/form-builder/demo/**/*.{ts,svelte}",
+        "src/lib/form-builder/core/schema-to-zod.ts",
+        "src/lib/form-builder/fields/**/*.zod.ts",
+        "src/lib/form-builder/schemas/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,svelte,astro}",
+        "scripts/**/*.ts"
+      ],
+      "ignore": [
+        "src/lib/components/ui/dropdown-menu/**"
+      ]
+    },
+    "packages/cli": {
+      "entry": [
+        "bin/*.js",
+        "src/**/*.test-manual.js"
+      ]
+    },
+    "packages/create-capsulo": {
+      "entry": [
+        "bin/*.js"
+      ]
+    }
+  },
+  "ignoreDependencies": [
+    "cloudflare"
+  ],
+  "ignoreBinaries": [
+    "tar"
+  ]
 }
