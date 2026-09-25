@@ -1,13 +1,18 @@
-import { CAPSULO_API_BASE, capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
+import { CAPSULO_API_BASE, capsuloFetch } from "$lib/api/capsulo-client";
 
 /**
  * Uploads a single file (stored in the project's KV namespace) and returns its key,
  * `<32 hex chars>-<file name>`. The key is what gets persisted in the form value.
+ *
+ * Files are uploaded as soon as they are picked, so the key can live in the local
+ * draft and go through the normal review and commit flow like any other value.
+ * Uploads that never get committed are removed later by the server's cleanup.
  */
-export async function uploadFile(file: File): Promise<string> {
+export async function uploadFile(file: File, signal?: AbortSignal): Promise<string> {
 	const { data, error } = await capsuloFetch<{ key: string }>("/uploads", {
 		method: "POST",
 		body: file,
+		signal,
 		headers: {
 			"Content-Type": file.type || "application/octet-stream",
 			"X-File-Name": encodeURIComponent(file.name)
@@ -15,15 +20,6 @@ export async function uploadFile(file: File): Promise<string> {
 	});
 	if (error !== null) throw new Error(`Failed to upload "${file.name}": ${error}`);
 	return data.key;
-}
-
-/**
- * Permanently removes uploads. Unknown keys are ignored.
- */
-export async function removeFiles(paths: string[]): Promise<void> {
-	if (paths.length === 0) return;
-	const { error } = await capsuloFetch("/uploads", { method: "DELETE", body: jsonBody({ keys: paths }) });
-	if (error !== null) throw new Error(`Failed to remove files: ${error}`);
 }
 
 /**

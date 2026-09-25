@@ -2,6 +2,7 @@ import { requireUser } from "$lib/server/auth";
 import { commitPages, listCommits } from "$lib/server/content";
 import { HttpError, handle, isRecord, json, readJson } from "$lib/server/http";
 import { requestRebuild } from "$lib/server/publish";
+import { scheduleUnusedUploadCleanup } from "$lib/server/uploads";
 
 export const prerender = false;
 
@@ -19,5 +20,6 @@ export const POST = handle(async (context) => {
 	if (!isRecord(body)) throw new HttpError(400, "Expected a JSON object.");
 
 	const result = await commitPages(user.id, body.message, body.pages);
+	scheduleUnusedUploadCleanup();
 	return json({ ...result, rebuildRequested: requestRebuild() });
 });

@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 
 import { HttpError, isRecord, nowIso, requireString } from "./http";
+import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
 
 const CONTENT_FORMAT_VERSION = 1;
 const GLOBALS_ID = "globals";
@@ -179,13 +180,14 @@ export async function saveGlobals(userId: string, content: unknown): Promise<{ u
 
 /**
  * Everything the static build needs: published pages + globals as the stored JSON
- * text (spliced in without parsing, to stay cheap on CPU) and the uploaded file keys.
+ * text (spliced in without parsing, to stay cheap on CPU) and the keys of the uploaded
+ * files they use. Uploads only referenced by drafts or old revisions are left out.
  */
 export async function exportPublishedContent(): Promise<string> {
 	const [pages, globals, uploads] = await env.DB.batch([
 		env.DB.prepare("SELECT page_id, content FROM pages ORDER BY page_id"),
 		env.DB.prepare("SELECT content FROM globals WHERE id = ?").bind(GLOBALS_ID),
-		env.DB.prepare("SELECT key, content_type FROM uploads ORDER BY key")
+		env.DB.prepare(PUBLISHED_UPLOADS_QUERY)
 	]);
 
 	const pageEntries = (pages.results as { page_id: string; content: string }[])

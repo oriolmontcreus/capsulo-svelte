@@ -38,8 +38,8 @@
   <header class="space-y-2">
     <h1 class="text-2xl font-semibold tracking-tight">File Upload Field Tests</h1>
     <p class="text-muted-foreground text-sm">
-      Live preview of FileUpload configurations. Edit values in the admin page
-      editor — uploads and deletions only take effect after clicking Save.
+      Live preview of FileUpload configurations. Files picked in the admin page
+      editor show up here right away and reach the live site once committed.
     </p>
     <p class="text-muted-foreground font-mono text-xs">instance: {instanceId}</p>
   </header>
