@@ -65,7 +65,18 @@
 	$effect(() => {
 		if (!open || !listEl) return;
 		const activeItem = listEl.children[displaySelectedIndex] as HTMLElement | undefined;
-		activeItem?.scrollIntoView({ block: "nearest" });
+		const scroller = listEl.parentElement;
+		if (!activeItem || !scroller) return;
+
+		// Scroll only the list. scrollIntoView would also scroll the page while the
+		// popover is still unpositioned, and any page scroll closes the menu.
+		const itemRect = activeItem.getBoundingClientRect();
+		const scrollerRect = scroller.getBoundingClientRect();
+		if (itemRect.top < scrollerRect.top) {
+			scroller.scrollTop -= scrollerRect.top - itemRect.top;
+		} else if (itemRect.bottom > scrollerRect.bottom) {
+			scroller.scrollTop += itemRect.bottom - scrollerRect.bottom;
+		}
 	});
 
 	const selectedItem = $derived(displayItems[displaySelectedIndex]);
