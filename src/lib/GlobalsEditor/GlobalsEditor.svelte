@@ -11,6 +11,7 @@
 	import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
 	import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
 	import { formatLocaleLabel } from "$lib/utils/locale-label";
+	import { GLOBALS_DRAFT_REPLACED_EVENT } from "$lib/globals/globals-draft";
 
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
 	import { createGlobalsEditorDocument } from "./globals-editor-document.svelte";
@@ -45,6 +46,9 @@
 
 	onMount(() => {
 		document.initialize();
+		const onDraftReplaced = () => void document.reloadDraft();
+		window.addEventListener(GLOBALS_DRAFT_REPLACED_EVENT, onDraftReplaced);
+		return () => window.removeEventListener(GLOBALS_DRAFT_REPLACED_EVENT, onDraftReplaced);
 	});
 </script>
 
@@ -62,6 +66,9 @@
 					</div>
 
 					<div class="flex shrink-0 items-center gap-2">
+						{#if document.hasUnsavedChanges && !isSaving}
+							<span class="text-muted-foreground text-xs">Unsaved changes</span>
+						{/if}
 						<Select.Root type="single" bind:value={locale}>
 							<Select.Trigger
 								size="sm"

@@ -4,6 +4,7 @@
   import GitCompareArrowsIcon from "@lucide/svelte/icons/git-compare-arrows";
   import HistoryIcon from "@lucide/svelte/icons/history";
   import LogOutIcon from "@lucide/svelte/icons/log-out";
+  import SparklesIcon from "@lucide/svelte/icons/sparkles";
   import { onMount } from "svelte";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import LightSwitch from "$lib/components/LightSwitch.svelte";
@@ -12,6 +13,8 @@
   import { listChangedPages } from "$lib/PageEditor/changes/changed-pages";
   import { CHANGES_UPDATED_EVENT } from "$lib/PageEditor/changes/draft-write";
   import { signOut } from "$lib/stores/session";
+  import { AI_ENABLED } from "$lib/ai/config";
+  import { aiSidebar, toggleAiSidebar } from "$lib/ai/ai-sidebar-state.svelte";
 
   type AdminRoute = "page-editor" | "globals" | "changes" | "history";
 
@@ -56,8 +59,12 @@
     },
   ];
 
+  const aiShortcutLabel =
+    typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘." : "Ctrl+.";
+
   let pathname = $state("");
   let changedCount = $state(0);
+  let hydrated = $state(false);
 
   function syncPathname() {
     if (typeof window === "undefined") return;
@@ -84,6 +91,7 @@
   }
 
   onMount(() => {
+    hydrated = true;
     syncPathname();
     void syncChangedCount();
     const onPageLoad = () => {
@@ -144,6 +152,35 @@
     </nav>
 
     <div class="mt-auto pb-2 flex flex-col items-center justify-center gap-2">
+      {#if AI_ENABLED}
+        <Tooltip.Root>
+          <Tooltip.Trigger>
+            {#snippet child({ props })}
+              {@const { class: triggerClass, ...triggerProps } = props}
+              <button
+                type="button"
+                {...triggerProps}
+                onclick={toggleAiSidebar}
+                aria-pressed={aiSidebar.open}
+                class={cn(
+                  triggerClass as ClassValue,
+                  "focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
+                  !hydrated
+                    ? // Before hydration, follow <html data-ai-sidebar> like the panel does.
+                      "text-muted-foreground in-data-[ai-sidebar=open]:bg-primary/30 in-data-[ai-sidebar=open]:text-foreground"
+                    : aiSidebar.open
+                      ? "bg-primary/30 text-foreground"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                )}
+              >
+                <SparklesIcon class="size-3.5" aria-hidden="true" />
+                <span class="sr-only">AI agent</span>
+              </button>
+            {/snippet}
+          </Tooltip.Trigger>
+          <Tooltip.Content side="right">AI agent ({aiShortcutLabel})</Tooltip.Content>
+        </Tooltip.Root>
+      {/if}
       <LightSwitch variant="ghost" class="size-8" />
       <Tooltip.Root>
         <Tooltip.Trigger>

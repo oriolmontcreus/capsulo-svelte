@@ -9,7 +9,16 @@ import {
 	setGlobalsValues,
 } from "$lib/globals/globals-store.svelte";
 import { saveGlobalsDocumentToDb } from "$lib/globals/globals-documents";
+import { clearGlobalsDraft, loadGlobalsDraft, saveGlobalsDraft } from "$lib/globals/globals-draft";
+import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
 import { session, syncSession } from "$lib/stores/session";
+
+const DRAFT_PERSIST_DEBOUNCE_MS = 250;
+
+function valuesDiffer(saved: SchemaValues, current: SchemaValues): boolean {
+	const changeSet = computePageChangeSet("globals", { globals: saved }, { globals: current });
+	return countFieldChanges(changeSet) > 0;
+}
 
 type DocumentContext = {
 	getValues: () => SchemaValues;
@@ -29,6 +38,7 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 	let loadError = $state<string | null>(null);
 	let saveError = $state<string | null>(null);
 	let schemaHydrationVersion = $state(0);
+	let hasUnsavedChanges = $state(false);
 
 	function applyHydratedValues(nextValues: SchemaValues): void {
 		context.setValues(nextValues);
@@ -64,8 +74,13 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		}
 
 		try {
-			const nextValues = await ensureGlobalsLoaded();
-			applyHydratedValues(nextValues);
+			const savedValues = await ensureGlobalsLoaded();
+			// Unsaved edits (yours or the AI agent's) survive leaving the page.
+			const draft = await loadGlobalsDraft();
+			const draftDiffers = draft !== null && valuesDiffer(savedValues, draft.values);
+			applyHydratedValues(draftDiffers ? draft.values : savedValues);
+			hasUnsavedChanges = draftDiffers;
+			if (draft && !draftDiffers) void clearGlobalsDraft();
 			hasExistingDocument = globalsStore.hasExistingDocument;
 		} catch (error) {
 			loadError = error instanceof Error ? error.message : "Failed to load global variables";
@@ -97,6 +112,8 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 
 		hasExistingDocument = true;
 		setGlobalsValues(context.getValues(), { hasExistingDocument: true });
+		await clearGlobalsDraft();
+		hasUnsavedChanges = false;
 		context.setIsSaving(false);
 		syncSaveState();
 	}
@@ -110,11 +127,34 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		});
 	}
 
+	function setupDraftPersistenceEffect(): void {
+		$effect(() => {
+			const values = context.getValues();
+			if (isLoading || !isAuthenticated || !globalsStore.loaded) return;
+
+			const timeoutId = window.setTimeout(() => {
+				const differs = valuesDiffer(globalsStore.values, values);
+				hasUnsavedChanges = differs;
+				void (differs ? saveGlobalsDraft(values) : clearGlobalsDraft());
+			}, DRAFT_PERSIST_DEBOUNCE_MS);
+
+			return () => window.clearTimeout(timeoutId);
+		});
+	}
+
 	setupSaveStateEffect();
+	setupDraftPersistenceEffect();
 
 	function initialize(): void {
 		syncSaveState();
 		void loadGlobalsDocument();
+	}
+
+	/** Picks up a draft written by the AI agent (or undoing its edit) while the editor is open. */
+	async function reloadDraft(): Promise<void> {
+		if (isLoading) return;
+		const draft = await loadGlobalsDraft();
+		applyHydratedValues(draft?.values ?? globalsStore.values);
 	}
 
 	return {
@@ -136,7 +176,11 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		get schemaHydrationVersion() {
 			return schemaHydrationVersion;
 		},
+		get hasUnsavedChanges() {
+			return hasUnsavedChanges;
+		},
 		saveGlobalsDocument,
 		initialize,
+		reloadDraft,
 	};
 }

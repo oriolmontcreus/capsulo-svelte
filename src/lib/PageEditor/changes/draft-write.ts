@@ -12,6 +12,14 @@ import { setDraftFieldValue, type DraftFieldTarget } from "./draft-values";
  */
 export const CHANGES_UPDATED_EVENT = "capsulo:changes-updated";
 
+/**
+ * Dispatched (with `{ pageId }`) when something other than the Page Editor rewrote a
+ * page's draft (the AI agent, or undoing one of its edits), so an open editor reloads it.
+ */
+export const DRAFT_REPLACED_EVENT = "capsulo:draft-replaced";
+
+export type DraftReplacedDetail = { pageId: string };
+
 export type DraftWriteResult = {
 	ok: boolean;
 	errorMessage: string | null;
@@ -88,6 +96,34 @@ async function writeDraft(
 
 	dispatchChangesUpdated();
 	return { ok: true, errorMessage: null };
+}
+
+/** The page's current draft values (seeded from the committed content if it has no draft yet). */
+export async function readPageDraft(
+	pageId: string
+): Promise<{ valuesByInstance: PageEditorValuesByInstance; errorMessage: string | null }> {
+	const snapshot = await loadOrSeedDraft(pageId);
+	return { valuesByInstance: snapshot.valuesByInstance, errorMessage: snapshot.errorMessage };
+}
+
+/**
+ * Rewrites the page's draft with `update(current)` and tells an open Page Editor to
+ * reload it. Used by the AI agent, whose edits land in the draft like manual ones.
+ */
+export async function updatePageDraft(
+	pageId: string,
+	update: (current: PageEditorValuesByInstance) => PageEditorValuesByInstance
+): Promise<DraftWriteResult> {
+	const snapshot = await loadOrSeedDraft(pageId);
+	if (snapshot.errorMessage) return { ok: false, errorMessage: snapshot.errorMessage };
+
+	const result = await writeDraft(pageId, update(snapshot.valuesByInstance), snapshot);
+	if (result.ok && typeof window !== "undefined") {
+		window.dispatchEvent(
+			new CustomEvent<DraftReplacedDetail>(DRAFT_REPLACED_EVENT, { detail: { pageId } })
+		);
+	}
+	return result;
 }
 
 /**

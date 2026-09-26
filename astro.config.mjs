@@ -12,6 +12,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { astroClientDepsFixPlugin } from './src/lib/vite-plugin-astro-client-deps-fix.ts';
 import { capsuleManifestPlugin } from './src/lib/vite-plugin-capsule-manifest.ts';
 import { capsuloPublishedPlugin } from './src/lib/vite-plugin-capsulo-published.ts';
+import { capsuloAiDevPlugin } from './src/lib/vite-plugin-capsulo-ai-dev.ts';
 import { schemaTypesPlugin } from './src/lib/vite-plugin-schema-types.ts';
 import capsuloConfig from './capsulo.config.ts';
 import { assertI18nConfig, getI18nConfig } from './src/lib/config/i18n-config.ts';
@@ -27,6 +28,10 @@ export default defineConfig({
   // Pages stay prerendered (static, free to serve). Only `/api/capsulo/*` runs on the Worker.
   adapter: cloudflare({
     prerenderEnvironment: 'node',
+    // Workers AI (the admin's AI agent) has no local simulator. With remote bindings on,
+    // `astro dev` would not start without a Cloudflare login; the AI dev proxy below calls
+    // Workers AI only when the sidebar is used. D1 and KV are local either way.
+    remoteBindings: false,
     imageService: { build: 'compile', runtime: 'passthrough' },
   }),
 
@@ -56,6 +61,7 @@ export default defineConfig({
       astroClientDepsFixPlugin(),
       capsuleManifestPlugin(),
       capsuloPublishedPlugin(),
+      capsuloAiDevPlugin(),
       schemaTypesPlugin(),
       tailwindcss(),
     ],

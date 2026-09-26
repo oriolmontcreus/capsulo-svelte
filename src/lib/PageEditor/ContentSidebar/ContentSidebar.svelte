@@ -4,6 +4,10 @@
 	import { type PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 	import { createCollapsedCapsulesState } from "./collapsed-capsules.svelte";
 	import { createContentSidebarDocument } from "./content-sidebar-document.svelte";
+	import {
+		DRAFT_REPLACED_EVENT,
+		type DraftReplacedDetail,
+	} from "$lib/PageEditor/changes/draft-write";
 	import { groupManifestEntries } from "./group-entries";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import ContentSidebarAlerts from "./ContentSidebarAlerts.svelte";
@@ -48,6 +52,12 @@
 
 	onMount(() => {
 		document.initialize();
+		const onDraftReplaced = (event: Event) => {
+			const { pageId: replacedPageId } = (event as CustomEvent<DraftReplacedDetail>).detail;
+			if (replacedPageId === pageId) void document.reloadDraftFromCache();
+		};
+		window.addEventListener(DRAFT_REPLACED_EVENT, onDraftReplaced);
+		return () => window.removeEventListener(DRAFT_REPLACED_EVENT, onDraftReplaced);
 	});
 </script>
 
