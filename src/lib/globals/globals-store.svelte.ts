@@ -1,9 +1,8 @@
-import { globalsSchema } from "$/config/globals/globals.schema";
 import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
 import type { SchemaValues } from "$lib/form-builder/core/types";
 
 import { loadGlobalsDocumentFromDb } from "./globals-documents";
+import { withGlobalsDefaults } from "./resolve-globals";
 
 export const globalsStore = $state({
 	values: {} as SchemaValues,
@@ -12,17 +11,6 @@ export const globalsStore = $state({
 });
 
 let inflightLoad: Promise<SchemaValues> | null = null;
-
-function resolveLoadedValues(
-	values: SchemaValues,
-	hasExistingDocument: boolean
-): SchemaValues {
-	if (hasExistingDocument && Object.keys(values).length > 0) {
-		return values;
-	}
-
-	return createSchemaInitialValues(globalsSchema, DEFAULT_LOCALE);
-}
 
 export function setGlobalsValues(
 	values: SchemaValues,
@@ -43,7 +31,7 @@ export async function ensureGlobalsLoaded(): Promise<SchemaValues> {
 		const result = await loadGlobalsDocumentFromDb();
 		if (result.errorMessage) throw new Error(result.errorMessage);
 
-		const values = resolveLoadedValues(result.values, result.hasExistingDocument);
+		const values = withGlobalsDefaults(result.hasExistingDocument ? result.values : null, DEFAULT_LOCALE);
 		setGlobalsValues(values, { hasExistingDocument: result.hasExistingDocument });
 		return values;
 	})();

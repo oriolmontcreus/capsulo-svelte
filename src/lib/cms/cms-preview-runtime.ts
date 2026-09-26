@@ -111,7 +111,7 @@ export async function initCmsPreview(pageId: string): Promise<void> {
 		if (event.data.pageId !== pageId) return;
 
 		const message = event.data as PageEditorPreviewSyncMessage;
-		applyPreviewSync(pageId, message.locale, message.valuesByInstance);
+		applyPreviewSync(pageId, message.locale, message.valuesByInstance, message.globals ?? null);
 
 		// After CMS data changes, islands will resize — force reflow
 		forceDevToolbarReflow();

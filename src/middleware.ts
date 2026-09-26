@@ -2,9 +2,11 @@ import { defineMiddleware } from "astro:middleware";
 
 import capsuloConfig from "../capsulo.config";
 import { syncSiteLocaleFromPathname } from "$lib/cms/cms-store.svelte";
-import { setServerPublishedValues } from "$lib/cms/published";
+import { setServerPublishedContent } from "$lib/cms/published";
 import { getI18nConfig } from "$lib/config/i18n-config";
-import { pathnameToPageId } from "$lib/i18n/routing";
+import { deserializeGlobalsValues } from "$lib/globals/globals-persistence";
+import { buildGlobalVariableValues } from "$lib/globals/resolve-globals";
+import { getLocaleFromPathname, pathnameToPageId } from "$lib/i18n/routing";
 import { deserializePageEditorValues } from "$lib/PageEditor/persistence";
 
 const i18nConfig = getI18nConfig(capsuloConfig);
@@ -16,14 +18,22 @@ function isAdminPathname(pathname: string): boolean {
 }
 
 /**
- * Seeds the published CMS values and the locale for the page about to render. This
+ * Seeds the published CMS values, the global variables for the page's locale (so
+ * `{{key}}` tokens are replaced at build) and the locale for the page about to render. This
  * must happen here rather than in Layout.astro: Astro renders slot children (the
  * capsule islands) eagerly, possibly before the layout's frontmatter runs.
  */
 async function seedPublishedContent(url: URL): Promise<void> {
   const { loadPublishedContent } = await import("virtual:capsulo/published");
-  const { pages } = await loadPublishedContent(url);
-  setServerPublishedValues(deserializePageEditorValues(pages[pathnameToPageId(url.pathname)]));
+  const { pages, globals } = await loadPublishedContent(url);
+  setServerPublishedContent({
+    values: deserializePageEditorValues(pages[pathnameToPageId(url.pathname)]),
+    variables: buildGlobalVariableValues(
+      deserializeGlobalsValues(globals),
+      getLocaleFromPathname(url.pathname),
+      i18nConfig.defaultLocale
+    )
+  });
   syncSiteLocaleFromPathname(url.pathname);
 }
 

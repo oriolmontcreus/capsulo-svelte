@@ -3,7 +3,7 @@ import "../styles/global.css";
 import CmsPump from "$lib/cms/CmsPump.svelte";
 import ModeWatcherClient from "$lib/components/ModeWatcherClient.svelte";
 import { getLocaleFromPathname } from "$lib/i18n/routing";
-import { PUBLISHED_ELEMENT_ID, getPublishedValues } from "$lib/cms/published";
+import { PUBLISHED_ELEMENT_ID, getPublishedValues, getPublishedVariables } from "$lib/cms/published";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -13,11 +13,15 @@ interface Props {
 const { fontFamily = "sans" } = Astro.props as Props;
 const locale = getLocaleFromPathname(Astro.url.pathname);
 
-// Published CMS values for this page (seeded by src/middleware.ts), embedded for hydration.
+// Published CMS values and global variables for this page (seeded by src/middleware.ts),
+// embedded so islands hydrate with the same text the build rendered.
 const isAdminPage = Astro.url.pathname.startsWith("/admin");
-const publishedValues = isAdminPage ? {} : getPublishedValues();
+const values = isAdminPage ? {} : getPublishedValues();
+const variables = isAdminPage ? {} : getPublishedVariables();
 const publishedJson =
-	Object.keys(publishedValues).length > 0 ? JSON.stringify(publishedValues).replaceAll("<", "\\u003c") : null;
+	Object.keys(values).length > 0 || Object.keys(variables).length > 0
+		? JSON.stringify({ values, variables }).replaceAll("<", "\\u003c")
+		: null;
 ---
 
 <!doctype html>
