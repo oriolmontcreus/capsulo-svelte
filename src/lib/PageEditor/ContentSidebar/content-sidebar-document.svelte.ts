@@ -289,6 +289,16 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		void loadPageEditorDocument();
 	}
 
+	/**
+	 * Picks up a draft rewritten outside the editor (the AI agent, or undoing its edit).
+	 * The debounced cache write then stores the same values back, which is a no-op.
+	 */
+	async function reloadDraftFromCache(): Promise<void> {
+		if (isLoading) return;
+		const cachedDocument = await loadPageEditorDocumentFromCache(context.getPageId());
+		if (cachedDocument) applyHydratedValues(cachedDocument.valuesByInstance);
+	}
+
 	return {
 		get isLoading() {
 			return isLoading;
@@ -319,5 +329,6 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		},
 		updateInstanceValues,
 		initialize,
+		reloadDraftFromCache,
 	};
 }

@@ -54,7 +54,7 @@ export function normalizeForComparison(value: unknown): unknown {
  * Structural deep-equality using microdiff. Order-insensitive for objects and
  * robust for nested arrays (select multiple, file-upload lists).
  */
-function valuesEqual(a: unknown, b: unknown): boolean {
+export function valuesEqual(a: unknown, b: unknown): boolean {
 	const left = normalizeForComparison(a);
 	const right = normalizeForComparison(b);
 	if (left === undefined && right === undefined) return true;

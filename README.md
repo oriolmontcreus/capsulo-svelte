@@ -84,6 +84,21 @@ Passwords fit the free plan's 10 ms CPU limit. The browser stretches them with P
 
 `capsulo pull --local` snapshots your local database instead, which is handy for checking a production build locally.
 
+## AI agent
+
+The sparkles button in the admin nav (or `⌘.` / `Ctrl+.`) opens an AI agent that reads your pages and global variables, answers questions about them and edits them on request. Its edits land in the draft, like manual ones: each shows up in the chat with Review and Undo, pages go live from Changes, and global variables with Save. Chats stay in the browser.
+
+It runs on [Workers AI](https://developers.cloudflare.com/workers-ai/) through the `AI` binding in `wrangler.jsonc`: no API key and nothing to create. The free plan includes 10,000 Neurons a day, about 30 messages with the default model (`@cf/google/gemma-4-26b-a4b-it`); past that the agent stops until 00:00 UTC and nothing is billed. Pick another model with function calling, or turn the agent off, in `capsulo.config.ts`:
+
+```ts
+export default defineCapsuloConfig({
+	i18n: { /* ... */ },
+	ai: { model: "@cf/openai/gpt-oss-120b" }, // or { enabled: false }
+});
+```
+
+Workers AI has no local simulator, so in `pnpm dev` the agent needs your Cloudflare login once (`npx wrangler login`); it tells you when. Local use counts against the same daily allowance. Everything else in `pnpm dev` works without a login.
+
 ## Free plan limits
 
 These are per Cloudflare account and shared by every project in it:
@@ -95,6 +110,7 @@ These are per Cloudflare account and shared by every project in it:
 | KV storage | 1 GB, 1k writes / day | Default upload storage; compress images before uploading |
 | R2 storage | 10 GB, 1M writes / month | Optional upload storage; needs a payment method on file |
 | Workers Builds | 3,000 min / month | Deploy Hooks dedupe bursts of commits |
+| Workers AI | 10,000 Neurons / day | The AI agent; about 30 messages a day with the default model |
 
 ## Repository layout
 

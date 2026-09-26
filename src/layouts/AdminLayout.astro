@@ -2,6 +2,9 @@
 import Layout from "./Layout.astro";
 import AdminNav from "$lib/admin/AdminNav.svelte";
 import { ScrollArea } from "$lib/components/ui/scroll-area";
+import AiSidebar from "$lib/ai/components/AiSidebar.svelte";
+import { AI_ENABLED } from "$lib/ai/config";
+import { AI_SIDEBAR_STORAGE_KEY } from "$lib/ai/ai-sidebar-state.svelte";
 
 interface Props {
 	activeRoute: "page-editor" | "globals" | "changes" | "history";
@@ -20,6 +23,14 @@ const { activeRoute, scrollable = true } = Astro.props as Props;
 			location.replace("/admin/login?next=" + encodeURIComponent(location.pathname + location.search));
 		}
 	</script>
+	{AI_ENABLED && (
+		<script is:inline define:vars={{ storageKey: AI_SIDEBAR_STORAGE_KEY }}>
+			// Lets the AI sidebar render open before hydration, so a reload doesn't pop it in.
+			try {
+				if (localStorage.getItem(storageKey) === "1") document.documentElement.dataset.aiSidebar = "open";
+			} catch {}
+		</script>
+	)}
 	<div class="flex h-dvh w-full overflow-hidden bg-neutral-100 dark:bg-[oklch(0.205_0_0)]">
 		<AdminNav {activeRoute} client:load transition:persist="admin-nav" />
 		<div class="min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -33,5 +44,6 @@ const { activeRoute, scrollable = true } = Astro.props as Props;
 				</div>
 			)}
 		</div>
+		{AI_ENABLED && <AiSidebar client:load transition:persist="ai-sidebar" />}
 	</div>
 </Layout>
