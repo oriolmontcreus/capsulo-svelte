@@ -1,0 +1,28 @@
+---
+import Icon from '@/components/Icon.astro';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+// Fumadocs' light/dark toggle. The script marks the active icon from <html class="dark">.
+const item = 'size-6.5 rounded-full p-1.5 text-fd-muted-foreground';
+---
+
+<button
+  class:list={['inline-flex items-center rounded-full border', className ?? 'p-1']}
+  aria-label="Toggle Theme"
+  data-theme-toggle
+>
+  <Icon
+    name="Sun"
+    fill="currentColor"
+    class:list={[item, 'in-[.light]:bg-fd-accent in-[.light]:text-fd-accent-foreground']}
+  />
+  <Icon
+    name="Moon"
+    fill="currentColor"
+    class:list={[item, 'in-[.dark]:bg-fd-accent in-[.dark]:text-fd-accent-foreground']}
+  />
+</button>

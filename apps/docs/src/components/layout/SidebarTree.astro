@@ -1,0 +1,56 @@
+---
+import Icon from '@/components/Icon.astro';
+import { containsUrl, type DocNode } from '@/lib/page-tree';
+import { sidebarItem } from '@/lib/classes';
+
+interface Props {
+  nodes: DocNode[];
+  currentUrl: string;
+  level?: number;
+  /** Folder names above this level, to give each folder a stable id. */
+  path?: string;
+}
+
+const { nodes, currentUrl, level = 1, path = '' } = Astro.props;
+
+const folderLine =
+  "before:content-[''] before:absolute before:w-px before:inset-y-1 before:bg-fd-border before:start-2.5 **:data-[active=true]:before:content-[''] **:data-[active=true]:before:bg-fd-primary **:data-[active=true]:before:absolute **:data-[active=true]:before:w-px **:data-[active=true]:before:inset-y-2.5 **:data-[active=true]:before:start-2.5";
+---
+
+{
+  nodes.map((node) => {
+    if (node.type === 'page') {
+      const active = node.url === currentUrl;
+      return (
+        <a data-active={String(active)} data-sidebar-item class={sidebarItem(active)} href={node.url}>
+          {node.name}
+        </a>
+      );
+    }
+
+    const id = `${path}/${node.name}`;
+    const open = containsUrl(node, currentUrl);
+    const state = open ? 'open' : 'closed';
+    return (
+      <div data-state={state} data-folder={id}>
+        <button type="button" data-state={state} data-folder-trigger class:list={[sidebarItem(false), 'w-full']}>
+          {node.name}
+          <Icon name="ChevronDown" class:list={['ms-auto transition-transform', !open && '-rotate-90']} data-icon />
+        </button>
+        <div
+          data-state={state}
+          data-collapsible-content
+          hidden={!open}
+          class:list={[
+            // Animations only after a click (data-animated), like Radix skipping them on first render.
+            'overflow-hidden data-animated:data-[state=closed]:animate-fd-collapsible-up data-animated:data-[state=open]:animate-fd-collapsible-down relative',
+            level === 1 && folderLine,
+          ]}
+          style={`--sidebar-item-offset:calc(var(--spacing) * ${(level + 1) * 3})`}
+        >
+          <Astro.self nodes={node.children} currentUrl={currentUrl} level={level + 1} path={id} />
+        </div>
+      </div>
+    );
+  })
+}

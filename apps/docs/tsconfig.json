@@ -3,11 +3,11 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
-      "$/*": ["./src/*"]
+      "$lib": ["../../src/lib"],
+      "$lib/*": ["../../src/lib/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "apps"]
+  "exclude": ["dist"]
 }

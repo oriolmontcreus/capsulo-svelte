@@ -1,0 +1,79 @@
+---
+import type { MarkdownHeading } from 'astro';
+import Icon from '@/components/Icon.astro';
+import TocItems from './TocItems.astro';
+
+interface Props {
+  title: string;
+  headings: MarkdownHeading[];
+}
+
+const { title, headings } = Astro.props;
+// Progress circle geometry from Fumadocs (size 24, stroke 2).
+const size = 24;
+const r = (size - 2) / 2;
+const circumference = 2 * Math.PI * r;
+---
+
+<header
+  id="nd-tocnav"
+  data-state="closed"
+  class="fixed pr-(--removed-body-scroll-bar-size,0) z-10 border-b backdrop-blur-sm transition-colors xl:hidden max-xl:on-root:[--fd-tocnav-height:40px] bg-fd-background/80 data-[state=open]:shadow-lg"
+  style="top:calc(var(--fd-banner-height) + var(--fd-nav-height));inset-inline-start:calc(var(--fd-sidebar-width) + var(--fd-layout-offset));inset-inline-end:0"
+>
+  <button
+    type="button"
+    data-state="closed"
+    data-tocnav-trigger
+    data-count={headings.length}
+    class="group flex w-full h-(--fd-tocnav-height) items-center text-sm text-fd-muted-foreground gap-2.5 px-4 py-2.5 text-start focus-visible:outline-none [&_svg]:size-4 md:px-6"
+  >
+    <svg
+      role="progressbar"
+      viewBox={`0 0 ${size} ${size}`}
+      aria-valuemin="0"
+      aria-valuemax="1"
+      class="shrink-0 group-data-[state=open]:text-fd-primary"
+    >
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke-width="2" class="stroke-current/25"></circle>
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke-width="2"
+        stroke="currentColor"
+        stroke-dasharray={circumference}
+        stroke-dashoffset={circumference}
+        stroke-linecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        class="transition-all"
+        data-tocnav-progress
+        data-circumference={circumference}></circle>
+    </svg>
+    <span class="grid flex-1 *:my-auto *:row-start-1 *:col-start-1">
+      <span
+        data-tocnav-title
+        class="truncate transition-all group-data-[state=open]:text-fd-foreground data-[hidden]:opacity-0 data-[hidden]:-translate-y-full data-[hidden]:pointer-events-none"
+        >{title}</span
+      >
+      <span
+        data-tocnav-current
+        data-hidden
+        class="truncate transition-all data-[hidden]:opacity-0 data-[hidden]:translate-y-full data-[hidden]:pointer-events-none"
+      ></span>
+    </span>
+    <Icon name="ChevronDown" class="shrink-0 transition-transform mx-0.5 group-data-[state=open]:rotate-180" />
+  </button>
+  <div
+    data-state="closed"
+    data-collapsible-content
+    data-tocnav-content
+    hidden
+    class="overflow-hidden data-animated:data-[state=closed]:animate-fd-collapsible-up data-animated:data-[state=open]:animate-fd-collapsible-down flex flex-col px-4 max-h-[50vh] md:px-6"
+  >
+    <div data-toc class="relative min-h-0 text-sm ms-px overflow-auto [scrollbar-width:none] [mask-image:linear-gradient(to_bottom,transparent,white_16px,white_calc(100%-16px),transparent)] pb-4">
+      <TocItems headings={headings} />
+    </div>
+  </div>
+</header>

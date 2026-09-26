@@ -1,0 +1,10 @@
+{
+	"$schema": "../../node_modules/wrangler/config-schema.json",
+	// The docs are static files only: Cloudflare serves them for free, no Worker code runs.
+	"name": "capsulo-docs",
+	"compatibility_date": "2026-04-15",
+	"assets": {
+		"directory": "./dist",
+		"not_found_handling": "404-page"
+	}
+}

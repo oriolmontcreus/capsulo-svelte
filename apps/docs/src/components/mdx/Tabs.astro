@@ -1,0 +1,44 @@
+---
+// Fumadocs' Tabs: <Tabs items={['Astro', 'Svelte']}><Tab value="Astro">…</Tab>…</Tabs>
+import { escapeTabValue } from './tabs';
+
+interface Props {
+  items: string[];
+  label?: string;
+  defaultIndex?: number;
+  class?: string;
+}
+
+const { items, label, defaultIndex = 0, class: className } = Astro.props;
+const active = escapeTabValue(items[defaultIndex]);
+// Mark the default panel active on the server so nothing jumps on load.
+const panels = (await Astro.slots.render('default')).replace(
+  `data-tab-value="${active}" data-state="inactive"`,
+  `data-tab-value="${active}" data-state="active"`,
+);
+---
+
+<div data-tabs class:list={['flex flex-col overflow-hidden rounded-xl border bg-fd-secondary my-4', className]}>
+  <div role="tablist" class="flex gap-3.5 text-fd-secondary-foreground overflow-x-auto px-4 not-prose">
+    {label && <span class="text-sm font-medium my-auto me-auto">{label}</span>}
+    {
+      items.map((item) => {
+        const value = escapeTabValue(item);
+        const selected = value === active;
+        return (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={selected}
+            data-state={selected ? 'active' : 'inactive'}
+            data-tab-trigger={value}
+            class="inline-flex items-center gap-2 whitespace-nowrap text-fd-muted-foreground border-b border-transparent py-2 text-sm font-medium transition-colors [&_svg]:size-4 hover:text-fd-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-fd-primary data-[state=active]:text-fd-primary"
+          >
+            {item}
+          </button>
+        );
+      })
+    }
+  </div>
+  <Fragment set:html={panels} />
+</div>

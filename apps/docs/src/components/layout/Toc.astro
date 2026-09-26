@@ -1,0 +1,30 @@
+---
+import type { MarkdownHeading } from 'astro';
+import Icon from '@/components/Icon.astro';
+import TocItems from './TocItems.astro';
+
+interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+---
+
+<div
+  id="nd-toc"
+  class="fixed bottom-0 pt-12 pb-2 pr-(--removed-body-scroll-bar-size,0) xl:on-root:[--fd-toc-width:286px] max-xl:hidden"
+  style="top:calc(var(--fd-banner-height) + var(--fd-nav-height));inset-inline-end:max(var(--fd-layout-offset), calc(50vw - var(--fd-sidebar-width)/2 - var(--fd-page-width)/2))"
+>
+  <div class="flex h-full w-(--fd-toc-width) max-w-full flex-col pe-4">
+    <h3 id="toc-title" class="inline-flex items-center gap-1.5 text-sm text-fd-muted-foreground">
+      <Icon name="Text" class="size-4" />
+      On this page
+    </h3>
+    <div
+      data-toc
+      class="relative min-h-0 text-sm ms-px overflow-auto [scrollbar-width:none] [mask-image:linear-gradient(to_bottom,transparent,white_16px,white_calc(100%-16px),transparent)] py-3"
+    >
+      <TocItems headings={headings} />
+    </div>
+  </div>
+</div>

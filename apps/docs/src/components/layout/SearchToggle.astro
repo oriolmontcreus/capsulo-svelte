@@ -1,0 +1,39 @@
+---
+import Icon from '@/components/Icon.astro';
+import { ghostIconButton } from '@/lib/classes';
+
+interface Props {
+  /** "full" is the wide sidebar button with the ⌘K hint; "icon" is the small one. */
+  variant?: 'full' | 'icon';
+  class?: string;
+  padding?: string;
+  rounded?: string;
+}
+
+const { variant = 'icon', class: className, padding, rounded } = Astro.props;
+---
+
+{
+  variant === 'full' ? (
+    <button
+      type="button"
+      data-search-full
+      data-search-open
+      class:list={[
+        'inline-flex items-center gap-2 rounded-lg border bg-fd-secondary/50 p-1.5 ps-2 text-sm text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground',
+        className,
+      ]}
+    >
+      <Icon name="Search" class="size-4" />
+      Search
+      <div class="ms-auto inline-flex gap-0.5">
+        <kbd class="rounded-md border bg-fd-background px-1.5">⌘</kbd>
+        <kbd class="rounded-md border bg-fd-background px-1.5">K</kbd>
+      </div>
+    </button>
+  ) : (
+    <button type="button" data-search data-search-open aria-label="Open Search" class:list={[ghostIconButton({ padding, rounded }), className]}>
+      <Icon name="Search" />
+    </button>
+  )
+}

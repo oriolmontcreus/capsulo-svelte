@@ -1,0 +1,18 @@
+---
+import Icon from '@/components/Icon.astro';
+import SearchToggle from './SearchToggle.astro';
+import { ghostIconButton } from '@/lib/classes';
+import { site } from '@/lib/site';
+---
+
+<header
+  id="nd-subnav"
+  class="fixed top-(--fd-banner-height) left-0 right-(--removed-body-scroll-bar-size,0) z-30 flex items-center ps-4 pe-2.5 border-b transition-colors backdrop-blur-sm bg-fd-background/80 h-(--fd-nav-height) on-root:[--fd-nav-height:56px] md:on-root:[--fd-nav-height:0px] md:hidden"
+>
+  <a class="inline-flex items-center gap-2.5 font-semibold" href="/docs/">{site.title}</a>
+  <div class="flex-1"></div>
+  <SearchToggle padding="p-2" />
+  <button aria-label="Open Sidebar" data-sidebar-toggle class={ghostIconButton({ padding: 'p-2' })}>
+    <Icon name="Sidebar" />
+  </button>
+</header>

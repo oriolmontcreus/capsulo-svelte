@@ -1,0 +1,37 @@
+---
+// Card from the old docs' mdx-components.tsx (square corners). Put the icon in the "icon" slot:
+// <Card title="…" href="…"><Code slot="icon" />Body</Card>
+interface Props {
+  title: string;
+  description?: string;
+  href?: string;
+  class?: string;
+}
+
+const { title, description, href, class: className } = Astro.props;
+const Tag = href ? 'a' : 'div';
+const external = href?.startsWith('http');
+---
+
+<Tag
+  href={href}
+  data-card
+  target={external ? '_blank' : undefined}
+  rel={external ? 'noreferrer noopener' : undefined}
+  class:list={[
+    'block rounded-none border bg-fd-card p-4 text-fd-card-foreground transition-colors @max-lg:col-span-full',
+    href && 'hover:bg-fd-accent/80',
+    className,
+  ]}
+>
+  {
+    Astro.slots.has('icon') && (
+      <div class="not-prose mb-2 w-fit shadow-md rounded-none border bg-fd-muted p-1.5 text-fd-muted-foreground [&_svg]:size-4">
+        <slot name="icon" />
+      </div>
+    )
+  }
+  <h3 class="not-prose mb-1 text-sm font-medium">{title}</h3>
+  {description && <p class="!my-0 text-sm text-fd-muted-foreground">{description}</p>}
+  <div class="text-sm text-fd-muted-foreground prose-no-margin empty:hidden"><slot /></div>
+</Tag>

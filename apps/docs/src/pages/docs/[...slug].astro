@@ -1,0 +1,61 @@
+---
+import { render } from 'astro:content';
+import DocsLayout from '@/layouts/DocsLayout.astro';
+import PageFooter from '@/components/layout/PageFooter.astro';
+import Toc from '@/components/layout/Toc.astro';
+import TocNav from '@/components/layout/TocNav.astro';
+import Icon from '@/components/Icon.astro';
+import PageActions from '@/components/layout/PageActions.astro';
+import { markdownUrl } from '@/lib/markdown';
+import { mdxComponents } from '@/components/mdx';
+import { flattenTree, folderPath, getPageTree, type DocPage } from '@/lib/page-tree';
+
+export async function getStaticPaths() {
+  const tree = await getPageTree();
+  return flattenTree(tree).map((page) => ({
+    params: { slug: page.url.replace(/^\/docs\/?/, '').replace(/\/$/, '') || undefined },
+    props: { page, tree },
+  }));
+}
+
+const { page, tree } = Astro.props as { page: DocPage; tree: Awaited<ReturnType<typeof getPageTree>> };
+const { Content, headings } = await render(page.entry);
+const tocHeadings = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 4);
+
+const pages = flattenTree(tree);
+const index = pages.findIndex((item) => item.url === page.url);
+const previous = pages[index - 1];
+const next = pages[index + 1];
+const breadcrumb = folderPath(tree, page.url) ?? [];
+---
+
+<DocsLayout title={page.name} description={page.description} tree={tree} currentUrl={page.url}>
+  <div id="nd-page" class="flex flex-1 w-full mx-auto max-w-(--fd-page-width) pt-(--fd-tocnav-height) pe-(--fd-toc-width)">
+    <TocNav title={page.name} headings={tocHeadings} />
+    <article class="flex min-w-0 w-full flex-col gap-4 pt-8 px-4 md:px-6 md:mx-auto">
+      {
+        breadcrumb.length > 0 && (
+          <div class="flex items-center gap-1.5 text-sm text-fd-muted-foreground">
+            {breadcrumb.map((name, i) => (
+              <>
+                {i !== 0 && <Icon name="ChevronRight" class="size-3.5 shrink-0" />}
+                <span class:list={['truncate', i === breadcrumb.length - 1 && 'text-fd-primary font-medium']}>{name}</span>
+              </>
+            ))}
+          </div>
+        )
+      }
+      <h1 class="text-[1.75em] font-semibold">{page.name}</h1>
+      {page.description && <p class="mb-8 text-lg text-fd-muted-foreground">{page.description}</p>}
+      <PageActions
+        markdownPath={markdownUrl(page.entry)}
+        sourcePath={`apps/docs/src/content/docs/${page.entry.id}.mdx`}
+      />
+      <div class="prose flex-1">
+        <Content components={mdxComponents} />
+      </div>
+      <PageFooter previous={previous} next={next} />
+    </article>
+  </div>
+  <Toc headings={tocHeadings} />
+</DocsLayout>
