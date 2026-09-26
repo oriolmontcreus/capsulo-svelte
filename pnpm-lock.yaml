@@ -162,9 +162,6 @@ importers:
       postcss-selector-parser:
         specifier: ^7.1.6
         version: 7.1.6
-      shadcn-svelte:
-        specifier: ^1.7.0
-        version: 1.7.0(svelte@5.57.1)
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
@@ -181,6 +178,9 @@ importers:
       '@astrojs/check':
         specifier: ^0.9.10
         version: 0.9.10(@emnapi/runtime@1.11.3)(prettier@3.9.9)(typescript@6.0.3)
+      postcss:
+        specifier: ^8.5.28
+        version: 8.5.28
       typescript:
         specifier: ^6.0.3
         version: 6.0.3

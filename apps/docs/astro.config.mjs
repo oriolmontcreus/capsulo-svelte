@@ -11,6 +11,7 @@ import { transformerNotationWordHighlight } from '@shikijs/transformers';
 
 import { astroClientDepsFixPlugin } from '../../src/lib/vite-plugin-astro-client-deps-fix.ts';
 import { previewMocksPlugin } from './src/previews/vite-plugin-preview-mocks.ts';
+import { previewScopePlugin } from './src/previews/vite-plugin-preview-scope.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // The Capsulo app (repo root), whose form builder the live previews render.
@@ -43,7 +44,7 @@ export default defineConfig({
 
   vite: {
     // The app's fix for Astro's late-discovered client router deps (504s and a reload in dev).
-    plugins: [astroClientDepsFixPlugin(), tailwindcss(), previewMocksPlugin(appRoot)],
+    plugins: [astroClientDepsFixPlugin(), tailwindcss(), previewScopePlugin(), previewMocksPlugin(appRoot)],
     resolve: {
       alias: {
         // Live previews import the real admin components from the main app.
