@@ -55,7 +55,7 @@
 								type="button"
 								onclick={() => onselect(commit.commitId)}
 								aria-current={active ? "true" : undefined}
-								class="focus-visible:ring-ring flex w-full flex-col items-start gap-1 rounded-md px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none {active
+								class="focus-visible:ring-ring flex w-full cursor-pointer flex-col items-start gap-1 rounded-md px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none {active
 									? 'bg-primary/20 text-foreground'
 									: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
 							>
@@ -71,12 +71,6 @@
 									>
 										{formatRelativeTimestamp(commit.createdAt, now)}
 									</time>
-									<span
-										class="bg-muted text-muted-foreground ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums"
-									>
-										{commit.revisions.length}
-										{commit.revisions.length === 1 ? "page" : "pages"}
-									</span>
 								</span>
 							</button>
 						</li>

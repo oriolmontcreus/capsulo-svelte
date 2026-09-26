@@ -152,7 +152,7 @@
 						type="button"
 						onclick={() => onselectpage(revision.pageId)}
 						aria-current={active ? "true" : undefined}
-						class="focus-visible:ring-ring rounded-md px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none {active
+						class="focus-visible:ring-ring cursor-pointer rounded-md px-2.5 py-1 text-xs transition-colors focus-visible:ring-2 focus-visible:outline-none {active
 							? 'bg-primary/20 text-foreground'
 							: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
 					>
