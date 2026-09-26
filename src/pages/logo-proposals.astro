@@ -2,74 +2,38 @@
 import Layout from "$/layouts/Layout.astro";
 import { LOGO_VIEWBOX, logoProposals, standaloneSvg, tileStyle } from "$lib/brand/logo-proposals";
 
-// Temporary page: brand mark exploration. Delete once a logo is chosen.
+// Brand marks: the chosen Iso Box (the favicon) and the Orb kept as a backup.
 
 const SIZES = [16, 24, 32, 48];
 const tiles = [
 	{ label: "Light", style: tileStyle("light") },
 	{ label: "Dark", style: tileStyle("dark") },
 ];
-const sections = [
-	{
-		group: "round3-beyond",
-		round: 3,
-		title: "Round 3 · Beyond the box",
-		description:
-			"Depth without a cube. The same orange, ink and mid-grey tones and the same lighting rule as the Iso Box, applied to pills, domes, folds and bevels.",
-	},
-	{
-		group: "round3-box",
-		round: 3,
-		title: "Round 3 · More box ideas",
-		description: "A few more takes on the cube you liked.",
-	},
-	{
-		group: "round2",
-		round: 2,
-		title: "Round 2 · Iso Box variants",
-		description:
-			"Kept for comparison. Every cube is on a 2:1 lattice, so it's exactly as wide as it is tall; the dashed card is the round-1 original.",
-	},
-] as const;
-
 const dataUri = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
-const counters: Record<number, number> = {};
-const cards = logoProposals.map((proposal) => {
-	const round = sections.find((s) => s.group === proposal.group)!.round;
-	counters[round] = (counters[round] ?? 0) + (proposal.reference ? 0 : 1);
-	return {
-		...proposal,
-		number: proposal.reference ? "Ref" : `${round}.${String(counters[round]).padStart(2, "0")}`,
-		downloads: [
-			{ label: "Light bg", file: `${proposal.id}-light.svg`, svg: standaloneSvg(proposal, "light") },
-			{ label: "Dark bg", file: `${proposal.id}-dark.svg`, svg: standaloneSvg(proposal, "dark") },
-			{ label: "Adaptive", file: `${proposal.id}.svg`, svg: standaloneSvg(proposal) },
-		],
-	};
-});
+const cards = logoProposals.map((proposal) => ({
+	...proposal,
+	downloads: [
+		{ label: "Light bg", file: `capsulo-${proposal.id}-light.svg`, svg: standaloneSvg(proposal, "light") },
+		{ label: "Dark bg", file: `capsulo-${proposal.id}-dark.svg`, svg: standaloneSvg(proposal, "dark") },
+		{ label: "Adaptive", file: `capsulo-${proposal.id}.svg`, svg: standaloneSvg(proposal) },
+	],
+}));
 ---
 
 <Layout>
 	<main class="min-h-full bg-background-inset text-foreground">
 		<div class="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6">
 			<header class="flex flex-col gap-2">
-				<span class="text-sm font-medium text-foreground-muted">Temporary · Brand exploration · Round 3</span>
-				<h1 class="text-3xl tracking-tight text-balance sm:text-4xl">Capsulo logo proposals</h1>
+				<h1 class="text-3xl tracking-tight text-balance sm:text-4xl">Capsulo logo</h1>
 				<p class="max-w-[65ch] text-foreground-muted text-balance">
-					Every mark fills the same centred square with the same margin, and is shown on white and black and at 16, 24, 32 and 48 px. Neutral tones follow the background; the oranges stay fixed.
+					The Iso Box is the Capsulo mark and the site favicon. The Orb is kept as a backup. Both are shown on white and black and at 16, 24, 32 and 48 px.
 				</p>
 			</header>
 
-			{sections.map((section) => (
-			<section class="flex flex-col gap-6">
-				<div class="flex flex-col gap-2">
-					<h2 class="text-2xl">{section.title}</h2>
-					<p class="max-w-[65ch] text-foreground-muted text-balance">{section.description}</p>
-				</div>
-			<ol class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-				{cards.filter((card) => card.group === section.group).map((card) => (
-					<li id={card.id} class:list={["flex flex-col overflow-hidden rounded-xl border bg-background", card.reference ? "border-dashed border-foreground-muted/40" : "border-border"]}>
+			<ol class="grid grid-cols-1 gap-6 md:grid-cols-2">
+				{cards.map((card) => (
+					<li id={card.id} class="flex flex-col overflow-hidden rounded-xl border border-border bg-background">
 						<div class="grid grid-cols-2">
 							{tiles.map((tile) => (
 								<div class="flex flex-col items-center gap-5 px-4 pt-7 pb-5" style={tile.style}>
@@ -86,8 +50,8 @@ const cards = logoProposals.map((proposal) => {
 						<div class="flex flex-1 flex-col gap-4 p-5">
 							<div class="flex flex-col gap-1.5">
 								<h3 class="flex items-baseline gap-2 text-lg">
-									<span class="text-sm tabular-nums text-foreground-muted">{card.number}</span>
 									{card.name}
+									{card.chosen && <span class="rounded-xs px-1.5 py-0.5 text-xs font-medium text-fixed-light" style="background:#FF6900">Favicon</span>}
 								</h3>
 								<p class="text-sm text-foreground-muted">{card.concept}</p>
 							</div>
@@ -114,8 +78,6 @@ const cards = logoProposals.map((proposal) => {
 					</li>
 				))}
 			</ol>
-			</section>
-			))}
 		</div>
 	</main>
 </Layout>
