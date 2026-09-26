@@ -1,29 +1,25 @@
 ---
 import Layout from "$/layouts/Layout.astro";
-import {
-	LOGO_INK_DARK,
-	LOGO_INK_LIGHT,
-	LOGO_VIEWBOX,
-	logoProposals,
-	standaloneSvg,
-} from "$lib/brand/logo-proposals";
+import { LOGO_VIEWBOX, logoProposals, standaloneSvg, tileStyle } from "$lib/brand/logo-proposals";
 
 // Temporary page: brand mark exploration. Delete once a logo is chosen.
 
 const SIZES = [16, 24, 32, 48];
 const tiles = [
-	{ label: "Light", bg: "#FFFFFF", ink: LOGO_INK_LIGHT },
-	{ label: "Dark", bg: "#000000", ink: LOGO_INK_DARK },
+	{ label: "Light", style: tileStyle("light") },
+	{ label: "Dark", style: tileStyle("dark") },
 ];
+const variantCount = logoProposals.filter((p) => !p.reference).length;
 
 const dataUri = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
-const cards = logoProposals.map((proposal, i) => ({
+let counter = 0;
+const cards = logoProposals.map((proposal) => ({
 	...proposal,
-	number: String(i + 1).padStart(2, "0"),
+	number: proposal.reference ? "Ref" : String(++counter).padStart(2, "0"),
 	downloads: [
-		{ label: "Light bg", file: `${proposal.id}-light.svg`, svg: standaloneSvg(proposal, LOGO_INK_LIGHT) },
-		{ label: "Dark bg", file: `${proposal.id}-dark.svg`, svg: standaloneSvg(proposal, LOGO_INK_DARK) },
+		{ label: "Light bg", file: `${proposal.id}-light.svg`, svg: standaloneSvg(proposal, "light") },
+		{ label: "Dark bg", file: `${proposal.id}-dark.svg`, svg: standaloneSvg(proposal, "dark") },
 		{ label: "Adaptive", file: `${proposal.id}.svg`, svg: standaloneSvg(proposal) },
 	],
 }));
@@ -33,19 +29,19 @@ const cards = logoProposals.map((proposal, i) => ({
 	<main class="min-h-full bg-background-inset text-foreground">
 		<div class="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12 sm:px-6">
 			<header class="flex flex-col gap-2">
-				<span class="text-sm font-medium text-foreground-muted">Temporary · Brand exploration</span>
-				<h1 class="text-3xl tracking-tight text-balance sm:text-4xl">Capsulo logo proposals</h1>
+				<span class="text-sm font-medium text-foreground-muted">Temporary · Brand exploration · Round 2</span>
+				<h1 class="text-3xl tracking-tight text-balance sm:text-4xl">Iso Box variants</h1>
 				<p class="max-w-[65ch] text-foreground-muted text-balance">
-					{logoProposals.length} square, text-free marks. Each one is shown on white and black, and at 16, 24, 32 and 48 px to check it still reads as a favicon. Neutral shapes follow the background; the accent is always Svelte orange.
+					{variantCount} variants of the Iso Box. All of them are built from the same 3D boxes on a 2:1 lattice, where a cube is exactly as wide as it is tall, and fitted into the same centred 48×48 square. They all use the same lighting: orange on top, ink on the left, mid-grey on the right. Each one is shown on white and black, and at 16, 24, 32 and 48 px.
 				</p>
 			</header>
 
 			<ol class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 				{cards.map((card) => (
-					<li id={card.id} class="flex flex-col overflow-hidden rounded-xl border border-border bg-background">
+					<li id={card.id} class:list={["flex flex-col overflow-hidden rounded-xl border bg-background", card.reference ? "border-dashed border-foreground-muted/40" : "border-border"]}>
 						<div class="grid grid-cols-2">
 							{tiles.map((tile) => (
-								<div class="flex flex-col items-center gap-5 px-4 pt-7 pb-5" style={`background:${tile.bg};color:${tile.ink}`}>
+								<div class="flex flex-col items-center gap-5 px-4 pt-7 pb-5" style={tile.style}>
 									<svg viewBox={LOGO_VIEWBOX} class="size-24" role="img" aria-label={`${card.name} on ${tile.label.toLowerCase()} background`} set:html={card.svg} />
 									<div class="flex items-end gap-3">
 										{SIZES.map((size) => (
