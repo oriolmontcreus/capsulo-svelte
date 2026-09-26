@@ -1,0 +1,82 @@
+---
+title: Color picker
+description: A component for selecting colors with support for alpha channel and preset colors.
+---
+
+The `ColorPicker` field captures a color as a hex value. It supports transparency with an alpha channel, preset swatches, and restricting the choice to those presets.
+
+## Usage
+
+```ts
+import { ColorPicker } from '$lib/form-builder/fields/ColorPickerField/color-picker-field.builder';
+```
+
+```ts
+// [!code word:ColorPicker]
+ColorPicker('fieldName').label('Field Label');
+```
+
+## API
+
+The `ColorPicker` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while no color is picked.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initial color, as a hex string.',
+      type: 'string',
+    },
+    showAlpha: {
+      description: 'Adds an alpha (opacity) slider. Colors are then stored as 8-digit hex.',
+      type: 'boolean',
+      default: 'true',
+    },
+    presetColors: {
+      description:
+        'Shows preset color swatches. Pass <code>true</code> as the second argument to allow only these colors.',
+      type: '(colors: string[], onlyPresets?: boolean) => this',
+      parameters: [
+        { name: 'colors', description: 'Hex colors to show as swatches.' },
+        { name: 'onlyPresets', description: 'Restricts the choice to the swatches. Defaults to <code>false</code>.' },
+      ],
+    },
+    translatable: {
+      description: 'Stores a color per locale instead of one shared color.',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets the color as a hex `string`, like `#3b82f6`, or `#3b82f680` with `showAlpha()`.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="colorpicker/basic" title="Basic color picker" />
+
+<ComponentPreview showMargin={false} class="border-b" example="colorpicker/alpha" title="With alpha channel" />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="colorpicker/presets" title="Preset colors" />
+
+<ComponentPreview showMargin={false} class="border-b" example="colorpicker/default-value" title="Default value" />
+
+<ComponentPreview showMargin={false} class="col-span-full" example="colorpicker/only-presets" title="Only presets" />
+
+</Previews>

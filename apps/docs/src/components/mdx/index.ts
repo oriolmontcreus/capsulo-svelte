@@ -1,5 +1,8 @@
 import A from './A.astro';
 import Callout from './Callout.astro';
+import ComponentPreview from '../previews/ComponentPreview.astro';
+import Previews from '../previews/Previews.astro';
+import TypeTable from '../previews/TypeTable.astro';
 import Card from './Card.astro';
 import Cards from './Cards.astro';
 import CodeBlock from './CodeBlock.astro';
@@ -34,6 +37,9 @@ export const mdxComponents = {
   h5: H5,
   h6: H6,
   Callout,
+  ComponentPreview,
+  Previews,
+  TypeTable,
   Card,
   Cards,
   File,

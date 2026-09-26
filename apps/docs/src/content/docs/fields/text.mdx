@@ -1,0 +1,70 @@
+---
+title: Text
+description: A fundamental component for capturing single-line text.
+---
+
+The `Text` field captures single-line text such as titles, names, emails or links. It supports placeholders, validation, translations and global variables: type `{{` to insert one.
+
+## Usage
+
+```ts
+import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
+```
+
+```ts
+// [!code word:Text]
+Text('fieldName').label('Field Label');
+```
+
+## API
+
+The `Text` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    placeholder: {
+      description: 'Sets the placeholder text.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while it is empty in the default locale.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initial value of the field. It can include global variables, like <code>{{siteName}}</code>.',
+      type: 'string',
+    },
+    translatable: {
+      description: 'Stores a value per locale instead of one shared value.',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets a `string` in the current locale. A `required()` field is typed `string`; otherwise it's `string | undefined`.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="text/basic" title="Basic text" />
+
+<ComponentPreview showMargin={false} class="border-b" example="text/required" title="Required" />
+
+<ComponentPreview showMargin={false} class="border-r" example="text/global-variables" title="Global variables" />
+
+<ComponentPreview showMargin={false} example="text/translatable" title="Translatable" locales={['en', 'es']} />
+
+</Previews>

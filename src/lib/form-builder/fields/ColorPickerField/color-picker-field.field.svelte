@@ -278,18 +278,21 @@
 
   <Popover bind:open>
     <PopoverTrigger>
-      <button
-        type="button"
-        id={field.name}
-        aria-labelledby="{field.name}-label"
-        class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-      >
-        <span
-          class="size-6 shrink-0 rounded-md border border-border"
-          style="background-color: {swatchColor};"
-        ></span>
-        <span class="truncate font-mono">{localHex}</span>
-      </button>
+      {#snippet child({ props })}
+        <button
+          {...props}
+          type="button"
+          id={field.name}
+          aria-labelledby="{field.name}-label"
+          class="flex h-10 w-full cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <span
+            class="size-6 shrink-0 rounded-md border border-border"
+            style="background-color: {swatchColor};"
+          ></span>
+          <span class="truncate font-mono">{localHex}</span>
+        </button>
+      {/snippet}
     </PopoverTrigger>
     <PopoverContent side="right" align="start" class="w-auto p-0 ml-4">
       {#if field.onlyPresets}

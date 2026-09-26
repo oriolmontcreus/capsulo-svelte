@@ -1,0 +1,101 @@
+---
+title: File upload
+description: A component for uploading and managing files, with image previews and an SVG editor.
+---
+
+The `FileUpload` field lets editors upload images, documents and other files. Files upload as soon as they're picked, show a preview, and can be zoomed (images) or edited in place (SVGs). It supports single or multiple files, type and size limits, and an `images()` shortcut.
+
+<Callout title="Where files are stored">
+  Uploads go to your project's Cloudflare Workers KV namespace by default (no payment method needed, up to 25 MB per file), or to R2 if you set the project up with it. When you publish, the build copies the files in use into the static site, so visitors never hit the Worker to see them. The previews on this page keep files in your browser and don't upload anything.
+</Callout>
+
+## Usage
+
+```ts
+import { FileUpload } from '$lib/form-builder/fields/FileUploadField/file-upload-field.builder';
+```
+
+```ts
+// [!code word:FileUpload]
+FileUpload('fieldName').label('Field Label');
+```
+
+## API
+
+The `FileUpload` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while no file is uploaded.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initial files, as upload keys.',
+      type: 'string[]',
+    },
+    accept: {
+      description:
+        'Sets the accepted file types, as MIME types (<code>image/png</code>, <code>image/*</code>) or extensions (<code>.pdf</code>), separated by commas.',
+      type: 'string',
+    },
+    maxSize: {
+      description: 'Sets the maximum size of each file, in bytes.',
+      type: 'number',
+    },
+    multiple: {
+      description: 'Allows several files. Without it, a new pick replaces the current file.',
+      type: 'boolean',
+      default: 'true',
+    },
+    maxFiles: {
+      description: 'Sets the maximum number of files, with <code>multiple()</code>.',
+      type: 'number',
+    },
+    images: {
+      description: 'Shortcut that accepts PNG, JPEG, WebP, GIF, AVIF and SVG images.',
+      type: '() => this',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets a `string[]` of upload keys (one key without `multiple()`). Turn a key into a URL with `mediaUrl`. The live site uses the copies baked into the build, and the editor preview reads recent uploads through the Worker:
+
+```svelte
+<script lang="ts">
+  import { cmsStore } from '$lib/cms/cms-store.svelte';
+  import { mediaUrl } from '$lib/form-builder/fields/FileUploadField/storage';
+
+  // ...
+  const source = $derived(cmsStore.active ? 'live' : 'published');
+</script>
+
+{#each data.gallery ?? [] as key (key)}
+  <img src={mediaUrl(key, source)} alt="" />
+{/each}
+```
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="fileupload/basic" title="Basic file upload" />
+
+<ComponentPreview showMargin={false} class="border-b" example="fileupload/image" title="Image" />
+
+<ComponentPreview showMargin={false} class="border-r" example="fileupload/gallery" title="Gallery" />
+
+<ComponentPreview showMargin={false} example="fileupload/documents" title="Documents" />
+
+</Previews>

@@ -1,0 +1,86 @@
+---
+title: Textarea
+description: A multi-line text input component for capturing longer user input.
+---
+
+The `Textarea` field captures multi-line text such as descriptions, comments or longer content. It grows with its content by default, and supports a character limit, translations and global variables.
+
+## Usage
+
+```ts
+import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+```
+
+```ts
+// [!code word:Textarea]
+Textarea('fieldName').label('Field Label');
+```
+
+## API
+
+The `Textarea` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    placeholder: {
+      description: 'Sets the placeholder text.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while it is empty in the default locale.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initial value of the field. It can include global variables, like <code>{{siteName}}</code>.',
+      type: 'string',
+    },
+    rows: {
+      description: 'Sets the visible height in rows. With <code>autoresize</code> on, it is the minimum height.',
+      type: 'number',
+      default: '3',
+    },
+    autoresize: {
+      description: 'Grows the field with its content. Turn it off for a fixed height that scrolls.',
+      type: 'boolean',
+      default: 'true',
+    },
+    maxLength: {
+      description: 'Sets the maximum number of characters. Longer input is cut at the limit.',
+      type: 'number',
+    },
+    translatable: {
+      description: 'Stores a value per locale instead of one shared value.',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets the plain text as a `string` in the current locale.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="textarea/basic" title="Basic textarea" />
+
+<ComponentPreview showMargin={false} class="border-b" example="textarea/max-length" title="Character limit" />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="textarea/rows" title="Initial rows" />
+
+<ComponentPreview showMargin={false} class="border-b" example="textarea/fixed-height" title="Fixed height" />
+
+<ComponentPreview showMargin={false} class="col-span-full" example="textarea/global-variables" title="Global variables" />
+
+</Previews>

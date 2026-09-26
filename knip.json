@@ -51,6 +51,7 @@
       "entry": [
         "src/pages/**/*.{astro,ts}",
         "src/scripts/*.ts",
+        "src/previews/mock-*.ts",
         "src/styles/**/*.css"
       ],
       "project": [

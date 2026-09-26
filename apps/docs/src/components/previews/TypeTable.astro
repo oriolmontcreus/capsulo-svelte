@@ -1,0 +1,83 @@
+---
+import Icon from '@/components/Icon.astro';
+import { renderType, type TypeNode } from './type-table';
+
+interface Props {
+  type: Record<string, TypeNode>;
+}
+
+// Same markup as the old site's TypeTable (a Fumadocs TypeTable with square corners).
+// Rows open and close with the handler in scripts/docs.ts.
+const { type } = Astro.props;
+const idPrefix = `tt-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="@container flex flex-col p-1 bg-fd-card text-fd-card-foreground rounded-none border my-6 text-sm overflow-hidden">
+  <div class="flex font-medium items-center px-3 py-1 not-prose text-fd-muted-foreground">
+    <p class="w-[25%]">Prop</p>
+    <p class="@max-xl:hidden">Type</p>
+  </div>
+  {
+    Object.entries(type).map(([name, item], index) => {
+      const contentId = `${idPrefix}-${index}`;
+      return (
+        <div
+          data-type-table-item
+          data-state="closed"
+          class="rounded-none border overflow-hidden transition-all data-[state=open]:shadow-sm data-[state=open]:bg-fd-background data-[state=open]:not-last:mb-2 data-[state=closed]:border-transparent"
+        >
+          <button
+            type="button"
+            data-type-table-trigger
+            aria-controls={contentId}
+            aria-expanded="false"
+            data-state="closed"
+            class="relative flex flex-row items-center w-full group text-start px-3 py-2 not-prose hover:bg-fd-accent"
+          >
+            <code
+              class:list={['min-w-fit w-[25%] font-medium pe-2 text-primary', item.deprecated && 'line-through']}
+            >
+              {name}
+              {!item.required && '?'}
+            </code>
+            <span class="@max-xl:hidden" set:html={renderType(item.type)} />
+            <Icon
+              name="ChevronDown"
+              class="absolute end-2 size-4 text-fd-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            />
+          </button>
+          <div id={contentId} data-state="closed" hidden class="overflow-hidden">
+            <div class="grid grid-cols-[1fr_3fr] gap-y-4 text-sm p-3 overflow-auto fd-scroll-container border-t">
+              <div class="text-sm prose col-span-full prose-no-margin empty:hidden" set:html={item.description ?? ''} />
+              {item.typeDescription && (
+                <>
+                  <p class="text-fd-muted-foreground not-prose pe-2">Type</p>
+                  <p class="my-auto not-prose" set:html={renderType(item.typeDescription)} />
+                </>
+              )}
+              {item.default && (
+                <>
+                  <p class="text-fd-muted-foreground not-prose pe-2">Default</p>
+                  <p class="my-auto not-prose">{item.default}</p>
+                </>
+              )}
+              {item.parameters && item.parameters.length > 0 && (
+                <>
+                  <p class="text-fd-muted-foreground not-prose pe-2">Parameters</p>
+                  <div class="flex flex-col gap-2">
+                    {item.parameters.map((param) => (
+                      <div class="inline-flex items-center flex-wrap gap-1">
+                        <p class="font-medium not-prose text-nowrap">{param.name} -</p>
+                        <div class="text-sm prose prose-no-margin" set:html={param.description} />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</div>

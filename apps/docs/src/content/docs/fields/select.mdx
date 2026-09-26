@@ -1,0 +1,207 @@
+---
+title: Select
+description: A versatile dropdown component for selecting from predefined options.
+---
+
+The `Select` field provides a dropdown for choosing from a list of options. It has two modes: a standard select and a searchable combobox. It also supports multiple selection, grouped options, multi-column layouts and an internal links mode for picking pages of your site.
+
+## Usage
+
+```ts
+import { Select } from '$lib/form-builder/fields/SelectField/select-field.builder';
+```
+
+```ts
+// [!code word:Select]
+Select('fieldName')
+  .label('Field Label')
+  .options([
+    { label: 'Option 1', value: 'opt1' },
+    { label: 'Option 2', value: 'opt2' },
+  ]);
+```
+
+## API
+
+The `Select` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    placeholder: {
+      description: 'Sets the text shown when nothing is selected.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while nothing is selected.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initially selected value, or values with <code>multiple()</code>.',
+      type: 'string | string[]',
+    },
+    options: {
+      description: 'The selectable options, each with a label, a value and an optional description.',
+      type: 'SelectOption[]',
+    },
+    groups: {
+      description: 'Options split into labeled groups. Used instead of <code>options</code>.',
+      type: 'SelectOptionGroup[]',
+    },
+    multiple: {
+      description: 'Lets the editor pick several options. The value becomes an array.',
+      type: 'boolean',
+      default: 'true',
+    },
+    searchable: {
+      description: 'Shows a combobox with a search input instead of a plain dropdown.',
+      type: 'boolean',
+      default: 'true',
+    },
+    searchPlaceholder: {
+      description: 'Sets the placeholder of the search input.',
+      type: 'string',
+      default: "'Search...'",
+    },
+    emptyMessage: {
+      description: 'Message shown when no option matches the search.',
+      type: 'string',
+      default: "'No results found.'",
+    },
+    highlightMatches: {
+      description: 'Highlights the matching text in search results.',
+      type: 'boolean',
+      default: 'true',
+    },
+    minSearchLength: {
+      description: 'Minimum characters typed before the search starts filtering.',
+      type: 'number',
+      default: '0',
+    },
+    columns: {
+      description: 'Lays the options out in a grid: a number of columns, or one per breakpoint.',
+      type: 'number | ResponsiveColumns',
+      default: '1',
+    },
+    internalLinks: {
+      description:
+        "Fills the options with your site's pages, found from the files in <code>src/pages</code>. The value is the page's path.",
+      type: '(autoResolveLocale?: boolean, groupBySection?: boolean) => this',
+      parameters: [
+        {
+          name: 'autoResolveLocale',
+          description: 'Adds the current locale to the path (<code>/en/about</code>). Defaults to <code>true</code>.',
+        },
+        {
+          name: 'groupBySection',
+          description: 'Groups pages by their top-level folder (Blog, Docs...). Defaults to <code>false</code>.',
+        },
+      ],
+    },
+  }}
+/>
+
+## Type Definitions
+
+### SelectOption
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Display text for the option.',
+      type: 'string',
+      required: true,
+    },
+    value: {
+      description: 'Value stored when the option is selected.',
+      type: 'string',
+      required: true,
+    },
+    description: {
+      description: 'Secondary text shown in a muted color.',
+      type: 'string',
+    },
+    disabled: {
+      description: 'Shows the option but prevents selecting it.',
+      type: 'boolean',
+    },
+  }}
+/>
+
+### SelectOptionGroup
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Group heading text.',
+      type: 'string',
+      required: true,
+    },
+    options: {
+      description: 'Options within this group.',
+      type: 'SelectOption[]',
+      required: true,
+    },
+  }}
+/>
+
+### ResponsiveColumns
+
+<TypeTable
+  type={{
+    base: {
+      description: 'Default columns (mobile).',
+      type: 'number',
+    },
+    sm: {
+      description: 'Small screens (640px+).',
+      type: 'number',
+    },
+    md: {
+      description: 'Medium screens (768px+).',
+      type: 'number',
+    },
+    lg: {
+      description: 'Large screens (1024px+).',
+      type: 'number',
+    },
+    xl: {
+      description: 'Extra large screens (1280px+).',
+      type: 'number',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets the selected option's `value` as a `string`, or a `string[]` with `multiple()`. A select has one value for every locale.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="select/basic" title="Basic select" />
+
+<ComponentPreview showMargin={false} class="border-b" example="select/searchable" title="Searchable" />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="select/groups" title="Grouped options" />
+
+<ComponentPreview showMargin={false} class="border-b" example="select/columns" title="Multiple columns" />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="select/descriptions" title="With descriptions" />
+
+<ComponentPreview showMargin={false} class="border-b" example="select/multiple" title="Multiple selection" />
+
+<ComponentPreview showMargin={false} class="border-r" example="select/internal-links" title="Internal links" />
+
+<ComponentPreview showMargin={false} example="select/internal-links-grouped" title="Internal links (grouped)" />
+
+</Previews>

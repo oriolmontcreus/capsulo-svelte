@@ -1,0 +1,66 @@
+---
+title: Rich editor
+description: A rich text editor for formatted content like articles and descriptions.
+---
+
+The `RichEditor` field is a rich text editor built on [TipTap](https://tiptap.dev/). Editors can format text as bold, italic or underlined, and insert global variables by typing `{{`. It stores the content as HTML.
+
+## Usage
+
+```ts
+import { RichEditor } from '$lib/form-builder/fields/RichEditorField/rich-editor-field.builder';
+```
+
+```ts
+// [!code word:RichEditor]
+RichEditor('fieldName').label('Field Label');
+```
+
+## API
+
+The `RichEditor` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    placeholder: {
+      description: 'Sets the text shown while the editor is empty.',
+      type: 'string',
+    },
+    required: {
+      description: 'Marks the field as required. Publishing fails while it has no text in the default locale.',
+      type: 'boolean',
+      default: 'true',
+    },
+    defaultValue: {
+      description: 'Sets the initial content, as HTML.',
+      type: 'string',
+    },
+    translatable: {
+      description: 'Stores content per locale instead of one shared value.',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
+
+## Value
+
+Your component gets an HTML `string` in the current locale, like `<p><strong>Hello</strong></p>`. Render it with `{@html}` in Svelte or `set:html` in Astro.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-r" example="rich-editor/basic" title="Basic rich editor" />
+
+<ComponentPreview showMargin={false} example="rich-editor/default-value" title="Default content" />
+
+</Previews>
