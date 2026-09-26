@@ -1,3 +1,4 @@
+import type { SchemaValues } from "$lib/form-builder/core/types";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 
 export const PAGE_EDITOR_PREVIEW_PARAM = "pageEditorPreview";
@@ -9,6 +10,8 @@ export type PageEditorPreviewSyncMessage = {
 	pageId: string;
 	locale: string;
 	valuesByInstance: PageEditorValuesByInstance;
+	/** Globals the editor has loaded, so `{{key}}` tokens preview with current values. */
+	globals: SchemaValues | null;
 };
 
 export type PageEditorPreviewReadyMessage = {
