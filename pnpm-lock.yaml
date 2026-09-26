@@ -162,6 +162,12 @@ importers:
       postcss-selector-parser:
         specifier: ^7.1.6
         version: 7.1.6
+      shadcn-svelte:
+        specifier: ^1.7.0
+        version: 1.7.0(svelte@5.57.1)
+      shiki:
+        specifier: ^4.4.3
+        version: 4.4.3
       svelte:
         specifier: ^5.55.5
         version: 5.57.1

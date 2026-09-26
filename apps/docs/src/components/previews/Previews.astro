@@ -1,0 +1,8 @@
+---
+// The old field pages' example grid: two columns of previews sharing one frame.
+// Each child is a <ComponentPreview showMargin={false}> with its own border classes.
+---
+
+<div class="grid grid-cols-1 md:grid-cols-2 border overflow-hidden *:m-0 *:rounded-none [&>*>div]:border-0 [&>*>div]:m-0">
+  <slot />
+</div>

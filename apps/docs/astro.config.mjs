@@ -9,7 +9,12 @@ import svelte from '@astrojs/svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { transformerNotationWordHighlight } from '@shikijs/transformers';
 
+import { astroClientDepsFixPlugin } from '../../src/lib/vite-plugin-astro-client-deps-fix.ts';
+import { previewMocksPlugin } from './src/previews/vite-plugin-preview-mocks.ts';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// The Capsulo app (repo root), whose form builder the live previews render.
+const appRoot = path.resolve(__dirname, '../..');
 
 // https://astro.build/config
 export default defineConfig({
@@ -37,13 +42,20 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    // The app's fix for Astro's late-discovered client router deps (504s and a reload in dev).
+    plugins: [astroClientDepsFixPlugin(), tailwindcss(), previewMocksPlugin(appRoot)],
     resolve: {
       alias: {
         // Live previews import the real admin components from the main app.
-        $lib: path.resolve(__dirname, '../../src/lib'),
+        $lib: path.join(appRoot, 'src/lib'),
+        $: path.join(appRoot, 'src'),
         '@': path.resolve(__dirname, 'src'),
       },
+      // The app's components and the docs must share one Svelte runtime.
+      dedupe: ['svelte'],
+      // Svelte component libraries the app's form builder uses. The docs don't list them
+      // as dependencies, so the Svelte integration doesn't know to compile them for SSR.
+      noExternal: ['@lucide/svelte', 'bits-ui', 'svelte-toolbelt', 'runed'],
     },
   },
 });

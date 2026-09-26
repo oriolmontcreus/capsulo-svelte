@@ -323,15 +323,49 @@ document.addEventListener('click', (event) => {
     return;
   }
 
+  const typeTableTrigger = target.closest<HTMLElement>('[data-type-table-trigger]');
+  if (typeTableTrigger) {
+    const item = typeTableTrigger.closest<HTMLElement>('[data-type-table-item]')!;
+    const content = document.getElementById(typeTableTrigger.getAttribute('aria-controls')!)!;
+    const open = item.dataset.state !== 'open';
+    const state = open ? 'open' : 'closed';
+    item.dataset.state = state;
+    typeTableTrigger.dataset.state = state;
+    typeTableTrigger.setAttribute('aria-expanded', String(open));
+    content.dataset.state = state;
+    content.hidden = !open;
+    return;
+  }
+
+  // Preview code dialogs are native <dialog>s: Escape and focus handling come for free.
+  const dialogTrigger = target.closest<HTMLElement>('[data-code-dialog-trigger]');
+  if (dialogTrigger) {
+    (document.getElementById(dialogTrigger.getAttribute('aria-controls')!) as HTMLDialogElement).showModal();
+    return;
+  }
+
+  const dialog = target.closest<HTMLDialogElement>('dialog[data-code-dialog]');
+  if (dialog) {
+    // A click on the backdrop lands on the <dialog> itself, outside its box.
+    const rect = dialog.getBoundingClientRect();
+    const outside =
+      target === dialog &&
+      (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom);
+    if (outside || target.closest('[data-code-dialog-close]')) {
+      dialog.close();
+      return;
+    }
+  }
+
   const copyMarkdown = target.closest<HTMLButtonElement>('[data-copy-markdown]');
   if (copyMarkdown) {
     void copyPageMarkdown(copyMarkdown);
     return;
   }
 
-  const popoverTrigger = target.closest<HTMLElement>('[data-popover-trigger]');
+  const popoverTrigger = target.closest<HTMLElement>('[data-menu-trigger]');
   if (popoverTrigger) {
-    const popover = popoverTrigger.closest<HTMLElement>('[data-popover]')!;
+    const popover = popoverTrigger.closest<HTMLElement>('[data-menu]')!;
     setPopover(popover, popoverTrigger.dataset.state !== 'open');
     return;
   }
@@ -350,14 +384,14 @@ document.addEventListener('click', (event) => {
 document.addEventListener('pointerdown', (event) => {
   const header = document.getElementById('nd-tocnav');
   if (header?.dataset.state === 'open' && !header.contains(event.target as Node)) setTocNav(false);
-  for (const popover of document.querySelectorAll<HTMLElement>('[data-popover]')) {
+  for (const popover of document.querySelectorAll<HTMLElement>('[data-menu]')) {
     if (!popover.contains(event.target as Node)) setPopover(popover, false);
   }
 });
 
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
-  for (const popover of document.querySelectorAll<HTMLElement>('[data-popover]')) setPopover(popover, false);
+  for (const popover of document.querySelectorAll<HTMLElement>('[data-menu]')) setPopover(popover, false);
 });
 
 // ---------------------------------------------------------------------------
@@ -387,8 +421,8 @@ async function copyPageMarkdown(button: HTMLButtonElement) {
 }
 
 function setPopover(popover: HTMLElement, open: boolean) {
-  const trigger = popover.querySelector<HTMLElement>('[data-popover-trigger]');
-  const content = popover.querySelector<HTMLElement>('[data-popover-content]');
+  const trigger = popover.querySelector<HTMLElement>('[data-menu-trigger]');
+  const content = popover.querySelector<HTMLElement>('[data-menu-content]');
   if (!trigger || !content || (trigger.dataset.state === 'open') === open) return;
   const state = open ? 'open' : 'closed';
   trigger.dataset.state = state;

@@ -38,14 +38,14 @@ const button =
     <Icon name="Check" class="hidden in-data-[checked]:block" />
     Copy Markdown
   </button>
-  <div class="relative" data-popover>
-    <button type="button" data-state="closed" data-popover-trigger class={button}>
+  <div class="relative" data-menu>
+    <button type="button" data-state="closed" data-menu-trigger class={button}>
       Open
       <Icon name="ChevronDown" class="size-3.5 text-fd-muted-foreground" />
     </button>
     <div
       data-state="closed"
-      data-popover-content
+      data-menu-content
       hidden
       class="absolute left-1/2 top-full mt-1 -translate-x-1/2 bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 slide-in-from-top-2 z-50 w-72 origin-top rounded-md border p-4 shadow-md outline-hidden flex flex-col"
     >

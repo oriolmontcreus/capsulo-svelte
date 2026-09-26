@@ -1,13 +1,72 @@
 import { render, type CollectionEntry } from 'astro:content';
+import type { TypeNode } from '@/components/previews/type-table';
+import { loadExample } from '@/previews/examples';
 import { pageUrl } from './page-tree';
 
-/** The page's MDX source without import/export lines, for "Copy Markdown" and llms.txt. */
+function attribute(tag: string, name: string): string | undefined {
+  return new RegExp(`\\b${name}="([^"]*)"`).exec(tag)?.[1];
+}
+
+/** Inline HTML used in TypeTable descriptions, as Markdown. */
+function htmlToMarkdown(html: string): string {
+  return html.replace(/<code>(.*?)<\/code>/g, '`$1`').replace(/<[^>]+>/g, '');
+}
+
+function typeTableMarkdown(source: string): string[] {
+  const literal = source.replace(/^\s*<TypeTable\s+type=\{/, '').replace(/\}\s*\/>\s*$/, '');
+  // The docs' own MDX source, evaluated at build time.
+  const rows = new Function(`return (${literal});`)() as Record<string, TypeNode>;
+  const cell = (value: string) => value.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return [
+    '| Prop | Type | Default | Description |',
+    '| --- | --- | --- | --- |',
+    ...Object.entries(rows).map(
+      ([name, row]) =>
+        `| \`${name}\` | \`${cell(row.type)}\` | ${row.default ? `\`${cell(row.default)}\`` : ''} | ${cell(htmlToMarkdown(row.description ?? ''))} |`,
+    ),
+  ];
+}
+
+const HIGHLIGHT_MARK = /^\/\/ \[!code [^\]]*\]$/;
+
+/**
+ * The page's MDX as plain Markdown: no import/export lines, type tables as Markdown
+ * tables, and each live preview as its title and example code.
+ */
+function mdxToMarkdown(body: string): string {
+  const out: string[] = [];
+  const lines = body.split('\n');
+  let inCode = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    const trimmed = line.trim();
+    if (trimmed.startsWith('```')) inCode = !inCode;
+    if (inCode || trimmed.startsWith('```')) {
+      // `// [!code word:…]` only drives the highlighting on the site.
+      if (!HIGHLIGHT_MARK.test(trimmed)) out.push(line);
+      continue;
+    }
+    if (/^(import|export) /.test(line) || /^<\/?Previews>$/.test(trimmed)) continue;
+    if (trimmed.startsWith('<ComponentPreview')) {
+      const title = attribute(trimmed, 'title') ?? '';
+      const { code } = loadExample(attribute(trimmed, 'example') ?? '', title);
+      out.push(`**${title}**`, '', '```ts', ...code.split('\n').filter((row) => !HIGHLIGHT_MARK.test(row)), '```');
+      continue;
+    }
+    if (trimmed.startsWith('<TypeTable')) {
+      const start = i;
+      while (!lines[i]!.trim().endsWith('/>')) i++;
+      out.push(...typeTableMarkdown(lines.slice(start, i + 1).join('\n')));
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+/** The page as Markdown, for "Copy Markdown" and llms.txt. */
 export function pageMarkdown(entry: CollectionEntry<'docs'>): string {
-  const body = (entry.body ?? '')
-    .split('\n')
-    .filter((line) => !/^(import|export) /.test(line))
-    .join('\n')
-    .trim();
+  const body = mdxToMarkdown(entry.body ?? '');
   return `# ${entry.data.title}\n\n${entry.data.description ? `${entry.data.description}\n\n` : ''}${body}\n`;
 }
 
@@ -31,6 +90,7 @@ function plainText(markdown: string): string {
   return markdown
     .replace(/`([^`]*)`/g, (_, text: string) => `\u0000${code.push(text) - 1}\u0000`)
     .replace(/<[^>]+>/g, ' ')
+    .replace(/\\?\|/g, ' ')
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/[*_`~]/g, '')
@@ -64,7 +124,7 @@ export async function searchEntry(entry: CollectionEntry<'docs'>, breadcrumbs: s
     paragraph = [];
   };
 
-  for (const line of (entry.body ?? '').split('\n')) {
+  for (const line of mdxToMarkdown(entry.body ?? '').split('\n')) {
     if (line.trimStart().startsWith('```')) {
       flush();
       inCode = !inCode;
@@ -81,8 +141,10 @@ export async function searchEntry(entry: CollectionEntry<'docs'>, breadcrumbs: s
       }
       continue;
     }
-    // Blank lines end a paragraph; each list item is its own result.
-    if (line.trim() === '' || /^\s*(?:[-+*]|\d+\.)\s+/.test(line)) flush();
+    // Table header and separator rows carry no text.
+    if (/^\|[\s|:-]+\|$/.test(line.trim()) || line.startsWith('| Prop |')) continue;
+    // Blank lines end a paragraph; each list item and table row is its own result.
+    if (line.trim() === '' || line.trim().startsWith('|') || /^\s*(?:[-+*]|\d+\.)\s+/.test(line)) flush();
     if (line.trim() !== '') paragraph.push(line);
   }
   flush();

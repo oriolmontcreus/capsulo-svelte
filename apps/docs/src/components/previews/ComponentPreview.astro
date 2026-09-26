@@ -1,0 +1,86 @@
+---
+import Icon from '@/components/Icon.astro';
+import CodeBlock from '@/components/mdx/CodeBlock.astro';
+import { highlight } from '@/lib/highlight';
+import { loadExample } from '@/previews/examples';
+import SchemaPreview from '@/previews/SchemaPreview.svelte';
+
+interface Props {
+  /** Example file under src/examples, without `.ts` (e.g. `text/basic`). */
+  example: string;
+  /** Title above the preview and in the code dialog. */
+  title: string;
+  /** Locales to edit in; pass two to show a translatable field once per locale. */
+  locales?: string[];
+  align?: 'center' | 'start' | 'end';
+  showBorder?: boolean;
+  showMargin?: boolean;
+  class?: string;
+}
+
+// Same markup as the old site's ComponentPreview: the preview, and a code button
+// that shows on hover and opens the example's source in a dialog.
+const {
+  example,
+  title,
+  locales,
+  align = 'center',
+  showBorder = true,
+  showMargin = true,
+  class: className,
+} = Astro.props;
+
+const { schema, code } = loadExample(example, title);
+const { style, html } = await highlight(code, 'ts');
+const dialogId = `preview-${example.replaceAll('/', '-')}`;
+---
+
+<div class:list={['group relative flex flex-col', showMargin && 'my-4 space-y-2', className]}>
+  <div class:list={['relative', showBorder && 'border']}>
+    <button
+      type="button"
+      data-code-dialog-trigger
+      aria-haspopup="dialog"
+      aria-controls={dialogId}
+      class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 size-8 duration-150 ease-in-out cursor-pointer z-10"
+    >
+      <Icon name="Code" class="size-4" />
+      <span class="sr-only">View code</span>
+    </button>
+    <dialog
+      id={dialogId}
+      data-code-dialog
+      aria-labelledby={`${dialogId}-title`}
+      class="bg-background text-foreground open:animate-in open:fade-in-0 open:zoom-in-95 inset-auto fixed top-[50%] left-[50%] z-50 open:grid w-full max-w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 m-0 min-h-[80vh] min-w-[80vw] content-start backdrop:bg-black/50"
+    >
+      <div class="flex flex-col gap-2 text-center sm:text-left">
+        <h2 id={`${dialogId}-title`} class="text-lg leading-none font-semibold">{title}</h2>
+      </div>
+      <div class="overflow-auto items-start w-full">
+        <CodeBlock class="astro-code" style={style}><Fragment set:html={html} /></CodeBlock>
+      </div>
+      <button
+        type="button"
+        data-code-dialog-close
+        class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px] hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-8 absolute top-4 right-4 cursor-pointer"
+      >
+        <Icon name="X" />
+        <span class="sr-only">Close</span>
+      </button>
+    </dialog>
+    <div
+      class:list={[
+        'flex justify-center',
+        {
+          'items-center': align === 'center',
+          'items-start': align === 'start',
+          'items-end': align === 'end',
+          'min-h-[350px] p-10': showMargin,
+          'min-h-0 p-6 pb-0 pt-8': !showMargin,
+        },
+      ]}
+    >
+      <SchemaPreview client:load schema={schema} locales={locales} />
+    </div>
+  </div>
+</div>
