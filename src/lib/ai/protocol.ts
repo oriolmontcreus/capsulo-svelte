@@ -120,7 +120,7 @@ export function parseAiRequestBody(body: unknown): AiRequestBody {
 }
 
 /** The `env.AI.run(model, input)` input: OpenAI-style chat messages with function tools. */
-export function buildModelInput(request: AiRequestBody): Record<string, unknown> {
+export function buildModelInput(request: AiRequestBody, options: { stream?: boolean } = {}): Record<string, unknown> {
 	const system = request.context ? `${AI_SYSTEM_PROMPT}\n\n${request.context}` : AI_SYSTEM_PROMPT;
 	return {
 		messages: [
@@ -145,7 +145,8 @@ export function buildModelInput(request: AiRequestBody): Record<string, unknown>
 		],
 		tools: AI_TOOLS,
 		max_tokens: MAX_OUTPUT_TOKENS,
-		temperature: 0.2
+		temperature: 0.2,
+		...(options.stream ? { stream: true } : {})
 	};
 }
 

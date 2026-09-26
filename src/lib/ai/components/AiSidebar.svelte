@@ -33,6 +33,8 @@
 	let running = $state(false);
 	let progress = $state<string | null>(null);
 	let location = $state<AgentLocation>({ kind: "other", path: "" });
+	/** The assistant entry the current model step is streaming into, if it has sent text. */
+	let streamingId = $state<string | null>(null);
 	let abortController: AbortController | null = null;
 	let scroller = $state<HTMLDivElement | null>(null);
 	let textarea = $state<HTMLTextAreaElement | null>(null);
@@ -55,6 +57,33 @@
 	async function scrollToBottom() {
 		await tick();
 		scroller?.scrollTo({ top: scroller.scrollHeight });
+	}
+
+	/** Streamed text only pulls the view down if you haven't scrolled up to read. */
+	function isNearBottom() {
+		return !scroller || scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 48;
+	}
+
+	function appendText(delta: string) {
+		const follow = isNearBottom();
+		const entry = chat.entries.find((item) => item.id === streamingId);
+		if (entry?.kind === "assistant") {
+			entry.text += delta;
+		} else {
+			// Whitespace before a tool call isn't worth a message.
+			if (!delta.trim()) return;
+			const id = createId();
+			chat.entries.push({ id, kind: "assistant", text: delta.trimStart() });
+			streamingId = id;
+		}
+		if (follow) void scrollToBottom();
+	}
+
+	/** Ends the streamed message of a step: trims it. */
+	function endStreamedText() {
+		const entry = chat.entries.find((item) => item.id === streamingId);
+		if (entry?.kind === "assistant") entry.text = entry.text.trim();
+		streamingId = null;
 	}
 
 	function persist() {
@@ -103,14 +132,18 @@
 		abortController = new AbortController();
 		syncLocation();
 		try {
-			const reply = await runAgent(
+			await runAgent(
 				buildSiteContext(location),
 				chat.transcript,
 				{
 					onProgress: (label) => {
+						endStreamedText();
+						const follow = isNearBottom();
 						progress = label;
-						void scrollToBottom();
+						if (follow) void scrollToBottom();
 					},
+					onStepStart: endStreamedText,
+					onText: appendText,
 					onEdit: (edit) => {
 						pushEntry({ id: createId(), kind: "edit", edit });
 						persist();
@@ -118,7 +151,6 @@
 				},
 				abortController.signal,
 			);
-			if (reply) pushEntry({ id: createId(), kind: "assistant", text: reply });
 		} catch (error) {
 			if (abortController.signal.aborted) {
 				pushEntry({ id: createId(), kind: "notice", text: "Stopped." });
@@ -136,6 +168,7 @@
 				chat.transcript.push({ role: "assistant", content: "(This request stopped before I could answer.)" });
 			}
 		} finally {
+			endStreamedText();
 			running = false;
 			progress = null;
 			abortController = null;
@@ -328,7 +361,7 @@
 							<AiNotice text={entry.text} code={entry.code} />
 						{/if}
 					{/each}
-					{#if running}
+					{#if running && !streamingId}
 						<div class="text-muted-foreground flex items-center gap-2 text-xs" aria-live="polite">
 							<LoaderCircleIcon class="size-3 animate-spin" aria-hidden="true" />
 							{progress ?? "Thinking"}…
@@ -374,7 +407,85 @@
 </aside>
 
 <style>
-	.ai-markdown :global(p) {
+	/* Compact Markdown for a 360px panel. Spacing comes from the wrapper's space-y-2. */
+	.ai-markdown :global(:is(p, ul, ol, pre, blockquote, h1, h2, h3, h4, h5, h6)) {
 		margin: 0;
+	}
+	.ai-markdown :global(:is(h1, h2)) {
+		font-size: 0.95rem;
+		font-weight: 600;
+		padding-top: 0.25rem;
+	}
+	.ai-markdown :global(:is(h3, h4, h5, h6)) {
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+	.ai-markdown :global(ul) {
+		list-style: disc;
+		padding-left: 1.25rem;
+	}
+	.ai-markdown :global(ol) {
+		list-style: decimal;
+		padding-left: 1.25rem;
+	}
+	.ai-markdown :global(li + li) {
+		margin-top: 0.125rem;
+	}
+	.ai-markdown :global(:is(ul, ol) :is(ul, ol)) {
+		margin-top: 0.125rem;
+	}
+	.ai-markdown :global(a) {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.ai-markdown :global(del) {
+		opacity: 0.7;
+	}
+	.ai-markdown :global(:not(pre) > code) {
+		background: var(--muted);
+		border-radius: 0.25rem;
+		padding: 0.05rem 0.3rem;
+		font-size: 0.85em;
+	}
+	.ai-markdown :global(pre) {
+		background: var(--muted);
+		border-radius: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		overflow-x: auto;
+		font-size: 0.75rem;
+		line-height: 1.5;
+	}
+	.ai-markdown :global(blockquote) {
+		border-left: 2px solid var(--border);
+		padding-left: 0.75rem;
+		color: var(--muted-foreground);
+	}
+	.ai-markdown :global(hr) {
+		border-color: var(--border);
+	}
+	.ai-markdown :global(.ai-table) {
+		overflow-x: auto;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+	}
+	.ai-markdown :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.75rem;
+	}
+	.ai-markdown :global(:is(th, td)) {
+		padding: 0.375rem 0.5rem;
+		white-space: nowrap;
+	}
+	.ai-markdown :global(:is(th, td):not([align])) {
+		text-align: start;
+	}
+	.ai-markdown :global(th) {
+		font-weight: 600;
+		background: var(--muted);
+	}
+	.ai-markdown :global(tr + tr td),
+	.ai-markdown :global(tbody tr:first-child td) {
+		border-top: 1px solid var(--border);
 	}
 </style>

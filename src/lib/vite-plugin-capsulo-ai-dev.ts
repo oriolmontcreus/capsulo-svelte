@@ -6,13 +6,8 @@ import path from "node:path";
 import type { Plugin } from "vite";
 
 import { AI_ENABLED, AI_MODEL } from "./ai/config";
-import {
-	AiRequestError,
-	buildModelInput,
-	normalizeModelOutput,
-	parseAiRequestBody,
-	toAiRequestError
-} from "./ai/protocol";
+import { AiRequestError, buildModelInput, parseAiRequestBody, toAiRequestError } from "./ai/protocol";
+import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "./ai/stream";
 
 const AI_ROUTE = "/api/capsulo/ai";
 /** Same override Wrangler honours, e.g. for a proxy or a test double. */
@@ -95,7 +90,8 @@ export function capsuloAiDevPlugin(): Plugin {
 		return { token, accountId };
 	}
 
-	async function runModel(input: Record<string, unknown>): Promise<unknown> {
+	/** Calls the model and returns the raw response once Cloudflare has accepted the request. */
+	async function callModel(input: Record<string, unknown>): Promise<Response> {
 		credentials ??= loadCredentials();
 		let current: Credentials;
 		try {
@@ -110,20 +106,22 @@ export function capsuloAiDevPlugin(): Plugin {
 			headers: { Authorization: `Bearer ${current.token}`, "Content-Type": "application/json" },
 			body: JSON.stringify(input)
 		});
-		const payload = (await response.json().catch(() => null)) as {
-			result?: unknown;
-			errors?: { code?: number; message?: string }[];
-		} | null;
-
 		if (response.status === 401 || response.status === 403) {
 			// Wrangler's OAuth token expires after an hour; the next request fetches a fresh one.
 			credentials = null;
 			throw new AiRequestError(401, "dev-login-required", `Cloudflare rejected the login. ${LOGIN_HINT}`);
 		}
-		if (!response.ok || !payload) {
+		if (!response.ok) {
+			const payload = (await response.json().catch(() => null)) as { errors?: { code?: number; message?: string }[] } | null;
 			const detail = payload?.errors?.map((error) => `${error.code ?? ""} ${error.message ?? ""}`.trim()).join("; ");
 			throw toAiRequestError(new Error(detail || `HTTP ${response.status}`));
 		}
+		return response;
+	}
+
+	async function runModel(input: Record<string, unknown>): Promise<unknown> {
+		const payload = (await (await callModel(input)).json().catch(() => null)) as { result?: unknown } | null;
+		if (!payload) throw toAiRequestError(new Error("The model returned an unreadable response."));
 		return payload.result;
 	}
 
@@ -177,11 +175,28 @@ export function capsuloAiDevPlugin(): Plugin {
 					} catch {
 						throw new AiRequestError(400, "bad-request", "Request body must be valid JSON.");
 					}
-					const output = await runModel(buildModelInput(parseAiRequestBody(body)));
-					send(res, 200, normalizeModelOutput(output));
+					const request = parseAiRequestBody(body);
+					const upstream = await callModel(buildModelInput(request, { stream: true }));
+					if (!upstream.body) throw toAiRequestError(new Error("The model returned an empty response."));
+					const events = toAiEventStream(upstream.body, () => runModel(buildModelInput(request)));
+
+					res.statusCode = 200;
+					res.setHeader("Content-Type", AI_STREAM_CONTENT_TYPE);
+					res.setHeader("Cache-Control", "no-store");
+					res.flushHeaders();
+					const reader = events.getReader();
+					// Stop pressed or tab closed: stop reading, which also stops the model.
+					res.on("close", () => void reader.cancel().catch(() => {}));
+					while (true) {
+						const { done, value } = await reader.read();
+						if (done) break;
+						res.write(value);
+					}
+					res.end();
 				} catch (error) {
 					const aiError = toAiRequestError(error);
 					if (aiError.code === "model-error") console.error("[capsulo ai]", error);
+					if (res.headersSent) return void res.end();
 					send(res, aiError.status, { error: aiError.message, code: aiError.code });
 				}
 			});

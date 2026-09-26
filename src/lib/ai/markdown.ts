@@ -1,63 +1,42 @@
+import { Marked, type Tokens } from "marked";
+
 /**
- * Tiny Markdown subset for the agent's replies: paragraphs, bullet and numbered lists,
- * **bold**, *italic*, `code` and [links](https://…). Everything is escaped first, so
- * model output can never inject HTML into the admin.
+ * Markdown for the agent's replies: GitHub-flavoured (headings, lists, tables, code
+ * blocks, strikethrough, links). The text comes from a model that also reads site
+ * content, so raw HTML is shown as text, links are limited to safe protocols and
+ * images are replaced by their alt text: nothing it writes can run in the admin.
  */
+const SAFE_HREF = /^(https?:|mailto:|\/(?!\/)|#)/i;
+
 function escapeHtml(text: string): string {
 	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function renderInline(text: string): string {
-	return escapeHtml(text)
-		.replace(/`([^`]+)`/g, '<code class="bg-muted rounded px-1 py-0.5 text-[0.85em]">$1</code>')
-		.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-		.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, "$1<em>$2</em>")
-		.replace(
-			/\[([^\]]+)\]\(((?:https?:\/\/|\/)[^\s)]+)\)/g,
-			'<a href="$2" class="underline underline-offset-2" target="_blank" rel="noopener noreferrer">$1</a>'
-		);
-}
+const marked = new Marked({
+	gfm: true,
+	breaks: true,
+	renderer: {
+		html({ text }: Tokens.HTML | Tokens.Tag) {
+			return escapeHtml(text);
+		},
+		link({ href, title, tokens }: Tokens.Link) {
+			const label = this.parser.parseInline(tokens);
+			if (!SAFE_HREF.test(href.trim())) return label;
+			const titleAttribute = title ? ` title="${escapeHtml(title)}"` : "";
+			return `<a href="${escapeHtml(href.trim())}"${titleAttribute} target="_blank" rel="noopener noreferrer">${label}</a>`;
+		},
+		image({ text }: Tokens.Image) {
+			return escapeHtml(text);
+		},
+		table(token: Tokens.Table) {
+			// Wide tables scroll inside the narrow sidebar instead of overflowing it.
+			const header = token.header.map((cell) => this.tablecell(cell)).join("");
+			const rows = token.rows.map((row) => `<tr>${row.map((cell) => this.tablecell(cell)).join("")}</tr>`).join("");
+			return `<div class="ai-table"><table><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table></div>`;
+		},
+	},
+});
 
 export function renderMarkdown(markdown: string): string {
-	const blocks: string[] = [];
-	let list: { ordered: boolean; items: string[] } | null = null;
-	let paragraph: string[] = [];
-
-	const flushParagraph = () => {
-		if (paragraph.length) blocks.push(`<p>${paragraph.map(renderInline).join("<br>")}</p>`);
-		paragraph = [];
-	};
-	const flushList = () => {
-		if (!list) return;
-		const tag = list.ordered ? "ol" : "ul";
-		const style = list.ordered ? "list-decimal" : "list-disc";
-		blocks.push(`<${tag} class="${style} space-y-0.5 pl-5">${list.items.map((item) => `<li>${renderInline(item)}</li>`).join("")}</${tag}>`);
-		list = null;
-	};
-
-	for (const rawLine of markdown.replace(/\r\n/g, "\n").split("\n")) {
-		const line = rawLine.trimEnd();
-		const bullet = /^\s*[-*•]\s+(.*)$/.exec(line);
-		const numbered = /^\s*\d+[.)]\s+(.*)$/.exec(line);
-		if (bullet || numbered) {
-			flushParagraph();
-			const ordered = Boolean(numbered);
-			if (list && list.ordered !== ordered) flushList();
-			list ??= { ordered, items: [] };
-			list.items.push((bullet ?? numbered)![1]);
-			continue;
-		}
-		if (line.trim() === "") {
-			flushParagraph();
-			flushList();
-			continue;
-		}
-		flushList();
-		// Headings read as bold lines in a narrow sidebar.
-		const heading = /^#{1,6}\s+(.*)$/.exec(line);
-		paragraph.push(heading ? `**${heading[1]}**` : line);
-	}
-	flushParagraph();
-	flushList();
-	return blocks.join("");
+	return marked.parse(markdown, { async: false });
 }
