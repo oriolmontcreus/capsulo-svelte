@@ -185,6 +185,7 @@
       <Preview
         pageId={pageId ?? ""}
         {valuesByInstance}
+        globalsValues={globalsStore.loaded ? globalsStore.values : null}
         bind:previewDevice
         bind:previewWidthPx
         bind:previewHeightPx

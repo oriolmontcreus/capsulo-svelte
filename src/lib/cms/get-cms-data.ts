@@ -4,9 +4,11 @@ import {
 	resolveSchemaValues
 } from "$lib/form-builder/core/translation-runtime";
 import type { SchemaDefinition, SchemaValues } from "$lib/form-builder/core/types";
+import { buildGlobalVariableValues } from "$lib/globals/resolve-globals";
+import { substituteSchemaVariables } from "$lib/globals/substitute-variables";
 
 import { cmsStore } from "./cms-store.svelte";
-import { getPublishedValues } from "./published";
+import { getPublishedValues, getPublishedVariables } from "./published";
 
 /**
  * Resolves CMS field values for a capsule instance, in this order: the editor draft
@@ -14,6 +16,8 @@ import { getPublishedValues } from "./published";
  * Locale comes from the URL (via CmsPump) or from the Page Editor in preview mode.
  * Falling back to schema default values means capsules never render empty,
  * preventing layout shift that breaks Astro Dev Toolbar bounding boxes.
+ * `{{key}}` tokens in text, textarea and rich editor fields are replaced with the global
+ * variables for the locale: the published globals, or the editor's globals in preview mode.
  * Use inside a Svelte capsule as: `const data = $derived(getCmsData<T>(instanceId, schema));`
  */
 export function getCmsData<T extends Record<string, unknown>>(
@@ -21,12 +25,17 @@ export function getCmsData<T extends Record<string, unknown>>(
 	schema: SchemaDefinition
 ): T {
 	const locale = cmsStore.locale;
-	const fallback = getSchemaDefaultValues(schema, locale, DEFAULT_LOCALE) as T;
+	const variables =
+		cmsStore.active && cmsStore.globals
+			? buildGlobalVariableValues(cmsStore.globals, locale, DEFAULT_LOCALE)
+			: getPublishedVariables();
 
 	const instanceValues = (
 		cmsStore.active ? cmsStore.valuesByInstance[instanceId] : getPublishedValues()[instanceId]
 	) as SchemaValues | undefined;
-	if (!instanceValues) return fallback;
+	const resolved = instanceValues
+		? resolveSchemaValues(schema, instanceValues, locale, DEFAULT_LOCALE)
+		: getSchemaDefaultValues(schema, locale, DEFAULT_LOCALE);
 
-	return resolveSchemaValues(schema, instanceValues, locale, DEFAULT_LOCALE) as T;
+	return substituteSchemaVariables(schema, resolved, variables) as T;
 }

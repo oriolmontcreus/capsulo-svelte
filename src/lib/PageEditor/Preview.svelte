@@ -4,6 +4,7 @@
   import * as Select from "$lib/components/ui/select";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import { LOCALES, DEFAULT_LOCALE } from "$lib/config/i18n-config";
+  import type { SchemaValues } from "$lib/form-builder/core/types";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
   import {
     PAGE_EDITOR_PREVIEW_CHANNEL,
@@ -36,6 +37,7 @@
   type Props = {
     pageId: string;
     valuesByInstance: PageEditorValuesByInstance;
+    globalsValues: SchemaValues | null;
     previewDevice: PreviewDeviceId;
     previewWidthPx: number;
     previewHeightPx: number;
@@ -45,6 +47,7 @@
   let {
     pageId,
     valuesByInstance,
+    globalsValues,
     previewDevice = $bindable(),
     previewWidthPx = $bindable(),
     previewHeightPx = $bindable(),
@@ -87,13 +90,11 @@
     return { to: previewRootEl };
   });
 
-  function toSerializableValues(): PageEditorValuesByInstance {
+  function toSerializable<T>(value: T, fallback: T): T {
     try {
-      return JSON.parse(
-        JSON.stringify(valuesByInstance ?? {}),
-      ) as PageEditorValuesByInstance;
+      return JSON.parse(JSON.stringify(value)) as T;
     } catch {
-      return {};
+      return fallback;
     }
   }
 
@@ -103,7 +104,8 @@
       type: "state-sync",
       pageId,
       locale,
-      valuesByInstance: toSerializableValues(),
+      valuesByInstance: toSerializable(valuesByInstance ?? {}, {}),
+      globals: globalsValues ? toSerializable(globalsValues, null) : null,
     };
   }
 
@@ -260,6 +262,7 @@
     pageId;
     locale;
     valuesByInstance;
+    globalsValues;
     if (typeof window === "undefined") return;
     const contentWindow = iframeEl?.contentWindow;
     if (!contentWindow) return;
