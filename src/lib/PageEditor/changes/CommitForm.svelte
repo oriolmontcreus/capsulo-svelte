@@ -1,12 +1,18 @@
 <script lang="ts">
+	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
+	import SparklesIcon from "@lucide/svelte/icons/sparkles";
+	import AiNotice from "$lib/ai/components/AiNotice.svelte";
+	import { AI_ENABLED } from "$lib/ai/config";
+	import { AgentError } from "$lib/ai/stream-client";
 	import { Button } from "$lib/components/ui/button";
+	import * as Popover from "$lib/components/ui/popover";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import type { CommitFailure } from "./commit";
-
-	const SUBJECT_SOFT_LIMIT = 72;
+	import { generateCommitMessage } from "./commit-message-ai";
 
 	let {
 		message = $bindable(""),
+		pageIds,
 		hasChanges,
 		isCommitting,
 		errorMessage = null,
@@ -15,6 +21,8 @@
 		oncommit,
 	}: {
 		message?: string;
+		/** The pages being committed: what the AI describes. */
+		pageIds: string[];
 		hasChanges: boolean;
 		isCommitting: boolean;
 		errorMessage?: string | null;
@@ -23,24 +31,122 @@
 		oncommit: () => void;
 	} = $props();
 
+	let generation = $state<AbortController | null>(null);
+	let generateError = $state<string | null>(null);
+	/** Local dev only: the developer's Wrangler login is missing or expired. */
+	let loginNoticeOpen = $state(false);
+	let aiButton = $state<HTMLButtonElement | null>(null);
+
+	const isGenerating = $derived(generation !== null);
 	const trimmed = $derived(message.trim());
-	const overLimit = $derived(message.length > SUBJECT_SOFT_LIMIT);
-	const disabled = $derived(!hasChanges || trimmed.length === 0 || isCommitting);
+	const disabled = $derived(!hasChanges || trimmed.length === 0 || isCommitting || isGenerating);
+
+	/**
+	 * Fills the message from the pending changes, in the style of the author's recent
+	 * commits and building on what they already typed. While it runs, the button
+	 * ignores the pointer (so hovering can't disturb the spinner); Escape in the box or
+	 * the button via keyboard stops it.
+	 */
+	async function generate(): Promise<void> {
+		if (generation) {
+			generation.abort();
+			return;
+		}
+
+		const controller = new AbortController();
+		generation = controller;
+		generateError = null;
+		loginNoticeOpen = false;
+		const draft = message;
+		try {
+			const generated = await generateCommitMessage({
+				pageIds,
+				draft,
+				signal: controller.signal,
+				onText: (text) => (message = text.trimStart())
+			});
+			message = generated;
+		} catch (error) {
+			// Stopped or failed: a half-written suggestion is no use, so restore the draft.
+			message = draft;
+			if (!controller.signal.aborted) {
+				console.error("[capsulo ai] commit message generation failed", error);
+				if (error instanceof AgentError && error.code === "dev-login-required") {
+					loginNoticeOpen = true;
+				} else {
+					generateError =
+						error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
+				}
+			}
+		} finally {
+			generation = null;
+		}
+	}
 </script>
 
 <div class="border-border space-y-2 border-t p-3">
-	<Textarea
-		bind:value={message}
-		rows={3}
-		placeholder="Describe what changed..."
-		disabled={!hasChanges || isCommitting}
-		aria-label="Commit message"
-	/>
-	<div class="flex items-center justify-between text-[10px]">
-		<span class={overLimit ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}>
-			{message.length}/{SUBJECT_SOFT_LIMIT}
-		</span>
+	<div class="relative">
+		<Textarea
+			bind:value={message}
+			rows={3}
+			placeholder="Describe what changed..."
+			disabled={!hasChanges || isCommitting}
+			readonly={isGenerating}
+			aria-busy={isGenerating}
+			onkeydown={(event) => {
+				if (event.key === "Escape" && generation) {
+					event.preventDefault();
+					generation.abort();
+				}
+			}}
+			aria-label="Commit message"
+			class={AI_ENABLED ? "pr-9" : undefined}
+		/>
+		{#if AI_ENABLED}
+			<Button
+				variant="ghost"
+				size="icon-xs"
+				bind:ref={aiButton}
+				class={[
+					"text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5",
+					isGenerating && "pointer-events-none",
+				]}
+				title={isGenerating ? undefined : "Generate commit message with AI"}
+				aria-label={isGenerating
+					? "Generating commit message (Esc to stop)"
+					: "Generate commit message with AI"}
+				disabled={!hasChanges || isCommitting}
+				onclick={generate}
+			>
+				{#if isGenerating}
+					<LoaderCircleIcon class="animate-spin" aria-hidden="true" />
+				{:else}
+					<SparklesIcon aria-hidden="true" />
+				{/if}
+			</Button>
+
+			<Popover.Root bind:open={loginNoticeOpen}>
+				<Popover.Content customAnchor={aiButton} side="top" align="end" collisionPadding={8} class="w-72 gap-3">
+					<Popover.Header>
+						<Popover.Title>Cloudflare login needed</Popover.Title>
+					</Popover.Header>
+					<AiNotice text="" code="dev-login-required" />
+					<Button
+						variant="outline"
+						size="xs"
+						class="self-end"
+						onclick={() => (loginNoticeOpen = false)}
+					>
+						Dismiss
+					</Button>
+				</Popover.Content>
+			</Popover.Root>
+		{/if}
 	</div>
+
+	{#if generateError}
+		<p class="text-destructive text-xs" aria-live="polite">{generateError}</p>
+	{/if}
 
 	{#if errorMessage}
 		<p class="text-destructive text-xs">{errorMessage}</p>

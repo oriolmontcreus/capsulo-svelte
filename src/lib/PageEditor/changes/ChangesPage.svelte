@@ -99,6 +99,7 @@
 		</div>
 		<CommitForm
 			bind:message
+			pageIds={changedPages.map((page) => page.pageId)}
 			hasChanges={changedPages.length > 0}
 			{isCommitting}
 			{errorMessage}

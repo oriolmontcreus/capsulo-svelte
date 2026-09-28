@@ -24,6 +24,11 @@ function argumentsText(value: unknown): string {
 	return value === undefined || value === null ? "" : JSON.stringify(value);
 }
 
+function fallbackFinishReason(raw: unknown): string | null {
+	const choice = isRecord(raw) && Array.isArray(raw.choices) ? raw.choices[0] : undefined;
+	return isRecord(choice) && typeof choice.finish_reason === "string" ? choice.finish_reason : null;
+}
+
 /**
  * @param runWithoutStreaming Asked when the stream ended with neither text nor tool
  *   calls (a model that doesn't stream tool calls): the same request, not streamed.
@@ -37,6 +42,9 @@ export function toAiEventStream(
 	const toolCalls: PartialToolCall[] = [];
 	let content = "";
 	let usage: AiResponseBody["usage"] = null;
+	let finishReason: string | null = null;
+	/** Characters of hidden reasoning (never shown), to explain an empty reply. */
+	let reasoningChars = 0;
 	let buffer = "";
 	// Set when the browser goes away (Stop, closed tab): stop reading so the model stops too.
 	let cancelled = false;
@@ -60,8 +68,11 @@ export function toAiEventStream(
 				const choice = Array.isArray(data.choices) ? data.choices[0] : undefined;
 				if (isRecord(choice)) {
 					// OpenAI chat-completions chunks (Gemma 4, GLM, gpt-oss, ...).
+					if (typeof choice.finish_reason === "string") finishReason = choice.finish_reason;
 					const delta = isRecord(choice.delta) ? choice.delta : isRecord(choice.message) ? choice.message : {};
 					text(delta.content);
+					const reasoning = delta.reasoning_content ?? delta.reasoning;
+					if (typeof reasoning === "string") reasoningChars += reasoning.length;
 					if (Array.isArray(delta.tool_calls)) {
 						delta.tool_calls.forEach((raw, position) => {
 							if (!isRecord(raw)) return;
@@ -120,15 +131,31 @@ export function toAiEventStream(
 					}));
 
 				if (!content.trim() && calls.length === 0) {
-					const fallback = normalizeModelOutput(await runWithoutStreaming());
+					const raw = await runWithoutStreaming();
+					const fallback = normalizeModelOutput(raw);
 					text(fallback.message.content);
 					calls = fallback.message.toolCalls;
 					usage = fallback.usage ?? usage;
+					finishReason = fallbackFinishReason(raw) ?? finishReason;
+				}
+
+				if (!content.trim() && calls.length === 0) {
+					// Nothing to show: say why instead of ending with a silent, empty reply.
+					console.warn("[capsulo ai] the model returned an empty reply", { finishReason, reasoningChars, usage });
+					const cause =
+						finishReason === "length"
+							? reasoningChars > 0
+								? " It used its whole output budget on reasoning."
+								: " It hit its output limit."
+							: "";
+					emit({ type: "error", error: `The AI model returned an empty reply.${cause} Try again.`, code: "model-error" });
+					return;
 				}
 
 				emit({ type: "done", message: { content, toolCalls: calls }, usage });
 			} catch (error) {
 				const aiError = toAiRequestError(error);
+				console.error("[capsulo ai] the model stream failed", error);
 				emit({ type: "error", error: aiError.message, code: aiError.code });
 			} finally {
 				if (!cancelled) controller.close();

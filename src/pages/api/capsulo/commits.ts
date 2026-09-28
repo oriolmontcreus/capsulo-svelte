@@ -7,10 +7,12 @@ import { scheduleUnusedUploadCleanup } from "$lib/server/uploads";
 export const prerender = false;
 
 export const GET = handle(async (context) => {
-	await requireUser(context);
+	const user = await requireUser(context);
 	const cursor = context.url.searchParams.get("cursor");
 	const limit = Math.min(Math.max(Number(context.url.searchParams.get("limit")) || 25, 1), 100);
-	return json(await listCommits(cursor, limit));
+	// `?author=me`: only the signed-in user's commits (the AI commit message imitates them).
+	const createdBy = context.url.searchParams.get("author") === "me" ? user.id : null;
+	return json(await listCommits(cursor, limit, createdBy));
 });
 
 /** Body: `{ message, pages: [{ pageId, content }] }`. All pages are written atomically. */

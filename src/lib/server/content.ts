@@ -110,18 +110,29 @@ export type CommitListRow = { id: string; message: string; created_by: string | 
 export type RevisionListRow = { id: number; page_id: string; created_at: string; commit_id: string | null };
 export type AuthorRow = { id: string; name: string | null; avatar_url: string | null };
 
-/** One keyset page of commits (newest first) plus the revisions and authors they reference. */
+/**
+ * One keyset page of commits (newest first) plus the revisions and authors they
+ * reference, optionally only those made by `createdBy`.
+ */
 export async function listCommits(
 	cursor: string | null,
-	limit: number
+	limit: number,
+	createdBy: string | null = null
 ): Promise<{ commits: CommitListRow[]; revisions: RevisionListRow[]; authors: AuthorRow[] }> {
-	const commitQuery = cursor
-		? env.DB.prepare(
-				"SELECT id, message, created_by, created_at FROM commits WHERE created_at < ? ORDER BY created_at DESC LIMIT ?"
-			).bind(cursor, limit)
-		: env.DB.prepare("SELECT id, message, created_by, created_at FROM commits ORDER BY created_at DESC LIMIT ?").bind(
-				limit
-			);
+	const conditions: string[] = [];
+	const params: unknown[] = [];
+	if (cursor) {
+		conditions.push("created_at < ?");
+		params.push(cursor);
+	}
+	if (createdBy) {
+		conditions.push("created_by = ?");
+		params.push(createdBy);
+	}
+	const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")} ` : "";
+	const commitQuery = env.DB.prepare(
+		`SELECT id, message, created_by, created_at FROM commits ${where}ORDER BY created_at DESC LIMIT ?`
+	).bind(...params, limit);
 	const { results: commits } = await commitQuery.all<CommitListRow>();
 	if (commits.length === 0) return { commits, revisions: [], authors: [] };
 

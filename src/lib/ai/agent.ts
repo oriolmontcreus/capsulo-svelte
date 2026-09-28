@@ -1,22 +1,12 @@
-import { CAPSULO_API_BASE } from "$lib/api/capsulo-client";
 import type { EditRecord } from "./edits";
-import type { AiErrorCode, AiMessage, AiResponseBody } from "./protocol";
-import type { AiStreamEvent } from "./stream";
+import type { AiMessage, AiResponseBody } from "./protocol";
+import { requestAiStream } from "./stream-client";
 import { describeToolCall, runToolCall } from "./tool-runner";
 
 /** Model calls per user message. Each one costs part of the free daily allowance. */
 const MAX_STEPS = 8;
 /** Tool results from earlier turns are shortened to this before being resent. */
 const OLD_TOOL_RESULT_CHARS = 1500;
-
-export class AgentError extends Error {
-	constructor(
-		message: string,
-		readonly code: AiErrorCode | "network" | "unauthorized"
-	) {
-		super(message);
-	}
-}
 
 export type AgentCallbacks = {
 	/** What the agent is doing right now ("Reading Home"), or null when it's thinking. */
@@ -46,66 +36,14 @@ function compactTranscript(transcript: AiMessage[]): AiMessage[] {
 	);
 }
 
-async function readError(response: Response): Promise<AgentError> {
-	const payload = (await response.json().catch(() => null)) as { error?: string; code?: AiErrorCode } | null;
-	if (response.status === 401 && !payload?.code) return new AgentError("Your session expired. Sign in again.", "unauthorized");
-	return new AgentError(payload?.error ?? `The AI request failed (${response.status}).`, payload?.code ?? "model-error");
-}
-
 /** Asks the model for its next step, passing on its text as it streams in. */
-async function requestStep(
+function requestStep(
 	context: string,
 	transcript: AiMessage[],
 	onText: (delta: string) => void,
 	signal: AbortSignal
 ): Promise<AiResponseBody> {
-	let response: Response;
-	try {
-		response = await fetch(`${CAPSULO_API_BASE}/ai`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			credentials: "same-origin",
-			body: JSON.stringify({ context, messages: compactTranscript(transcript) }),
-			signal
-		});
-	} catch (error) {
-		if (signal.aborted) throw error;
-		throw new AgentError("Could not reach the server. Check your connection and try again.", "network");
-	}
-	if (!response.ok || !response.body) throw await readError(response);
-
-	const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-	let buffer = "";
-	const handleLine = (line: string): AiResponseBody | null => {
-		if (!line.trim()) return null;
-		const event = JSON.parse(line) as AiStreamEvent;
-		if (event.type === "text") onText(event.delta);
-		else if (event.type === "error") throw new AgentError(event.error, event.code);
-		else if (event.type === "done") return { message: event.message, usage: event.usage };
-		return null;
-	};
-
-	try {
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			buffer += value;
-			const lines = buffer.split("\n");
-			buffer = lines.pop() ?? "";
-			for (const line of lines) {
-				const result = handleLine(line);
-				if (result) return result;
-			}
-		}
-		const result = handleLine(buffer);
-		if (result) return result;
-	} catch (error) {
-		if (signal.aborted || error instanceof AgentError) throw error;
-		throw new AgentError("The connection dropped before the reply finished. Try again.", "network");
-	} finally {
-		reader.cancel().catch(() => {});
-	}
-	throw new AgentError("The connection dropped before the reply finished. Try again.", "network");
+	return requestAiStream("/ai", { context, messages: compactTranscript(transcript) }, onText, signal);
 }
 
 /**
