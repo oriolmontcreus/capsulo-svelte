@@ -164,7 +164,7 @@
                 aria-pressed={aiSidebar.open}
                 class={cn(
                   triggerClass as ClassValue,
-                  "focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
+                  "focus-visible:ring-ring flex size-8 shrink-0 cursor-pointer items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
                   !hydrated
                     ? // Before hydration, follow <html data-ai-sidebar> like the panel does.
                       "text-muted-foreground in-data-[ai-sidebar=open]:bg-primary/30 in-data-[ai-sidebar=open]:text-foreground"
@@ -192,7 +192,7 @@
               onclick={handleSignOut}
               class={cn(
                 triggerClass as ClassValue,
-                "text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
+                "text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 cursor-pointer items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
               )}
             >
               <LogOutIcon class="size-3.5" aria-hidden="true" />
