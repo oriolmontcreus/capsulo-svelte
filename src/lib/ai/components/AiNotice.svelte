@@ -32,7 +32,7 @@
 	role={code ? "alert" : undefined}
 >
 	{#if code === "dev-login-required"}
-		<p>The AI agent calls Cloudflare Workers AI, which needs your Cloudflare login in local dev. Run this once in the project folder, then send your message again:</p>
+		<p>The AI agent calls Cloudflare Workers AI, which needs your Cloudflare login in local dev. Run this once in the project folder, then try again:</p>
 		<div class="bg-background border-border mt-2 flex items-center gap-2 rounded-md border px-2 py-1 font-mono">
 			<span class="flex-1">{LOGIN_COMMAND}</span>
 			<button

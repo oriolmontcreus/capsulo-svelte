@@ -25,9 +25,35 @@ const AI_ROUTES: Record<string, ModelInputBuilder> = {
 };
 /** Same override Wrangler honours, e.g. for a proxy or a test double. */
 const CLOUDFLARE_API = process.env.CLOUDFLARE_API_BASE_URL ?? "https://api.cloudflare.com/client/v4";
-const LOGIN_HINT = "Run `npx wrangler login` in the project folder, then send your message again.";
+const LOGIN_HINT = "Run `npx wrangler login` in the project folder, then try again.";
 
 type Credentials = { token: string; accountId: string };
+type CloudflareError = { code?: number; message?: string };
+
+/**
+ * Cloudflare API codes for a missing, expired or revoked token. An expired login
+ * doesn't always come back as a 401/403, so the codes and wording are checked too.
+ */
+const AUTH_ERROR_CODES = new Set([6003, 6111, 9106, 9109, 10000]);
+const AUTH_ERROR_MESSAGE = /authenticat|unauthori[sz]ed|invalid (access )?token|token (has )?expired/i;
+
+function isAuthFailure(status: number, errors: CloudflareError[]): boolean {
+	if (status === 401 || status === 403) return true;
+	return errors.some(
+		(error) =>
+			(typeof error.code === "number" && AUTH_ERROR_CODES.has(error.code)) ||
+			(typeof error.message === "string" && AUTH_ERROR_MESSAGE.test(error.message))
+	);
+}
+
+/** Only local dev uses a personal login: in production the Worker's AI binding needs none. */
+function loginRequired(message: string, detail?: unknown): AiRequestError {
+	console.warn(
+		"[capsulo ai] Cloudflare login needed for the AI in local dev: run `npx wrangler login`, then try again.",
+		...(detail === undefined ? [] : [detail])
+	);
+	return new AiRequestError(401, "dev-login-required", `${message} ${LOGIN_HINT}`);
+}
 
 /**
  * Workers AI has no local simulator: its binding always calls Cloudflare, and with it
@@ -49,7 +75,8 @@ export function capsuloAiDevPlugin(): Plugin {
 				process.execPath,
 				[bin, ...args],
 				{ cwd: root, env: { ...process.env, WRANGLER_SEND_METRICS: "false" }, windowsHide: true, timeout: 30_000 },
-				(error, stdout) => (error ? reject(error) : resolve(stdout))
+				(error, stdout, stderr) =>
+					error ? reject(new Error(`wrangler ${args.join(" ")} failed: ${stderr.trim() || error.message}`)) : resolve(stdout)
 			);
 		});
 	}
@@ -80,14 +107,18 @@ export function capsuloAiDevPlugin(): Plugin {
 	}
 
 	async function loadCredentials(): Promise<Credentials> {
+		let wranglerError: unknown;
 		const token =
 			process.env.CLOUDFLARE_API_TOKEN ??
 			(await runWrangler(["auth", "token", "--json"]).then(
 				(output) => parseJsonOutput(output).token,
-				() => undefined
+				(error: unknown) => {
+					wranglerError = error instanceof Error ? error.message : error;
+					return undefined;
+				}
 			));
 		if (typeof token !== "string" || !token) {
-			throw new AiRequestError(401, "dev-login-required", `The AI agent needs a Cloudflare login in local dev. ${LOGIN_HINT}`);
+			throw loginRequired("You're not logged in to Cloudflare, or your login has expired.", wranglerError);
 		}
 
 		let accountId = configuredAccountId();
@@ -96,7 +127,7 @@ export function capsuloAiDevPlugin(): Plugin {
 			const accounts = Array.isArray(whoami.accounts) ? (whoami.accounts as { id?: unknown }[]) : [];
 			const first = accounts.find((account) => typeof account.id === "string");
 			if (!first) {
-				throw new AiRequestError(401, "dev-login-required", `Could not find your Cloudflare account. ${LOGIN_HINT}`);
+				throw loginRequired("Could not find your Cloudflare account.");
 			}
 			accountId = first.id as string;
 		}
@@ -119,14 +150,16 @@ export function capsuloAiDevPlugin(): Plugin {
 			headers: { Authorization: `Bearer ${current.token}`, "Content-Type": "application/json" },
 			body: JSON.stringify(input)
 		});
-		if (response.status === 401 || response.status === 403) {
-			// Wrangler's OAuth token expires after an hour; the next request fetches a fresh one.
-			credentials = null;
-			throw new AiRequestError(401, "dev-login-required", `Cloudflare rejected the login. ${LOGIN_HINT}`);
-		}
 		if (!response.ok) {
-			const payload = (await response.json().catch(() => null)) as { errors?: { code?: number; message?: string }[] } | null;
-			const detail = payload?.errors?.map((error) => `${error.code ?? ""} ${error.message ?? ""}`.trim()).join("; ");
+			const payload = (await response.json().catch(() => null)) as { errors?: CloudflareError[] } | null;
+			const errors = Array.isArray(payload?.errors) ? payload.errors : [];
+			const detail = errors.map((error) => `${error.code ?? ""} ${error.message ?? ""}`.trim()).join("; ");
+			if (isAuthFailure(response.status, errors)) {
+				// Drop the cached token: the next request asks Wrangler again, so it picks up
+				// a refreshed token or a new `wrangler login` without restarting the dev server.
+				credentials = null;
+				throw loginRequired("Cloudflare rejected your login: it has expired or is invalid.", `HTTP ${response.status} ${detail}`);
+			}
 			throw toAiRequestError(new Error(detail || `HTTP ${response.status}`));
 		}
 		return response;

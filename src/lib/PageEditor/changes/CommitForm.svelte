@@ -1,9 +1,11 @@
 <script lang="ts">
 	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import SparklesIcon from "@lucide/svelte/icons/sparkles";
+	import AiNotice from "$lib/ai/components/AiNotice.svelte";
 	import { AI_ENABLED } from "$lib/ai/config";
 	import { AgentError } from "$lib/ai/stream-client";
 	import { Button } from "$lib/components/ui/button";
+	import * as Popover from "$lib/components/ui/popover";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import type { CommitFailure } from "./commit";
 	import { generateCommitMessage } from "./commit-message-ai";
@@ -31,6 +33,9 @@
 
 	let generation = $state<AbortController | null>(null);
 	let generateError = $state<string | null>(null);
+	/** Local dev only: the developer's Wrangler login is missing or expired. */
+	let loginNoticeOpen = $state(false);
+	let aiButton = $state<HTMLButtonElement | null>(null);
 
 	const isGenerating = $derived(generation !== null);
 	const trimmed = $derived(message.trim());
@@ -38,7 +43,9 @@
 
 	/**
 	 * Fills the message from the pending changes, in the style of the author's recent
-	 * commits and building on what they already typed. Clicking again stops it.
+	 * commits and building on what they already typed. While it runs, the button
+	 * ignores the pointer (so hovering can't disturb the spinner); Escape in the box or
+	 * the button via keyboard stops it.
 	 */
 	async function generate(): Promise<void> {
 		if (generation) {
@@ -49,6 +56,7 @@
 		const controller = new AbortController();
 		generation = controller;
 		generateError = null;
+		loginNoticeOpen = false;
 		const draft = message;
 		try {
 			const generated = await generateCommitMessage({
@@ -63,8 +71,12 @@
 			message = draft;
 			if (!controller.signal.aborted) {
 				console.error("[capsulo ai] commit message generation failed", error);
-				generateError =
-					error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
+				if (error instanceof AgentError && error.code === "dev-login-required") {
+					loginNoticeOpen = true;
+				} else {
+					generateError =
+						error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
+				}
 			}
 		} finally {
 			generation = null;
@@ -81,6 +93,12 @@
 			disabled={!hasChanges || isCommitting}
 			readonly={isGenerating}
 			aria-busy={isGenerating}
+			onkeydown={(event) => {
+				if (event.key === "Escape" && generation) {
+					event.preventDefault();
+					generation.abort();
+				}
+			}}
 			aria-label="Commit message"
 			class={AI_ENABLED ? "pr-9" : undefined}
 		/>
@@ -88,27 +106,41 @@
 			<Button
 				variant="ghost"
 				size="icon-xs"
-				class="text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5 transition-colors active:not-aria-[haspopup]:translate-y-0"
-				title={isGenerating ? "Stop generating" : "Generate commit message with AI"}
-				aria-label={isGenerating ? "Stop generating" : "Generate commit message with AI"}
+				bind:ref={aiButton}
+				class={[
+					"text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5",
+					isGenerating && "pointer-events-none",
+				]}
+				title={isGenerating ? undefined : "Generate commit message with AI"}
+				aria-label={isGenerating
+					? "Generating commit message (Esc to stop)"
+					: "Generate commit message with AI"}
 				disabled={!hasChanges || isCommitting}
 				onclick={generate}
 			>
-				<!-- The spin runs on a fixed-size box on its own layer, so hover repaints of
-				     the button can't make the rotating icon jitter. -->
-				<span
-					class="inline-flex size-3.5 items-center justify-center {isGenerating
-						? 'animate-spin will-change-transform'
-						: ''}"
-					aria-hidden="true"
-				>
-					{#if isGenerating}
-						<LoaderCircleIcon class="size-3.5" />
-					{:else}
-						<SparklesIcon class="size-3.5" />
-					{/if}
-				</span>
+				{#if isGenerating}
+					<LoaderCircleIcon class="animate-spin" aria-hidden="true" />
+				{:else}
+					<SparklesIcon aria-hidden="true" />
+				{/if}
 			</Button>
+
+			<Popover.Root bind:open={loginNoticeOpen}>
+				<Popover.Content customAnchor={aiButton} side="top" align="end" collisionPadding={8} class="w-72 gap-3">
+					<Popover.Header>
+						<Popover.Title>Cloudflare login needed</Popover.Title>
+					</Popover.Header>
+					<AiNotice text="" code="dev-login-required" />
+					<Button
+						variant="outline"
+						size="xs"
+						class="self-end"
+						onclick={() => (loginNoticeOpen = false)}
+					>
+						Dismiss
+					</Button>
+				</Popover.Content>
+			</Popover.Root>
 		{/if}
 	</div>
 
