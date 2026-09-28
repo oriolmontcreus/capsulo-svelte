@@ -11,7 +11,11 @@ const MAX_CHANGES_CHARS = 40_000;
 const MAX_RECENT_MESSAGES = 10;
 const MAX_RECENT_MESSAGE_CHARS = 1_000;
 const MAX_DRAFT_CHARS = 2_000;
-const MAX_OUTPUT_TOKENS = 256;
+/**
+ * Generous for a one-line message on purpose: if a reasoning model thinks anyway, a
+ * tight cap is spent on reasoning and the reply comes back empty.
+ */
+const MAX_OUTPUT_TOKENS = 1024;
 
 export type CommitMessageRequest = {
 	/** The pending changes, as text (see describeChanges in commit-message-ai.ts). */
@@ -87,6 +91,9 @@ export function buildCommitMessageModelInput(
 		],
 		max_tokens: MAX_OUTPUT_TOKENS,
 		temperature: 0.3,
+		// Gemma 4 (the default model) can think before answering; a commit message doesn't
+		// need it, and skipping it is faster and cheaper.
+		chat_template_kwargs: { enable_thinking: false },
 		...(options.stream ? { stream: true } : {})
 	};
 }

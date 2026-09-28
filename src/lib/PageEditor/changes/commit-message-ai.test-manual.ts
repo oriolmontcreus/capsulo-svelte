@@ -5,7 +5,7 @@
  * Run with:  npx tsx src/lib/PageEditor/changes/commit-message-ai.test-manual.ts
  */
 import assert from "node:assert/strict";
-import { cleanCommitMessage, parseCommitMessageRequest } from "../../ai/commit-message";
+import { buildCommitMessageModelInput, cleanCommitMessage, parseCommitMessageRequest } from "../../ai/commit-message";
 import { describeChanges, formatValue, type CapsuleInfo } from "./commit-message-context";
 import type { PageChangeSet } from "./diff-model";
 
@@ -119,5 +119,12 @@ assert.deepEqual(parsed, { changes: "x", recentMessages: ["a", "b"], draft: "fix
 assert.throws(() => parseCommitMessageRequest({ changes: "" }), /no changes/);
 assert.throws(() => parseCommitMessageRequest({ changes: "x", draft: "d".repeat(3000) }), /too long/);
 assert.throws(() => parseCommitMessageRequest({ changes: "x", recentMessages: "nope" }), /must be an array/);
+
+// Model input: no thinking, and room for a reply even if a model reasons anyway.
+const input = buildCommitMessageModelInput(parsed, { stream: true });
+assert.deepEqual(input.chat_template_kwargs, { enable_thinking: false });
+assert.ok((input.max_tokens as number) >= 1024);
+assert.equal(input.stream, true);
+assert.equal("tools" in input, false);
 
 console.log("commit-message-ai: all checks passed");

@@ -1,6 +1,6 @@
 import { capsuloFetch } from "$lib/api/capsulo-client";
 import { cleanCommitMessage } from "$lib/ai/commit-message";
-import { requestAiStream } from "$lib/ai/stream-client";
+import { AgentError, requestAiStream } from "$lib/ai/stream-client";
 import { getCapsuleByKey } from "$lib/capsules/core/registry";
 import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
@@ -58,7 +58,7 @@ async function loadRecentCommitMessages(): Promise<string[]> {
  * Asks the AI for a commit message describing the given pages' pending changes, in
  * the style of the author's recent messages and building on `draft` when it isn't
  * empty. The raw text streams to `onText`; the cleaned-up message is returned.
- * Throws an AgentError on failure.
+ * Throws an AgentError on failure, including an empty reply.
  */
 export async function generateCommitMessage(options: {
 	pageIds: string[];
@@ -71,6 +71,12 @@ export async function generateCommitMessage(options: {
 		loadRecentCommitMessages()
 	]);
 
+	console.debug("[capsulo ai] generating a commit message", {
+		changesChars: changes.length,
+		styleExamples: recentMessages.length,
+		hasDraft: options.draft.trim().length > 0
+	});
+
 	let text = "";
 	const { message } = await requestAiStream(
 		"/ai/commit-message",
@@ -81,5 +87,10 @@ export async function generateCommitMessage(options: {
 		},
 		options.signal
 	);
-	return cleanCommitMessage(message.content);
+	const cleaned = cleanCommitMessage(message.content);
+	if (!cleaned) {
+		console.warn("[capsulo ai] the commit message came back empty", { raw: message.content });
+		throw new AgentError("The AI returned an empty commit message. Try again.", "model-error");
+	}
+	return cleaned;
 }

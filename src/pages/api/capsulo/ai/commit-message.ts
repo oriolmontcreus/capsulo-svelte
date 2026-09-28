@@ -39,6 +39,7 @@ export const POST = handle(async (context) => {
 		});
 	} catch (error) {
 		if (!(error instanceof AiRequestError)) throw error;
+		if (error.code === "model-error") console.error("[capsulo ai] commit message", error);
 		return json({ error: error.message, code: error.code }, { status: error.status });
 	}
 });

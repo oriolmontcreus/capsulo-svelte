@@ -57,12 +57,12 @@
 				signal: controller.signal,
 				onText: (text) => (message = text.trimStart())
 			});
-			// An empty reply keeps what the author wrote rather than wiping it.
-			message = generated || draft;
+			message = generated;
 		} catch (error) {
 			// Stopped or failed: a half-written suggestion is no use, so restore the draft.
 			message = draft;
 			if (!controller.signal.aborted) {
+				console.error("[capsulo ai] commit message generation failed", error);
 				generateError =
 					error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
 			}
@@ -88,17 +88,26 @@
 			<Button
 				variant="ghost"
 				size="icon-xs"
-				class="text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5"
+				class="text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5 transition-colors active:not-aria-[haspopup]:translate-y-0"
 				title={isGenerating ? "Stop generating" : "Generate commit message with AI"}
 				aria-label={isGenerating ? "Stop generating" : "Generate commit message with AI"}
 				disabled={!hasChanges || isCommitting}
 				onclick={generate}
 			>
-				{#if isGenerating}
-					<LoaderCircleIcon class="animate-spin" aria-hidden="true" />
-				{:else}
-					<SparklesIcon aria-hidden="true" />
-				{/if}
+				<!-- The spin runs on a fixed-size box on its own layer, so hover repaints of
+				     the button can't make the rotating icon jitter. -->
+				<span
+					class="inline-flex size-3.5 items-center justify-center {isGenerating
+						? 'animate-spin will-change-transform'
+						: ''}"
+					aria-hidden="true"
+				>
+					{#if isGenerating}
+						<LoaderCircleIcon class="size-3.5" />
+					{:else}
+						<SparklesIcon class="size-3.5" />
+					{/if}
+				</span>
 			</Button>
 		{/if}
 	</div>
