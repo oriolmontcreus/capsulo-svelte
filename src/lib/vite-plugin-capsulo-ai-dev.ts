@@ -5,11 +5,24 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import type { Plugin } from "vite";
 
+import { buildCommitMessageModelInput, parseCommitMessageRequest } from "./ai/commit-message";
 import { AI_ENABLED, AI_MODEL } from "./ai/config";
 import { AiRequestError, buildModelInput, parseAiRequestBody, toAiRequestError } from "./ai/protocol";
 import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "./ai/stream";
 
-const AI_ROUTE = "/api/capsulo/ai";
+type ModelInputBuilder = (body: unknown) => (options?: { stream?: boolean }) => Record<string, unknown>;
+
+/** The AI routes this proxy answers, each turning a request body into Workers AI input. */
+const AI_ROUTES: Record<string, ModelInputBuilder> = {
+	"/api/capsulo/ai": (body) => {
+		const request = parseAiRequestBody(body);
+		return (options) => buildModelInput(request, options);
+	},
+	"/api/capsulo/ai/commit-message": (body) => {
+		const request = parseCommitMessageRequest(body);
+		return (options) => buildCommitMessageModelInput(request, options);
+	}
+};
 /** Same override Wrangler honours, e.g. for a proxy or a test double. */
 const CLOUDFLARE_API = process.env.CLOUDFLARE_API_BASE_URL ?? "https://api.cloudflare.com/client/v4";
 const LOGIN_HINT = "Run `npx wrangler login` in the project folder, then send your message again.";
@@ -163,7 +176,8 @@ export function capsuloAiDevPlugin(): Plugin {
 		},
 		configureServer(server) {
 			server.middlewares.use(async (req, res, next) => {
-				if (req.method !== "POST" || req.url?.split("?")[0] !== AI_ROUTE) return next();
+				const route = AI_ROUTES[req.url?.split("?")[0] ?? ""];
+				if (req.method !== "POST" || !route) return next();
 				try {
 					if (!(await isSignedIn(req))) return send(res, 401, { error: "Not signed in." });
 					if (!AI_ENABLED) {
@@ -175,10 +189,10 @@ export function capsuloAiDevPlugin(): Plugin {
 					} catch {
 						throw new AiRequestError(400, "bad-request", "Request body must be valid JSON.");
 					}
-					const request = parseAiRequestBody(body);
-					const upstream = await callModel(buildModelInput(request, { stream: true }));
+					const modelInput = route(body);
+					const upstream = await callModel(modelInput({ stream: true }));
 					if (!upstream.body) throw toAiRequestError(new Error("The model returned an empty response."));
-					const events = toAiEventStream(upstream.body, () => runModel(buildModelInput(request)));
+					const events = toAiEventStream(upstream.body, () => runModel(modelInput()));
 
 					res.statusCode = 200;
 					res.setHeader("Content-Type", AI_STREAM_CONTENT_TYPE);

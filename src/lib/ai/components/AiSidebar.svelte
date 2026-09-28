@@ -10,7 +10,8 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import * as Tooltip from "$lib/components/ui/tooltip";
-	import { AgentError, closeOpenToolCalls, runAgent } from "../agent";
+	import { closeOpenToolCalls, runAgent } from "../agent";
+	import { AgentError } from "../stream-client";
 	import {
 		aiSidebar,
 		isAiSidebarShortcut,

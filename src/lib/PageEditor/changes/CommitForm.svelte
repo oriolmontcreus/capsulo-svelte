@@ -1,12 +1,16 @@
 <script lang="ts">
+	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
+	import SparklesIcon from "@lucide/svelte/icons/sparkles";
+	import { AI_ENABLED } from "$lib/ai/config";
+	import { AgentError } from "$lib/ai/stream-client";
 	import { Button } from "$lib/components/ui/button";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import type { CommitFailure } from "./commit";
-
-	const SUBJECT_SOFT_LIMIT = 72;
+	import { generateCommitMessage } from "./commit-message-ai";
 
 	let {
 		message = $bindable(""),
+		pageIds,
 		hasChanges,
 		isCommitting,
 		errorMessage = null,
@@ -15,6 +19,8 @@
 		oncommit,
 	}: {
 		message?: string;
+		/** The pages being committed: what the AI describes. */
+		pageIds: string[];
 		hasChanges: boolean;
 		isCommitting: boolean;
 		errorMessage?: string | null;
@@ -23,24 +29,83 @@
 		oncommit: () => void;
 	} = $props();
 
+	let generation = $state<AbortController | null>(null);
+	let generateError = $state<string | null>(null);
+
+	const isGenerating = $derived(generation !== null);
 	const trimmed = $derived(message.trim());
-	const overLimit = $derived(message.length > SUBJECT_SOFT_LIMIT);
-	const disabled = $derived(!hasChanges || trimmed.length === 0 || isCommitting);
+	const disabled = $derived(!hasChanges || trimmed.length === 0 || isCommitting || isGenerating);
+
+	/**
+	 * Fills the message from the pending changes, in the style of the author's recent
+	 * commits and building on what they already typed. Clicking again stops it.
+	 */
+	async function generate(): Promise<void> {
+		if (generation) {
+			generation.abort();
+			return;
+		}
+
+		const controller = new AbortController();
+		generation = controller;
+		generateError = null;
+		const draft = message;
+		try {
+			const generated = await generateCommitMessage({
+				pageIds,
+				draft,
+				signal: controller.signal,
+				onText: (text) => (message = text.trimStart())
+			});
+			// An empty reply keeps what the author wrote rather than wiping it.
+			message = generated || draft;
+		} catch (error) {
+			// Stopped or failed: a half-written suggestion is no use, so restore the draft.
+			message = draft;
+			if (!controller.signal.aborted) {
+				generateError =
+					error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
+			}
+		} finally {
+			generation = null;
+		}
+	}
 </script>
 
 <div class="border-border space-y-2 border-t p-3">
-	<Textarea
-		bind:value={message}
-		rows={3}
-		placeholder="Describe what changed..."
-		disabled={!hasChanges || isCommitting}
-		aria-label="Commit message"
-	/>
-	<div class="flex items-center justify-between text-[10px]">
-		<span class={overLimit ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}>
-			{message.length}/{SUBJECT_SOFT_LIMIT}
-		</span>
+	<div class="relative">
+		<Textarea
+			bind:value={message}
+			rows={3}
+			placeholder="Describe what changed..."
+			disabled={!hasChanges || isCommitting}
+			readonly={isGenerating}
+			aria-busy={isGenerating}
+			aria-label="Commit message"
+			class={AI_ENABLED ? "pr-9" : undefined}
+		/>
+		{#if AI_ENABLED}
+			<Button
+				variant="ghost"
+				size="icon-xs"
+				class="text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5"
+				title={isGenerating ? "Stop generating" : "Generate commit message with AI"}
+				aria-label={isGenerating ? "Stop generating" : "Generate commit message with AI"}
+				disabled={!hasChanges || isCommitting}
+				onclick={generate}
+			>
+				{#if isGenerating}
+					<LoaderCircleIcon class="animate-spin" aria-hidden="true" />
+				{:else}
+					<SparklesIcon aria-hidden="true" />
+				{/if}
+			</Button>
+		{/if}
 	</div>
+
+	{#if generateError}
+		<p class="text-destructive text-xs" aria-live="polite">{generateError}</p>
+	{/if}
 
 	{#if errorMessage}
 		<p class="text-destructive text-xs">{errorMessage}</p>
