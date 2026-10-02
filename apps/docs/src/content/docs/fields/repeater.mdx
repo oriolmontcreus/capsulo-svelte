@@ -1,0 +1,127 @@
+---
+title: Repeater
+description: A list of items that each hold their own set of fields, like cards, team members or FAQ entries.
+---
+
+The `Repeater` field lets editors build a list of items, where every item has the same fields. Use it for feature cards, testimonials, team members, pricing tiers, links or any content that repeats. Editors can add, duplicate, delete and drag items to reorder them, and you can set a minimum and maximum number of items. Item fields can be any other field, including another `Repeater`.
+
+<Callout title="One list, translated fields">
+  The list of items is shared by every language: adding, removing or reordering an item changes it everywhere. Only the item fields marked `.translatable()` hold one value per language, and an empty translation falls back to the default language.
+</Callout>
+
+## Usage
+
+```ts
+import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
+```
+
+Pass the field name and the fields of each item:
+
+```ts
+// [!code word:Repeater]
+Repeater('fieldName', [
+  Text('title').label('Title'),
+  Textarea('body').label('Body'),
+]).label('Field Label');
+```
+
+## API
+
+The `Repeater` builder provides a fluent API to configure the field.
+
+<TypeTable
+  type={{
+    label: {
+      description: 'Sets the label of the field. Defaults to the field name.',
+      type: 'string',
+    },
+    description: {
+      description: 'Adds a helper description below the field.',
+      type: 'string',
+    },
+    itemName: {
+      description:
+        'Names one item in the editor, e.g. <code>Card</code> shows "Add Card" and "Card 2". It also names the generated item type (<code>&lt;Schema&gt;CardItem</code>).',
+      type: 'string',
+      default: '"item"',
+    },
+    itemPluralName: {
+      description: 'Names several items, e.g. "No Cards yet". Defaults to the item name plus "s".',
+      type: 'string',
+      default: '"items"',
+    },
+    minItems: {
+      description:
+        'The fewest items allowed. The field starts with that many items and items can\'t be deleted below it. Use <code>minItems(1)</code> to require at least one item.',
+      type: 'number',
+    },
+    maxItems: {
+      description: 'The most items allowed. Adding and duplicating stop at this number.',
+      type: 'number',
+    },
+    defaultValue: {
+      description:
+        'Sets the initial items, as plain values for their fields. Values go to the default language, and a nested repeater takes an array of items too.',
+      type: 'Record<string, unknown>[]',
+    },
+  }}
+/>
+
+The builder throws a `RangeError` when `minItems` or `maxItems` isn't a whole number of zero or more, when `minItems` is above `maxItems`, or when `defaultValue` has more items than `maxItems`.
+
+## Value
+
+Your component gets an array with one object per item. Each item has an `_id` that stays the same when items move, so use it as the key in `{#each}`, plus one property per item field with that field's usual value, already resolved for the page's language. A repeater with no items gives an empty array, never `undefined`.
+
+The generated types include an interface per item. For the schema `Features` with `Repeater('cards', [...]).itemName('Card')`:
+
+```ts
+export interface FeaturesData {
+  cards: FeaturesCardItem[];
+}
+
+export interface FeaturesCardItem {
+  _id: string;
+  title?: string;
+  body?: string;
+}
+```
+
+```svelte
+<script lang="ts">
+  import { getCmsData } from '$lib/cms/get-cms-data';
+  import { featuresSchema } from './features.schema';
+  import type { FeaturesData } from './features.schema.d';
+
+  let { instanceId }: { instanceId: string } = $props();
+
+  const data = $derived(getCmsData<FeaturesData & Record<string, unknown>>(instanceId, featuresSchema));
+</script>
+
+{#each data.cards as card (card._id)}
+  <article>
+    <h3>{card.title}</h3>
+    <p>{card.body}</p>
+  </article>
+{/each}
+```
+
+`{{variable}}` tokens in text, textarea and rich editor fields inside items are replaced like anywhere else.
+
+## Examples
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="repeater/basic" title="Basic repeater" />
+
+<ComponentPreview showMargin={false} class="border-b" example="repeater/defaults" title="Default items" />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="repeater/limits" title="Minimum and maximum" />
+
+<ComponentPreview showMargin={false} class="border-b" example="repeater/translatable" title="Translatable item fields" locales={['en', 'es']} />
+
+<ComponentPreview showMargin={false} class="border-r" example="repeater/nested" title="Nested repeaters" />
+
+<ComponentPreview showMargin={false} example="repeater/mixed" title="Any field inside items" />
+
+</Previews>

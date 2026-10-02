@@ -130,17 +130,27 @@ The form-builder i18n model is intentionally uniform and future-proof:
 
 This contract avoids brittle parser branches and makes future field types consistent.
 
-### Repeater readiness (arrays / nested objects)
+### Repeater (arrays / nested objects)
 
-When `Repeater` is added, it must inherit the same rule set:
+`Repeater` (`fields/RepeaterField/`) follows the same rule set:
 
-- Repeater item fields still resolve using `targetLocale -> defaultLocale -> undefined`.
-- Translatable item fields store per-locale values.
-- Non-translatable item fields store only `defaultLocale`.
-- No alternate legacy payload shapes are allowed for repeater data.
+- The repeater itself is never translatable: its item list is stored under `defaultLocale`,
+  so item count, order and ids are shared by every locale.
+- Each item is `{ _id, ...SchemaValues }`: every child field is a locale map, exactly like a
+  top-level field. Translatable children store per-locale values; the others only `defaultLocale`.
+- Item fields resolve using `targetLocale -> defaultLocale -> undefined`, recursively
+  (`resolveSchemaValues` in `translation-runtime.ts`). A nested repeater is a child whose
+  locale map holds another item list.
+- Default items get deterministic ids (`<field>-default-<n>`) so the Changes diff baseline
+  matches what the editor seeds.
 
-Utility note: locale resolution/writes are centralized in
-`src/lib/form-builder/core/translation-runtime.ts` so repeaters can reuse the same logic.
+```json
+"cards": { "es": [ { "_id": "item_…", "title": { "es": "Hola", "en": "Hello" }, "image": { "es": ["…"] } } ] }
+```
+
+Rendering: `SchemaRenderer` delegates its loop to `SchemaFieldList`, which repeater items reuse
+for their children (an item is a mini schema). The renderer shares its locale context with
+nested lists through `schema-renderer-context.ts`.
 
 ---
 
@@ -177,6 +187,11 @@ Use this exact sequence:
 4. Register validation mapper in `core/schema-to-zod.ts`.
 5. Add one schema example using the new field.
 6. Verify values emission shape and zod behavior.
+7. Check the type-dependent consumers: `renderer/schema-renderer-i18n.ts` (`isRenderableField`,
+   `resolveRenderValue`), `core/translation-runtime.ts` (initial and default values),
+   `scripts/lib/schema-types/parse-schema.ts` (generated TS type), the Changes views
+   (`PageEditor/changes/FieldValueView.svelte`, `FieldDiff.svelte`, `commit-message-context.ts`),
+   and the AI agent (`ai/edits.ts` `validateValue`, `ai/site-content.ts` `describeField`).
 
 If any of those steps is skipped, the system becomes partially wired.
 
