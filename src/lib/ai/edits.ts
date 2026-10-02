@@ -1,5 +1,13 @@
 import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-import type { FieldDefinition, SchemaValues } from "$lib/form-builder/core/types";
+import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
+import type {
+	FieldDefinition,
+	LocalizedFieldValue,
+	RepeaterFieldDefinition,
+	RepeaterItem,
+	SchemaValues
+} from "$lib/form-builder/core/types";
+import { createEmptyRepeaterItem } from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
 import { notifyGlobalsDraftReplaced, saveGlobalsDraft } from "$lib/globals/globals-draft";
 import { valuesEqual } from "$lib/PageEditor/changes/diff-model";
 import { setDraftFieldValue } from "$lib/PageEditor/changes/draft-values";
@@ -52,8 +60,96 @@ function isColor(value: string): boolean {
 	return /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value);
 }
 
-/** Coerces and checks a value against its field definition. Returns an error message or the value to store. */
-function validateValue(field: FieldDefinition, raw: unknown, locale: string): { value: unknown } | { error: string } {
+type Validated = { value: unknown } | { error: string };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Turns the item list the model sent (the shape `presentFieldValue` shows it) into stored
+ * items. An item with a known `_id` keeps the child values it doesn't mention; an item
+ * without one is new. Translatable children take `{ locale: value }`, others one value.
+ */
+function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous: unknown, path: string): Validated {
+	if (!Array.isArray(raw)) return { error: `${path} needs the full list of items (an array).` };
+	if (field.minItems && raw.length < field.minItems) {
+		return { error: `${path} needs at least ${field.minItems} items (got ${raw.length}).` };
+	}
+	if (field.maxItems !== undefined && raw.length > field.maxItems) {
+		return { error: `${path} allows at most ${field.maxItems} items (got ${raw.length}).` };
+	}
+
+	const previousById = new Map(normalizeRepeaterItems(previous).map((item) => [item._id, item]));
+	const childNames = field.fields.map((child) => child.name);
+	const seen = new Set<string>();
+	const items: RepeaterItem[] = [];
+
+	for (const [index, entry] of raw.entries()) {
+		const itemPath = `${path}[${index}]`;
+		if (!isPlainObject(entry)) return { error: `${itemPath} needs an object of field values.` };
+
+		const requestedId = typeof entry._id === "string" && entry._id ? entry._id : undefined;
+		const existing = requestedId ? previousById.get(requestedId) : undefined;
+		if (requestedId && !existing) {
+			return { error: `${itemPath} has an unknown _id "${requestedId}". Omit _id to add a new item.` };
+		}
+		if (requestedId && seen.has(requestedId)) return { error: `${itemPath} repeats _id "${requestedId}".` };
+		const unknownKey = Object.keys(entry).find((key) => key !== "_id" && !childNames.includes(key));
+		if (unknownKey) return { error: `${itemPath} has no field "${unknownKey}". Fields: ${childNames.join(", ")}.` };
+
+		const item: RepeaterItem = { ...(existing ?? createEmptyRepeaterItem(field, DEFAULT_LOCALE)) };
+		seen.add(item._id);
+
+		for (const child of field.fields) {
+			if (!(child.name in entry)) continue;
+			const childPath = `${itemPath}.${child.name}`;
+			const rawChild = entry[child.name];
+			const previousChild = (item[child.name] ?? {}) as LocalizedFieldValue<unknown>;
+
+			if (child.type === "file-upload") {
+				if (valuesEqual(rawChild, previousChild[DEFAULT_LOCALE])) continue;
+				return { error: `${childPath} is a file upload; the AI agent can't change files. Leave it out.` };
+			}
+			if (child.type === "repeater") {
+				const nested = validateRepeater(child, rawChild, previousChild[DEFAULT_LOCALE], childPath);
+				if ("error" in nested) return nested;
+				item[child.name] = { [DEFAULT_LOCALE]: nested.value };
+				continue;
+			}
+			if (!isTranslatable(child)) {
+				const validated = validateValue(child, rawChild, DEFAULT_LOCALE);
+				if ("error" in validated) return { error: `${childPath}: ${validated.error}` };
+				item[child.name] = { [DEFAULT_LOCALE]: validated.value };
+				continue;
+			}
+			if (!isPlainObject(rawChild)) {
+				return { error: `${childPath} is translatable: send an object of locale to value, e.g. {"${DEFAULT_LOCALE}": "…"}.` };
+			}
+			const next: LocalizedFieldValue<unknown> = { ...previousChild };
+			for (const [locale, value] of Object.entries(rawChild)) {
+				if (!LOCALES.includes(locale)) {
+					return { error: `${childPath} has unknown locale "${locale}". Locales: ${LOCALES.join(", ")}.` };
+				}
+				if (value === null) continue;
+				const validated = validateValue(child, value, locale);
+				if ("error" in validated) return { error: `${childPath} (${locale}): ${validated.error}` };
+				next[locale] = validated.value;
+			}
+			item[child.name] = next;
+		}
+
+		items.push(item);
+	}
+
+	return { value: items };
+}
+
+/**
+ * Coerces and checks a value against its field definition. Returns an error message or the
+ * value to store. `previous` is the stored value, which repeaters merge item edits into.
+ */
+function validateValue(field: FieldDefinition, raw: unknown, locale: string, previous?: unknown): Validated {
 	const name = `"${field.name}"`;
 	switch (field.type) {
 		case "text":
@@ -100,6 +196,8 @@ function validateValue(field: FieldDefinition, raw: unknown, locale: string): { 
 		}
 		case "file-upload":
 			return { error: `${name} is a file upload; the AI agent can't change files. Ask the user to upload it in the editor.` };
+		case "repeater":
+			return validateRepeater(field, raw, previous, field.name);
 	}
 }
 
@@ -107,6 +205,7 @@ function validateValue(field: FieldDefinition, raw: unknown, locale: string): { 
 function resolveChange(
 	target: string,
 	instanceIds: string[],
+	current: PageEditorValuesByInstance,
 	change: RequestedChange,
 	index: number
 ): Resolved | { error: string } {
@@ -133,7 +232,7 @@ function resolveChange(
 		}
 	}
 
-	const validated = validateValue(field, change.value, locale);
+	const validated = validateValue(field, change.value, locale, current[instanceId]?.[field.name]?.[locale]);
 	if ("error" in validated) return { error: `${prefix} ${validated.error}` };
 	return { instanceId, field, locale, value: validated.value };
 }
@@ -152,21 +251,21 @@ export async function applyContentUpdate(target: string, changes: RequestedChang
 	if (changes.length === 0) return { edit: null, errors: ["No changes given."] };
 
 	const instanceIds = isGlobals ? [GLOBALS_TARGET] : page!.instances.filter((item) => item.capsule).map((item) => item.instanceId);
-	const errors: string[] = [];
-	const resolved: Resolved[] = [];
-	changes.forEach((change, index) => {
-		const result = resolveChange(target, instanceIds, change, index);
-		if ("error" in result) errors.push(result.error);
-		else resolved.push(result);
-	});
-	if (resolved.length === 0) return { edit: null, errors };
-
-	const current = isGlobals
+	const current: PageEditorValuesByInstance = isGlobals
 		? { [GLOBALS_TARGET]: await readGlobalsValues() }
 		: await readPageValues(page!).then((result) => {
 				if (result.errorMessage) throw new Error(result.errorMessage);
 				return result.values;
 			});
+
+	const errors: string[] = [];
+	const resolved: Resolved[] = [];
+	changes.forEach((change, index) => {
+		const result = resolveChange(target, instanceIds, current, change, index);
+		if ("error" in result) errors.push(result.error);
+		else resolved.push(result);
+	});
+	if (resolved.length === 0) return { edit: null, errors };
 
 	const fields: EditedField[] = [];
 	for (const change of resolved) {

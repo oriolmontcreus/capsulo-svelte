@@ -4,6 +4,7 @@ import { getCapsuleByKey } from "$lib/capsules/core/registry";
 import type { RegisteredCapsule } from "$lib/capsules/core/types";
 import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
 import type { FieldDefinition, SchemaDefinition, SchemaValues, SelectFieldDefinition } from "$lib/form-builder/core/types";
+import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
 import { getAllOptions, resolveSelectData } from "$lib/form-builder/fields/SelectField/modules/resolve-options";
 import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
 import { ensureGlobalsLoaded } from "$lib/globals/globals-store.svelte";
@@ -94,8 +95,20 @@ export async function readGlobalsValues(): Promise<SchemaValues> {
 	return withDefaults(globalsSchema, values);
 }
 
-/** How a field's value is presented to the model: one value, or one per locale. */
+/**
+ * How a field's value is presented to the model: one value, or one per locale. A repeater is
+ * a list of `{ _id, child: value }` items whose children are presented the same way.
+ */
 function presentFieldValue(field: FieldDefinition, value: SchemaValues[string] | undefined): unknown {
+	if (field.type === "repeater") {
+		return normalizeRepeaterItems(value?.[DEFAULT_LOCALE]).map((item) => {
+			const presented: Record<string, unknown> = { _id: item._id };
+			for (const child of field.fields) {
+				presented[child.name] = presentFieldValue(child, item[child.name] as SchemaValues[string] | undefined);
+			}
+			return presented;
+		});
+	}
 	if (!isTranslatable(field)) return value?.[DEFAULT_LOCALE] ?? null;
 	const perLocale: Record<string, unknown> = {};
 	for (const locale of LOCALES) perLocale[locale] = value?.[locale] ?? null;
@@ -110,7 +123,7 @@ export function presentInstanceValues(schema: SchemaDefinition, values: SchemaVa
 
 const MAX_OPTIONS_IN_CONTEXT = 25;
 
-function describeField(field: FieldDefinition): string {
+function describeField(field: FieldDefinition, indent = ""): string {
 	const parts: string[] = [field.type];
 	if (isTranslatable(field)) parts.push("translatable");
 	if (field.required) parts.push("required");
@@ -130,14 +143,23 @@ function describeField(field: FieldDefinition): string {
 		parts.push(`only: ${field.presetColors.join(", ")}`);
 	}
 	if (field.type === "file-upload") parts.push("read-only for you");
+	if (field.type === "repeater") {
+		if (field.minItems) parts.push(`min ${field.minItems} items`);
+		if (field.maxItems !== undefined) parts.push(`max ${field.maxItems} items`);
+	}
 
 	const label = field.label && field.label !== field.name ? ` "${field.label}"` : "";
 	const description = field.description ? ` - ${field.description}` : "";
-	return `- ${field.name}${label}: ${parts.join(", ")}${description}`;
+	const line = `${indent}- ${field.name}${label}: ${parts.join(", ")}${description}`;
+	if (field.type !== "repeater") return line;
+	return [
+		`${line}. Each item has an _id and these fields:`,
+		...field.fields.map((child) => describeField(child, `${indent}  `))
+	].join("\n");
 }
 
 function describeSchema(schema: SchemaDefinition): string {
-	return schema.fields.map(describeField).join("\n");
+	return schema.fields.map((field) => describeField(field)).join("\n");
 }
 
 export type AgentLocation = { kind: "page"; pageId: string } | { kind: "globals" } | { kind: "other"; path: string };

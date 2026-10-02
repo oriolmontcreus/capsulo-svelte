@@ -65,6 +65,20 @@ async function presentPage(page: SitePage): Promise<unknown> {
 	return { pageId: page.pageId, name: page.name, instances };
 }
 
+/** The text inside a presented value; repeater items contribute their child values. */
+function searchableText(value: unknown): string {
+	if (typeof value === "string") return value;
+	if (Array.isArray(value)) return value.map(searchableText).filter(Boolean).join(", ");
+	if (typeof value === "object" && value !== null) {
+		return Object.entries(value)
+			.filter(([key]) => key !== "_id")
+			.map(([, entry]) => searchableText(entry))
+			.filter(Boolean)
+			.join(" · ");
+	}
+	return "";
+}
+
 function collectMatches(
 	target: string,
 	instanceId: string | undefined,
@@ -78,7 +92,7 @@ function collectMatches(
 				? Object.entries(value as Record<string, unknown>)
 				: [[undefined, value] as const];
 		for (const [locale, localeValue] of perLocale) {
-			const text = Array.isArray(localeValue) ? localeValue.join(", ") : typeof localeValue === "string" ? localeValue : "";
+			const text = searchableText(localeValue);
 			const index = text.toLowerCase().indexOf(needle);
 			if (index === -1) continue;
 			if (results.length >= MAX_SEARCH_RESULTS) return;
