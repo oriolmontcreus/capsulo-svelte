@@ -5,6 +5,10 @@ export interface ParsedSchemaField {
 	hasDefaultValue: boolean;
 	multiple: boolean;
 	builder: string;
+	/** Repeater only: the fields of each item. */
+	children?: ParsedSchemaField[];
+	/** Repeater only: `.itemName()`, used to name the item interface. */
+	itemName?: string;
 }
 
 export interface ParsedSchemaDefinition {

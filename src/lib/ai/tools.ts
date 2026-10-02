@@ -78,7 +78,7 @@ export const AI_TOOLS = [
 								},
 								value: {
 									description:
-										"New value: a string for text, textarea, colorpicker and single select; HTML for rich-editor; a boolean for toggle; an array of option values for multiple select."
+										"New value: a string for text, textarea, colorpicker and single select; HTML for rich-editor; a boolean for toggle; an array of option values for multiple select; the full list of items for a repeater (keep each kept item's _id)."
 								}
 							},
 							required: ["field", "value"]

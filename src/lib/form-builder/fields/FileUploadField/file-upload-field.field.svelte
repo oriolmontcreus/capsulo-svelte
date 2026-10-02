@@ -279,7 +279,7 @@
   <input
     bind:this={inputEl}
     type="file"
-    class="sr-only"
+    class="sr-only max-w-px"
     accept={field.accept}
     multiple={multiple}
     onchange={onInputChange}

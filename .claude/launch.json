@@ -6,6 +6,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
       "port": 4321
+    },
+    {
+      "name": "docs-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "apps/docs", "dev"],
+      "port": 4322
     }
   ]
 }

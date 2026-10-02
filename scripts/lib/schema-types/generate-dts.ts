@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getInterfaceName, parseSchemaFile } from "./parse-schema";
+import { getInterfaceName, normalizeInterfaceStem, parseSchemaFile } from "./parse-schema";
 import type {
 	BatchProcessSummary,
 	FileWriteResult,
 	GeneratedDtsFile,
 	ParsedSchemaDefinition,
+	ParsedSchemaField,
 	ProcessSchemaResult
 } from "./types";
 
@@ -13,18 +14,34 @@ function toDtsPath(schemaPath: string): string {
 	return schemaPath.replace(/\.schema\.ts$/, ".schema.d.ts");
 }
 
+/**
+ * Renders the field lines of an interface. Each repeater adds an item interface to
+ * `itemInterfaces`, named `<stem><ItemName or FieldName>Item` (nested ones extend the stem).
+ */
+function renderFieldLines(fields: ParsedSchemaField[], stem: string, itemInterfaces: string[]): string[] {
+	return fields.map((field) => {
+		let type = field.type;
+		if (field.children) {
+			const itemStem = `${stem}${normalizeInterfaceStem(field.itemName ?? field.name)}`;
+			const itemInterface = `${itemStem}Item`;
+			const lines = ["\t_id: string;", ...renderFieldLines(field.children, itemStem, itemInterfaces)];
+			itemInterfaces.push([`export interface ${itemInterface} {`, ...lines, `}`].join("\n"));
+			type = `${itemInterface}[]`;
+		}
+		const optionalFlag = field.required ? "" : "?";
+		return `\t${field.name}${optionalFlag}: ${type};`;
+	});
+}
+
 function renderInterface(schema: ParsedSchemaDefinition): string {
 	const interfaceName = getInterfaceName(schema);
-	const fields = schema.fields
-		.map((field) => {
-			const optionalFlag = field.required ? "" : "?";
-			return `\t${field.name}${optionalFlag}: ${field.type};`;
-		})
-		.join("\n");
+	const itemInterfaces: string[] = [];
+	const fields = renderFieldLines(schema.fields, interfaceName.replace(/Data$/, ""), itemInterfaces).join("\n");
 
-	return [`export interface ${interfaceName} {`, fields || "\t// No fields detected yet.", `}`].join(
-		"\n"
-	);
+	return [
+		[`export interface ${interfaceName} {`, fields || "\t// No fields detected yet.", `}`].join("\n"),
+		...itemInterfaces
+	].join("\n\n");
 }
 
 function generateDtsFromSchemaFile(schemaPath: string): GeneratedDtsFile {

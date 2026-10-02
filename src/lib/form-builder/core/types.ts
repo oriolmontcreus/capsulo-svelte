@@ -5,7 +5,8 @@ export type FieldType =
 	| "toggle"
 	| "select"
 	| "colorpicker"
-	| "file-upload";
+	| "file-upload"
+	| "repeater";
 
 export interface BaseFieldDefinition {
 	type: FieldType;
@@ -102,6 +103,20 @@ export interface FileUploadFieldDefinition extends BaseFieldDefinition {
 	colSpan?: number | "full" | ResponsiveColumns;
 }
 
+export interface RepeaterFieldDefinition extends BaseFieldDefinition {
+	type: "repeater";
+	/** Fields of each item. An item stores them like a schema does: field -> locale map. */
+	fields: FieldDefinition[];
+	/** Singular name for one item, e.g. "Card" ("Add Card"). */
+	itemName?: string;
+	/** Plural name for the items, e.g. "Cards" ("No Cards yet"). */
+	itemPluralName?: string;
+	minItems?: number;
+	maxItems?: number;
+	/** Initial items as plain child values (`[{ title: "Hi" }]`), written to the default locale. */
+	defaultValue?: Record<string, unknown>[];
+}
+
 export type FieldDefinition =
 	| TextFieldDefinition
 	| TextareaFieldDefinition
@@ -109,7 +124,8 @@ export type FieldDefinition =
 	| ToggleFieldDefinition
 	| SelectFieldDefinition
 	| ColorPickerFieldDefinition
-	| FileUploadFieldDefinition;
+	| FileUploadFieldDefinition
+	| RepeaterFieldDefinition;
 
 export interface FieldBuilder<TField extends FieldDefinition = FieldDefinition> {
 	build(): TField;
@@ -129,3 +145,15 @@ export interface SchemaDefinition<TField extends FieldDefinition = FieldDefiniti
 export type LocalizedFieldValue<TValue = string> = Partial<Record<string, TValue>>;
 export type SchemaValues = Record<string, LocalizedFieldValue<unknown>>;
 export type ResolvedSchemaValues = Record<string, unknown | undefined>;
+
+/**
+ * One repeater item as stored: a stable id plus the item's field values, each a locale map
+ * exactly like a schema's top-level values. Item order and ids are shared by every locale.
+ */
+export interface RepeaterItem {
+	_id: string;
+	[fieldName: string]: unknown;
+}
+
+/** What a field component receives and emits. */
+export type FieldValue = string | boolean | string[] | RepeaterItem[];
