@@ -1,10 +1,10 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import type { SchemaDefinition, SchemaValues } from "../core/types";
-  import { getFieldComponent } from "./field-registry";
+  import type { FieldValue, SchemaDefinition, SchemaValues } from "../core/types";
+  import SchemaFieldList from "./SchemaFieldList.svelte";
+  import { setSchemaRendererContext } from "./schema-renderer-context";
   import {
     applySchemaFieldUpdate,
-    buildSchemaRenderItems,
     createSchemaInitialValues,
     resolveSchemaRendererI18nContext,
     type TranslatableLocaleMode,
@@ -67,14 +67,17 @@
       editingLocale: props.editingLocale,
     }),
   );
-  const renderItems = $derived(
-    buildSchemaRenderItems(
-      props.schema,
-      values,
-      i18nContext,
-      props.translatableLocaleMode ?? "all",
-    ),
-  );
+  const translatableLocaleMode = $derived(props.translatableLocaleMode ?? "all");
+
+  // Repeater items render their own field lists and need the same locale setup.
+  setSchemaRendererContext({
+    get i18n() {
+      return i18nContext;
+    },
+    get translatableLocaleMode() {
+      return translatableLocaleMode;
+    },
+  });
 
   queueMicrotask(() => {
     props.onValuesChange?.({ ...values });
@@ -83,7 +86,7 @@
   function updateValue(
     fieldName: string,
     fieldLocale: string,
-    nextValue: string | boolean | string[],
+    nextValue: FieldValue,
   ) {
     values = applySchemaFieldUpdate(
       props.schema,
@@ -98,16 +101,10 @@
   }
 </script>
 
-<div class="space-y-4">
-  {#each renderItems as item (item.localizedField.name)}
-    {@const FieldComponent = getFieldComponent(item.sourceField.type)}
-    {#if FieldComponent}
-      <FieldComponent
-        field={item.localizedField}
-        value={item.value}
-        onValueChange={(nextValue: string | boolean | string[]) =>
-          updateValue(item.sourceField.name, item.locale, nextValue)}
-      />
-    {/if}
-  {/each}
-</div>
+<SchemaFieldList
+  fields={props.schema.fields}
+  {values}
+  context={i18nContext}
+  {translatableLocaleMode}
+  onFieldChange={updateValue}
+/>

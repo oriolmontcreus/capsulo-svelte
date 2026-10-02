@@ -1,12 +1,14 @@
 import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
 import {
   createInitialFieldValue,
+  normalizeRepeaterItems,
   resolveFieldValue,
   setFieldValue,
 } from "$lib/form-builder/core/translation-runtime";
 import { normalizeSelectValue } from "../fields/SelectField/modules/select-value";
 import type {
   FieldDefinition,
+  FieldValue,
   SchemaDefinition,
   SchemaValues,
   SelectFieldDefinition,
@@ -30,8 +32,11 @@ export interface SchemaRenderItem {
   sourceField: FieldDefinition;
   localizedField: FieldDefinition;
   locale: string;
-  value: string | boolean | string[];
+  value: FieldValue;
 }
+
+/** The part of a schema the renderer needs; a repeater item passes its own fields. */
+type FieldsSource = Pick<SchemaDefinition, "fields">;
 
 function normalizeLocales(locales: string[] | undefined): string[] {
   const trimmedLocales =
@@ -68,7 +73,7 @@ export function resolveSchemaRendererI18nContext(
 }
 
 export function createSchemaInitialValues(
-  schema: SchemaDefinition,
+  schema: FieldsSource,
   defaultLocale: string,
 ): SchemaValues {
   const initialValues: SchemaValues = {};
@@ -88,7 +93,8 @@ function isRenderableField(field: FieldDefinition): boolean {
     field.type === "toggle" ||
     field.type === "select" ||
     field.type === "colorpicker" ||
-    field.type === "file-upload"
+    field.type === "file-upload" ||
+    field.type === "repeater"
   );
 }
 
@@ -108,7 +114,10 @@ function getFieldLocales(
 function resolveRenderValue(
   field: FieldDefinition,
   resolvedValue: unknown,
-): string | boolean | string[] {
+): FieldValue {
+  if (field.type === "repeater") {
+    return normalizeRepeaterItems(resolvedValue);
+  }
   if (field.type === "toggle") {
     return typeof resolvedValue === "boolean" ? resolvedValue : false;
   }
@@ -125,7 +134,7 @@ function resolveRenderValue(
 }
 
 export function buildSchemaRenderItems(
-  schema: SchemaDefinition,
+  schema: FieldsSource,
   values: SchemaValues,
   context: SchemaRendererI18nContext,
   translatableLocaleMode: TranslatableLocaleMode = "all",
@@ -171,11 +180,11 @@ export function buildSchemaRenderItems(
 }
 
 export function applySchemaFieldUpdate(
-  schema: SchemaDefinition,
+  schema: FieldsSource,
   values: SchemaValues,
   fieldName: string,
   fieldLocale: string,
-  nextValue: string | boolean | string[],
+  nextValue: FieldValue,
   context: SchemaRendererI18nContext,
 ): SchemaValues {
   const field = schema.fields.find((item) => item.name === fieldName);
