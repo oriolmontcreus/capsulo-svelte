@@ -5,6 +5,7 @@
 	import type { FieldChange } from "./diff-model";
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import FieldValueView from "./FieldValueView.svelte";
+	import RepeaterDiff from "./RepeaterDiff.svelte";
 
 	let {
 		field,
@@ -38,7 +39,9 @@
 		{/if}
 	</div>
 
-	{#if isInline}
+	{#if field.type === "repeater"}
+		<RepeaterDiff {field} oldValue={change.oldValue} newValue={change.newValue} />
+	{:else if isInline}
 		<InlineTextDiff oldText={asText(change.oldValue)} newText={asText(change.newValue)} />
 	{:else}
 		<div class="grid grid-cols-2 gap-4">

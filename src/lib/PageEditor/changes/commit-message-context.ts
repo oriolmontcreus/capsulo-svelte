@@ -1,5 +1,6 @@
-import type { FieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
+import type { FieldDefinition, RepeaterFieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
 import type { PageChangeSet } from "./diff-model";
+import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
 
 /** Per value: enough to tell what changed without sending whole articles to the model. */
 const MAX_VALUE_CHARS = 160;
@@ -70,6 +71,30 @@ export function formatValue(value: unknown, field: FieldDefinition | undefined):
 	return JSON.stringify(truncate(text.replace(/\s+/g, " ").trim(), MAX_VALUE_CHARS));
 }
 
+/** A repeater change as item operations: `added "A"; edited "B" (Title, Body (en)); moved "C"`. */
+function describeRepeaterChange(
+	field: RepeaterFieldDefinition,
+	oldValue: unknown,
+	newValue: unknown,
+	defaultLocale: string
+): string {
+	const parts = diffRepeaterItems(field, oldValue, newValue).map((change) => {
+		const title = JSON.stringify(truncate(repeaterItemTitle(field, change.item, change.index, defaultLocale), 60));
+		if (change.kind !== "changed") return `${change.kind} ${title}`;
+		const edited = [
+			...new Set(
+				change.changes.map(
+					(child) =>
+						`${child.field.label ?? child.field.name}${child.locale === defaultLocale ? "" : ` (${child.locale})`}`
+				)
+			),
+		];
+		const actions = [edited.length ? `edited ${title} (${edited.join(", ")})` : "", change.moved ? `moved ${title}` : ""];
+		return actions.filter(Boolean).join(", ");
+	});
+	return truncate(parts.join("; ") || "reordered", MAX_VALUE_CHARS * 2);
+}
+
 /**
  * Turns the pending change sets into the compact text the commit-message model reads:
  *
@@ -110,7 +135,10 @@ export function describeChanges(pages: ChangedPageForDescription[], options: Des
 				const field = capsule?.fields.find((entry) => entry.name === change.fieldName);
 				const label = field?.label ?? change.fieldName;
 				const locale = change.locale === options.defaultLocale ? "" : ` (${change.locale})`;
-				const line = `    ${label}${locale}: ${formatValue(change.oldValue, field)} → ${formatValue(change.newValue, field)}`;
+				const line =
+					field?.type === "repeater"
+						? `    ${label}: ${describeRepeaterChange(field, change.oldValue, change.newValue, options.defaultLocale)}`
+						: `    ${label}${locale}: ${formatValue(change.oldValue, field)} → ${formatValue(change.newValue, field)}`;
 				if (!push(line)) omitted += 1;
 			}
 		}

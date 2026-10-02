@@ -1,6 +1,10 @@
 <script lang="ts">
 	import type { FieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
+	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+	import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
 	import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
+	import RepeaterItemValues from "./RepeaterItemValues.svelte";
+	import { repeaterItemTitle } from "./repeater-diff";
 
 	let { field, value }: { field: FieldDefinition; value: unknown } = $props();
 
@@ -17,7 +21,21 @@
 	}
 </script>
 
-{#if field.type === "toggle"}
+{#if field.type === "repeater"}
+	{@const items = normalizeRepeaterItems(value)}
+	{#if items.length > 0}
+		<ol class="space-y-2">
+			{#each items as item, index (item._id)}
+				<li class="border-border space-y-1.5 rounded-md border px-2.5 py-2">
+					<div class="truncate text-sm font-medium">{repeaterItemTitle(field, item, index, DEFAULT_LOCALE)}</div>
+					<RepeaterItemValues {field} {item} />
+				</li>
+			{/each}
+		</ol>
+	{:else}
+		<span class="text-muted-foreground text-sm italic">empty</span>
+	{/if}
+{:else if field.type === "toggle"}
 	<span class="bg-muted inline-flex rounded px-2 py-0.5 text-sm">
 		{value ? "On" : "Off"}
 	</span>
