@@ -13,7 +13,12 @@ const BUILDER_TS_TYPE_MAP: Record<string, string> = {
   Toggle: "boolean",
   Select: "string",
   ColorPicker: "string",
+  FileUpload: "string[]",
 };
+
+function isRepeaterBuilder(builder: string): boolean {
+  return builder === "Repeater" || builder === "repeater";
+}
 
 function isSelectBuilder(builder: string): boolean {
   return builder === "Select" || builder === "select";
@@ -40,7 +45,7 @@ function getStringLiteralValue(
   return undefined;
 }
 
-function normalizeInterfaceStem(input: string): string {
+export function normalizeInterfaceStem(input: string): string {
   const cleaned = input.replace(/[^A-Za-z0-9]+/g, " ").trim();
   if (!cleaned) return "Schema";
 
@@ -133,10 +138,15 @@ function parseFieldFromBuilderChain(
   let required = false;
   let hasDefaultValue = false;
   let multiple = false;
+  let itemName: string | undefined;
 
   for (const method of methods) {
     if (method.name === "defaultValue") {
       hasDefaultValue = true;
+    }
+
+    if (method.name === "itemName") {
+      itemName = getStringLiteralValue(method.args[0]);
     }
 
     if (method.name === "required") {
@@ -146,6 +156,28 @@ function parseFieldFromBuilderChain(
     if (method.name === "multiple") {
       multiple = parseBooleanMethodArg(method.args);
     }
+  }
+
+  if (isRepeaterBuilder(builder)) {
+    // Repeater("name", [...fields]): the item fields are the second argument.
+    const fieldsArg = cursor.arguments[1];
+    const children =
+      fieldsArg && ts.isArrayLiteralExpression(fieldsArg)
+        ? fieldsArg.elements
+            .map((element) => parseFieldFromBuilderChain(element))
+            .filter((field): field is ParsedSchemaField => Boolean(field))
+        : [];
+    // A repeater always resolves to an array (empty when there are no items).
+    return {
+      name: fieldName,
+      builder,
+      required: true,
+      hasDefaultValue,
+      multiple: false,
+      type: "any[]",
+      children,
+      itemName,
+    };
   }
 
   return {
