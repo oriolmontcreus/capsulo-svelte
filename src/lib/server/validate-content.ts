@@ -18,7 +18,7 @@ const OPTIONS = { defaultLocale: DEFAULT_LOCALE, locales: LOCALES };
 export type PageContentIssue = ContentIssue & { pageId: string };
 
 /** The same check the Changes page runs before it lets anyone commit. */
-export function findPageContentIssues(pageId: string, content: unknown): PageContentIssue[] {
+function findPageContentIssues(pageId: string, content: unknown): PageContentIssue[] {
 	const instances = listPageInstances(capsuleManifest[pageId] ?? []);
 	return validatePageContent(instances, deserializePageEditorValues(content), getCapsuleSchemaByKey, OPTIONS).map(
 		(issue) => ({ ...issue, pageId })

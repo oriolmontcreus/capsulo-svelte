@@ -44,7 +44,7 @@ export function validatePageValues(pageId: string, valuesByInstance: PageEditorV
 }
 
 /** Page editor link that opens the field: right capsule, repeater item and language. */
-export function issueHref(issue: Pick<PageIssue, "pageId" | "instanceId" | "path" | "locale">): string {
+function issueHref(issue: Pick<PageIssue, "pageId" | "instanceId" | "path" | "locale">): string {
 	const params = new URLSearchParams({ field: issue.path.join(".") });
 	if (issue.locale !== DEFAULT_LOCALE) params.set("locale", issue.locale);
 	if (issue.instanceId === GLOBALS_INSTANCE_ID) return `/admin/globals?${params}`;
@@ -53,7 +53,7 @@ export function issueHref(issue: Pick<PageIssue, "pageId" | "instanceId" | "path
 }
 
 /** Labels along an issue path; repeater item ids become "Speaker 2". */
-export function describeIssuePath(fields: FieldDefinition[], values: SchemaValues, path: string[]): string[] {
+function describeIssuePath(fields: FieldDefinition[], values: SchemaValues, path: string[]): string[] {
 	const labels: string[] = [];
 	let currentFields = fields;
 	let currentValues = values;

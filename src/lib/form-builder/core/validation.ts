@@ -61,7 +61,7 @@ function getValidator(field: FieldDefinition): FieldValidator<FieldDefinition> |
 }
 
 /** True when `value` counts as empty for the field's `required` check. */
-export function isFieldValueEmpty(field: FieldDefinition, value: unknown): boolean {
+function isFieldValueEmpty(field: FieldDefinition, value: unknown): boolean {
 	return getValidator(field)?.isEmpty(field, value) ?? (value === undefined || value === null || value === "");
 }
 
@@ -76,7 +76,7 @@ export function validateFieldValue(field: FieldDefinition, value: unknown): stri
 	return validator.validate(field, value);
 }
 
-export function requiredMessage(field: FieldDefinition): string {
+function requiredMessage(field: FieldDefinition): string {
 	return getValidator(field)?.requiredMessage?.(field) ?? `${fieldLabel(field)} is required.`;
 }
 
@@ -91,7 +91,7 @@ function localesToCheck(field: FieldDefinition, stored: Record<string, unknown>,
  * Validates a list of fields. Hidden fields are skipped (their children too). Required fields
  * must be filled in the default locale; every stored locale must pass the format rules.
  */
-export function validateFields(
+function validateFields(
 	fields: FieldDefinition[],
 	values: SchemaValues,
 	options: ValidationOptions,

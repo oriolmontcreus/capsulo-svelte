@@ -12,6 +12,8 @@ interface Props {
   title: string;
   /** Locales to edit in; pass two to show a translatable field once per locale. */
   locales?: string[];
+  /** Show validation errors right away instead of after an edit. */
+  showErrors?: boolean;
   align?: 'center' | 'start' | 'end';
   showBorder?: boolean;
   showMargin?: boolean;
@@ -24,13 +26,14 @@ const {
   example,
   title,
   locales,
+  showErrors = false,
   align = 'center',
   showBorder = true,
   showMargin = true,
   class: className,
 } = Astro.props;
 
-const { schema, code } = loadExample(example, title);
+const { code } = loadExample(example, title);
 const { style, html } = await highlight(code, 'ts');
 const dialogId = `preview-${example.replaceAll('/', '-')}`;
 ---
@@ -80,7 +83,7 @@ const dialogId = `preview-${example.replaceAll('/', '-')}`;
         },
       ]}
     >
-      <SchemaPreview client:load schema={schema} locales={locales} />
+      <SchemaPreview client:load {example} {title} locales={locales} showErrors={showErrors} />
     </div>
   </div>
 </div>

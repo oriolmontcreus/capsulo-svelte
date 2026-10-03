@@ -36,8 +36,3 @@ export function isFieldHidden(field: FieldDefinition, values: ConditionValues): 
 export function isFieldRequired(field: FieldDefinition, values: ConditionValues): boolean {
 	return evaluateCondition(field, "required", field.required, values);
 }
-
-/** True when the schema author wrote a function for `required` or `hidden`. */
-export function hasConditionalLogic(field: FieldDefinition): boolean {
-	return typeof field.required === "function" || typeof field.hidden === "function";
-}

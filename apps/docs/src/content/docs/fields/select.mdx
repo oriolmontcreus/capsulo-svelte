@@ -40,8 +40,13 @@ The `Select` builder provides a fluent API to configure the field.
       type: 'string',
     },
     required: {
-      description: 'Marks the field as required. Publishing fails while nothing is selected.',
-      type: 'boolean',
+      description: 'Marks the field as required. Publishing fails while nothing is selected. Pass a function of the other fields\' values to require it only in some cases.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
+    hidden: {
+      description: 'Hides the field and skips its validation. Pass a function of the other fields\' values to hide it only in some cases. See <a href="/docs/conditional-fields/">Conditional fields</a>.',
+      type: 'boolean | (values) => boolean',
       default: 'true',
     },
     defaultValue: {

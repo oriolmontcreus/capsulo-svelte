@@ -35,8 +35,13 @@ The `Textarea` builder provides a fluent API to configure the field.
       type: 'string',
     },
     required: {
-      description: 'Marks the field as required. Publishing fails while it is empty in the default locale.',
-      type: 'boolean',
+      description: 'Marks the field as required. Publishing fails while it is empty in the default locale. Pass a function of the other fields\' values to require it only in some cases.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
+    hidden: {
+      description: 'Hides the field and skips its validation. Pass a function of the other fields\' values to hide it only in some cases. See <a href="/docs/conditional-fields/">Conditional fields</a>.',
+      type: 'boolean | (values) => boolean',
       default: 'true',
     },
     defaultValue: {
@@ -53,9 +58,38 @@ The `Textarea` builder provides a fluent API to configure the field.
       type: 'boolean',
       default: 'true',
     },
+    minLength: {
+      description: 'The fewest characters allowed.',
+      type: 'number',
+    },
     maxLength: {
       description: 'Sets the maximum number of characters. Longer input is cut at the limit.',
       type: 'number',
+    },
+    regex: {
+      description: 'A pattern the whole text must match. Text with a global variable skips the check.',
+      type: 'string | RegExp',
+    },
+    minRows: {
+      description: 'The minimum height in rows while it grows with its content. Overrides <code>rows</code>.',
+      type: 'number',
+    },
+    maxRows: {
+      description: 'The maximum height in rows; longer text scrolls inside the field.',
+      type: 'number',
+    },
+    resize: {
+      description: 'Lets editors drag the field\'s size. Works best with <code>autoresize(false)</code>, since auto-resizing resets the height as they type.',
+      type: '"none" | "vertical" | "horizontal" | "both"',
+      default: '"none"',
+    },
+    prefix: {
+      description: 'Text or an icon component shown inside the field, before the text.',
+      type: 'string | Component',
+    },
+    suffix: {
+      description: 'Text or an icon component shown inside the field, after the text.',
+      type: 'string | Component',
     },
     translatable: {
       description: 'Stores a value per locale instead of one shared value.',
@@ -81,6 +115,10 @@ Your component gets the plain text as a `string` in the current locale.
 
 <ComponentPreview showMargin={false} class="border-b" example="textarea/fixed-height" title="Fixed height" />
 
-<ComponentPreview showMargin={false} class="col-span-full" example="textarea/global-variables" title="Global variables" />
+<ComponentPreview showMargin={false} class="border-b border-r" example="textarea/global-variables" title="Global variables" />
+
+<ComponentPreview showMargin={false} class="border-b" example="textarea/max-rows" title="Height limits" />
+
+<ComponentPreview showMargin={false} class="col-span-full" example="textarea/min-length" title="Minimum length" showErrors />
 
 </Previews>

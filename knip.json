@@ -25,7 +25,6 @@
         "src/styles/**/*.css",
         "src/lib/form-builder/demo/**/*.{ts,svelte}",
         "src/lib/form-builder/core/schema-to-zod.ts",
-        "src/lib/form-builder/fields/**/*.zod.ts",
         "src/lib/form-builder/schemas/**/*.ts"
       ],
       "project": [
