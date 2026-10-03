@@ -8,6 +8,7 @@
 		DRAFT_REPLACED_EVENT,
 		type DraftReplacedDetail,
 	} from "$lib/PageEditor/changes/draft-write";
+	import { capsuleKeyFromInstanceId } from "$lib/PageEditor/changes/schema-defaults";
 	import { groupManifestEntries } from "./group-entries";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import ContentSidebarAlerts from "./ContentSidebarAlerts.svelte";
@@ -28,6 +29,8 @@
 			disabled: true,
 			isSaving: false,
 		}),
+		focusTarget = null,
+		showAllErrors = $bindable(false),
 	}: ContentSidebarProps = $props();
 
 	const groupedEntries = $derived(groupManifestEntries(entries));
@@ -44,6 +47,14 @@
 		setSaveControls: (controls) => {
 			saveControls = controls;
 		},
+	});
+
+	// A focused field's capsule must be open for the field to render.
+	$effect(() => {
+		if (!focusTarget) return;
+		const capsuleKey = capsuleKeyFromInstanceId(focusTarget.instanceId);
+		const group = groupedEntries.find((candidate) => candidate.capsuleKey === capsuleKey);
+		if (group) collapsedCapsules.expand(group.capsuleKey);
 	});
 
 	const canCollapseAll = $derived(
@@ -92,6 +103,12 @@
 							{locale}
 							{valuesByInstance}
 							schemaHydrationVersion={document.schemaHydrationVersion}
+							{focusTarget}
+							{showAllErrors}
+							onShowErrors={() => {
+								showAllErrors = true;
+								collapsedCapsules.expand(group.capsuleKey);
+							}}
 							onToggle={() => collapsedCapsules.toggle(group.capsuleKey)}
 							onInstanceValuesChange={document.updateInstanceValues}
 						/>

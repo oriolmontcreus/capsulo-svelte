@@ -4,9 +4,12 @@
 	let {
 		pages,
 		selectedPageId = $bindable(null),
+		issueCounts = {},
 	}: {
 		pages: ChangedPageSummary[];
 		selectedPageId?: string | null;
+		/** Validation issues per page id; pages with issues can't be committed. */
+		issueCounts?: Record<string, number>;
 	} = $props();
 </script>
 
@@ -26,6 +29,14 @@
 						: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
 				>
 					<span class="truncate">{page.name}</span>
+					{#if issueCounts[page.pageId]}
+						<span
+							class="bg-destructive/10 text-destructive ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
+							title="{issueCounts[page.pageId]} {issueCounts[page.pageId] === 1 ? 'field needs' : 'fields need'} attention"
+						>
+							{issueCounts[page.pageId]} {issueCounts[page.pageId] === 1 ? "issue" : "issues"}
+						</span>
+					{/if}
 					<span
 						class="bg-muted text-muted-foreground shrink-0 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums"
 					>

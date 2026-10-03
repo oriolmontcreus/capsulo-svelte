@@ -2,6 +2,8 @@
   import { getCapsuleByKey } from "$lib/capsules/core/registry";
   import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
   import type { SchemaValues } from "$lib/form-builder/core/types";
+  import { validatePageContent } from "$lib/capsules/core/validate-content";
+  import { VALIDATION_OPTIONS } from "$lib/PageEditor/validate-documents";
   import {
     buildCapsuleInstanceData,
     getCapsuleDisplayTitle,
@@ -9,7 +11,7 @@
   import { getCapsuleGroupColorThemeId } from "./capsule-group-colors";
   import CapsuleGroupBody from "./CapsuleGroupBody.svelte";
   import CapsuleGroupHeader from "./CapsuleGroupHeader.svelte";
-  import type { GroupedCapsuleEntry } from "./types";
+  import type { FieldFocusTarget, GroupedCapsuleEntry } from "./types";
 
   type Props = {
     group: GroupedCapsuleEntry;
@@ -17,6 +19,10 @@
     locale: string;
     valuesByInstance: PageEditorValuesByInstance;
     schemaHydrationVersion: number;
+    focusTarget?: FieldFocusTarget | null;
+    showAllErrors?: boolean;
+    /** Reveal every error on the page (the header's issue badge). */
+    onShowErrors: () => void;
     onToggle: () => void;
     onInstanceValuesChange: (instanceId: string, values: SchemaValues) => void;
   };
@@ -27,6 +33,9 @@
     locale,
     valuesByInstance,
     schemaHydrationVersion,
+    focusTarget = null,
+    showAllErrors = false,
+    onShowErrors,
     onToggle,
     onInstanceValuesChange,
   }: Props = $props();
@@ -42,6 +51,16 @@
   const instanceData = $derived(buildCapsuleInstanceData(group));
   const panelId = $derived(`capsule-panel-${group.capsuleKey}`);
   const colorThemeId = $derived(getCapsuleGroupColorThemeId(group.capsuleKey));
+  const issueCount = $derived(
+    capsule
+      ? validatePageContent(
+          instanceData.instanceIds.map((instanceId) => ({ instanceId, capsuleKey: group.capsuleKey })),
+          valuesByInstance,
+          () => capsule.schema,
+          VALIDATION_OPTIONS,
+        ).length
+      : 0,
+  );
 </script>
 
 <section
@@ -54,6 +73,8 @@
     instanceIds={instanceData.instanceIds}
     {isExpanded}
     {panelId}
+    {issueCount}
+    {onShowErrors}
     {onToggle}
   />
 
@@ -67,6 +88,8 @@
       {locale}
       {valuesByInstance}
       {schemaHydrationVersion}
+      {focusTarget}
+      {showAllErrors}
       {onInstanceValuesChange}
     />
   {/if}

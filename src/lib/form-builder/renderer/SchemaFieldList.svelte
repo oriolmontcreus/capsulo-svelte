@@ -34,6 +34,8 @@
   }: Props = $props();
 
   const renderer = getSchemaRendererContext();
+  /** Longer than the repeater item's slide transition (150ms). */
+  const FOCUS_SETTLE_MS = 220;
 
   // Conditions see the sibling values in the default locale, exactly as the validator does.
   const conditionValues = $derived(resolveConditionValues(fields, values, context.defaultLocale));
@@ -59,12 +61,15 @@
     const target = listEl.querySelector<HTMLElement>(`:scope > [data-field-path="${CSS.escape(focusPath.join("."))}"]`);
     if (!target) return;
     handledFocusRequest = request;
-    void tick().then(() => {
-      target.scrollIntoView({ block: "center", behavior: "smooth" });
-      target.querySelector<HTMLElement>("input, textarea, [contenteditable='true'], button")?.focus({ preventScroll: true });
-      target.dataset.focusFlash = "true";
-      setTimeout(() => delete target.dataset.focusFlash, 1600);
-    });
+    // Wait out a repeater item's open transition, or the scroll lands short of the field.
+    void tick().then(() =>
+      setTimeout(() => {
+        target.scrollIntoView({ block: "center" });
+        target.querySelector<HTMLElement>("input, textarea, [contenteditable='true'], button")?.focus({ preventScroll: true });
+        target.dataset.focusFlash = "true";
+        setTimeout(() => delete target.dataset.focusFlash, 1600);
+      }, FOCUS_SETTLE_MS),
+    );
   });
 </script>
 

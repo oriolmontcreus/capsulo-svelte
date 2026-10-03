@@ -1,3 +1,4 @@
+import { capsuleInstanceId } from "$lib/capsules/core/page-instances";
 import { getCapsuleByKey } from "$lib/capsules/core/registry";
 import type { GroupedCapsuleEntry } from "./types";
 
@@ -21,9 +22,8 @@ export function buildCapsuleInstanceData(group: GroupedCapsuleEntry): {
 		),
 	);
 
-	const instanceIds = flatInstanceKeys.map(
-		(_, instanceIndex) =>
-			`${group.capsuleKey}-${String(instanceIndex + 1).padStart(2, "0")}`,
+	const instanceIds = flatInstanceKeys.map((_, instanceIndex) =>
+		capsuleInstanceId(group.capsuleKey, instanceIndex),
 	);
 
 	return { flatInstanceKeys, instanceIds };

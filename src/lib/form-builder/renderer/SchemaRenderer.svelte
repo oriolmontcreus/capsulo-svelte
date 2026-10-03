@@ -10,8 +10,8 @@
   } from "./schema-renderer-context";
   import {
     applySchemaFieldUpdate,
-    createSchemaInitialValues,
     resolveSchemaRendererI18nContext,
+    withSchemaDefaults,
     type TranslatableLocaleMode,
   } from "./schema-renderer-i18n";
 
@@ -38,25 +38,11 @@
       editingLocale: componentProps.editingLocale,
     });
 
-    const schemaDefaults = createSchemaInitialValues(
+    return withSchemaDefaults(
       componentProps.schema,
+      componentProps.initialValues,
       context.defaultLocale,
     );
-    if (!componentProps.initialValues) {
-      return schemaDefaults;
-    }
-
-    const mergedValues: SchemaValues = { ...schemaDefaults };
-    for (const [fieldName, localizedValues] of Object.entries(
-      componentProps.initialValues,
-    )) {
-      mergedValues[fieldName] = {
-        ...(schemaDefaults[fieldName] ?? {}),
-        ...(localizedValues ?? {}),
-      };
-    }
-
-    return mergedValues;
   }
 
   const initialValues = untrack(() =>

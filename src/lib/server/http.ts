@@ -3,7 +3,9 @@ import type { APIContext } from "astro";
 export class HttpError extends Error {
 	constructor(
 		readonly status: number,
-		message: string
+		message: string,
+		/** Extra JSON fields sent next to `error`, e.g. the validation issues of a 422. */
+		readonly details?: Record<string, unknown>
 	) {
 		super(message);
 	}
@@ -25,7 +27,7 @@ export function handle(
 			return await run(context);
 		} catch (error) {
 			if (error instanceof HttpError) {
-				return json({ error: error.message }, { status: error.status });
+				return json({ ...error.details, error: error.message }, { status: error.status });
 			}
 			console.error("[capsulo api]", error);
 			return json({ error: "Internal error." }, { status: 500 });
