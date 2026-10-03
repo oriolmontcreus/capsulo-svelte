@@ -16,6 +16,8 @@ The first of these that applies wins:
 
 So when you build a site for a Spanish-speaking client, set `admin.locale: "es"` and the CMS greets them in Spanish from the very first screen, with no setup on their side.
 
+Admin pages are prerendered in the project default, but an editor using another language never sees it: each part of the page appears once it has switched to their language, and the CMS loads the next page's code as soon as they hover a link, so it shows up already translated.
+
 ## Set the project default
 
 `npm create capsulo` asks for the CMS language and writes it for you (pass `--admin-locale es` to skip the question). To change it later, edit `capsulo.config.ts`:

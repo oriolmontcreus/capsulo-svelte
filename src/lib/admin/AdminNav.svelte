@@ -17,6 +17,8 @@
   import { aiSidebar, toggleAiSidebar } from "$lib/ai/ai-sidebar-state.svelte";
   import { t, type MessageKey } from "$lib/admin-i18n/i18n.svelte";
   import LanguageSwitcher from "./LanguageSwitcher.svelte";
+  import { ADMIN_PORTAL_HOST } from "./portal-host";
+  import { BitsConfig } from "bits-ui";
 
   type AdminRoute = "page-editor" | "globals" | "changes" | "history";
 
@@ -110,6 +112,8 @@
   });
 </script>
 
+<!-- The nav persists across navigations: its menus and tooltips must too. -->
+<BitsConfig defaultPortalTo={ADMIN_PORTAL_HOST}>
 <Tooltip.Provider delayDuration={150}>
   <aside
     class="border-border bg-background flex h-full w-11 shrink-0 flex-col border-r"
@@ -212,3 +216,4 @@
     </div>
   </aside>
 </Tooltip.Provider>
+</BitsConfig>

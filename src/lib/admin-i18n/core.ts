@@ -40,6 +40,9 @@ function configuredUiLocale(): UiLocale | undefined {
 /** `admin.locale` from `capsulo.config.ts`, if the project sets one. */
 export const CONFIGURED_UI_LOCALE = configuredUiLocale();
 
+/** The language admin pages are prerendered in; the editor's own language replaces it on load. */
+export const BUILD_UI_LOCALE: UiLocale = CONFIGURED_UI_LOCALE ?? FALLBACK_UI_LOCALE;
+
 /** The first browser language the admin supports ("es-MX" counts as "es"). */
 function matchBrowserLocale(languages: readonly string[]): UiLocale | undefined {
 	for (const language of languages) {
@@ -62,7 +65,7 @@ export function resolveUiLocale(input: {
 }
 
 /** Outside the browser (build, Worker API) the admin speaks the project's language. */
-let readLocale: () => UiLocale = () => CONFIGURED_UI_LOCALE ?? FALLBACK_UI_LOCALE;
+let readLocale: () => UiLocale = () => BUILD_UI_LOCALE;
 
 /** Lets the Svelte runtime route reads through its reactive state. */
 export function setUiLocaleReader(reader: () => UiLocale): void {

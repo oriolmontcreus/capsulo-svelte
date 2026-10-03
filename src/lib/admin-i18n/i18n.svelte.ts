@@ -4,8 +4,7 @@
  * components see the right language from their first render.
  */
 import {
-	CONFIGURED_UI_LOCALE,
-	FALLBACK_UI_LOCALE,
+	BUILD_UI_LOCALE,
 	UI_LOCALE_COOKIE,
 	resolveUiLocale,
 	setUiLocaleReader,
@@ -32,7 +31,7 @@ function readCookie(name: string): string | null {
 
 function initialLocale(): UiLocale {
 	// The build renders the admin in the project's language; hydration then swaps in the editor's.
-	if (typeof document === "undefined") return CONFIGURED_UI_LOCALE ?? FALLBACK_UI_LOCALE;
+	if (typeof document === "undefined") return BUILD_UI_LOCALE;
 	return resolveUiLocale({ stored: readCookie(UI_LOCALE_COOKIE), browserLanguages: navigator.languages });
 }
 

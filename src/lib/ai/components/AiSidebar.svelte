@@ -37,6 +37,8 @@
 	import AiEditCard from "./AiEditCard.svelte";
 	import AiNotice from "./AiNotice.svelte";
 	import { formatDate, t } from "$lib/admin-i18n/i18n.svelte";
+	import { ADMIN_PORTAL_HOST } from "$lib/admin/portal-host";
+	import { BitsConfig } from "bits-ui";
 
 	let chat = $state<ChatRecord>(createChat());
 	let chats = $state<ChatRecord[]>([]);
@@ -322,6 +324,8 @@
 	});
 </script>
 
+<!-- The sidebar persists across navigations: its menus and tooltips must too. -->
+<BitsConfig defaultPortalTo={ADMIN_PORTAL_HOST}>
 <!-- Before hydration the panel's visibility comes from <html data-ai-sidebar> (set by
      AdminLayout from localStorage), so a reload doesn't flash it in; after that, state. -->
 <aside
@@ -543,6 +547,7 @@
 		</form>
 	</Tooltip.Provider>
 </aside>
+</BitsConfig>
 
 <style>
 	/* Compact Markdown for a 360px panel. Spacing comes from the wrapper's space-y-2. */
