@@ -1,3 +1,4 @@
+import type { FieldCondition } from "../../core/types";
 import type { ToggleFieldBuilder, ToggleFieldDefinition } from "./toggle-field.types";
 
 class ToggleFieldBuilderImpl implements ToggleFieldBuilder {
@@ -20,8 +21,13 @@ class ToggleFieldBuilderImpl implements ToggleFieldBuilder {
 		return this;
 	}
 
-	required(value = true): this {
+	required(value: FieldCondition = true): this {
 		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 

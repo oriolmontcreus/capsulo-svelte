@@ -1,5 +1,5 @@
 import type { SelectFieldBuilder, SelectFieldDefinition } from "./select-field.types";
-import type { SelectOption, SelectOptionGroup, InternalLinksConfig, ResponsiveColumns } from "../../core/types";
+import type { FieldCondition, SelectOption, SelectOptionGroup, InternalLinksConfig, ResponsiveColumns } from "../../core/types";
 
 class SelectFieldBuilderImpl implements SelectFieldBuilder {
 	private field: SelectFieldDefinition;
@@ -26,8 +26,13 @@ class SelectFieldBuilderImpl implements SelectFieldBuilder {
 		return this;
 	}
 
-	required(value = true): this {
+	required(value: FieldCondition = true): this {
 		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 

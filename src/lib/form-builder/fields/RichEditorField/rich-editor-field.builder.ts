@@ -1,7 +1,9 @@
+import type { FieldCondition } from "../../core/types";
 import type {
 	RichEditorFieldBuilder,
 	RichEditorFieldDefinition,
 } from "./rich-editor-field.types";
+import { assertNonNegativeInteger, assertRange } from "../../core/builder-asserts";
 
 class RichEditorFieldBuilderImpl implements RichEditorFieldBuilder {
 	private field: RichEditorFieldDefinition;
@@ -28,8 +30,13 @@ class RichEditorFieldBuilderImpl implements RichEditorFieldBuilder {
 		return this;
 	}
 
-	required(value = true): this {
+	required(value: FieldCondition = true): this {
 		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 
@@ -43,7 +50,21 @@ class RichEditorFieldBuilderImpl implements RichEditorFieldBuilder {
 		return this;
 	}
 
+	minLength(value: number): this {
+		assertNonNegativeInteger(`RichEditor("${this.field.name}").minLength`, value);
+		this.field.minLength = value;
+		return this;
+	}
+
+	maxLength(value: number): this {
+		assertNonNegativeInteger(`RichEditor("${this.field.name}").maxLength`, value);
+		this.field.maxLength = value;
+		return this;
+	}
+
 	build(): RichEditorFieldDefinition {
+		const { name, minLength, maxLength } = this.field;
+		assertRange(`RichEditor("${name}")`, "minLength", minLength, "maxLength", maxLength);
 		return { ...this.field };
 	}
 }

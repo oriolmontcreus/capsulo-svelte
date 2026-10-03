@@ -1,4 +1,4 @@
-import type { ResponsiveColumns } from "../../core/types";
+import type { FieldCondition, ResponsiveColumns } from "../../core/types";
 import type {
 	FileUploadFieldBuilder,
 	FileUploadFieldDefinition,
@@ -27,8 +27,13 @@ class FileUploadFieldBuilderImpl implements FileUploadFieldBuilder {
 		return this;
 	}
 
-	required(value = true): this {
+	required(value: FieldCondition = true): this {
 		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 
