@@ -15,8 +15,22 @@ export interface CapsuloAiConfig {
 	model?: string;
 }
 
+/** Languages the admin UI itself is translated into (independent of the site's `i18n.locales`). */
+export type CapsuloAdminLocale = "en" | "es" | "fr";
+
+export interface CapsuloAdminConfig {
+	/**
+	 * Language of the admin UI for editors who haven't picked one themselves (each editor can
+	 * change it from the admin). When unset, the editor's browser language is used if the admin
+	 * supports it, else English.
+	 */
+	locale?: CapsuloAdminLocale;
+}
+
 export interface CapsuloConfig {
 	i18n: CapsuloI18nConfig;
+	/** The admin UI itself (not the site's content). */
+	admin?: CapsuloAdminConfig;
 	/** AI agent sidebar in the admin. Runs on Workers AI; no API key needed. */
 	ai?: CapsuloAiConfig;
 }

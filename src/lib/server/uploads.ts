@@ -53,7 +53,7 @@ export async function storeUpload(request: Request, userId: string): Promise<str
 	const { bucket, namespace } = storage();
 	// KV's per-value limit, or the Workers request body limit on the Free and Pro plans.
 	const maxMb = bucket ? 100 : 25;
-	if (size > maxMb * 1024 * 1024) throw new HttpError(413, `Files are limited to ${maxMb} MB.`);
+	if (size > maxMb * 1024 * 1024) throw HttpError.translated(413, "api.fileTooLarge", { maxMb });
 	if (!request.body) throw new HttpError(400, "Empty upload.");
 
 	const rawName = decodeURIComponent(request.headers.get("X-File-Name") ?? "file");

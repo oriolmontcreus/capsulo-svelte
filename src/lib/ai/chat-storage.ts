@@ -1,6 +1,7 @@
 import { createIdbStore } from "$lib/utils/idb-store";
 import type { EditRecord } from "./edits";
 import type { AiErrorCode, AiMessage } from "./protocol";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 /** What the sidebar shows. The model sees `transcript` instead. */
 export type ChatEntry =
@@ -44,10 +45,10 @@ export function createId(): string {
 
 export function createChat(): ChatRecord {
 	const now = new Date().toISOString();
-	return { id: createId(), title: "New chat", createdAt: now, updatedAt: now, entries: [], transcript: [], pendingNotes: [] };
+	return { id: createId(), title: t("ai.newChat"), createdAt: now, updatedAt: now, entries: [], transcript: [], pendingNotes: [] };
 }
 
 export function titleFromMessage(text: string): string {
 	const singleLine = text.replace(/\s+/g, " ").trim();
-	return singleLine.length > 60 ? `${singleLine.slice(0, 57)}…` : singleLine || "New chat";
+	return singleLine.length > 60 ? `${singleLine.slice(0, 57)}…` : singleLine || t("ai.newChat");
 }

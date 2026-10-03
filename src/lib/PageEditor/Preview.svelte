@@ -33,6 +33,7 @@
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import Maximize2 from "@lucide/svelte/icons/maximize-2";
   import Minimize2 from "@lucide/svelte/icons/minimize-2";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   type Props = {
     pageId: string;
@@ -342,7 +343,7 @@
 <main
   bind:this={previewRootEl}
   class="bg-muted/40 flex min-w-0 flex-1 flex-col overflow-hidden"
-  aria-label="Preview"
+  aria-label={t("preview.label")}
 >
   <header
     class="border-border flex h-fit shrink-0 justify-between items-center gap-3 border-b px-3"
@@ -355,18 +356,18 @@
       <Select.Root type="single" bind:value={previewDevice}>
         <Select.Trigger
           size="sm"
-          aria-label="Preview dimensions"
+          aria-label={t("preview.dimensions")}
           class={ghostSelectTriggerClass}
         >
           {getPreviewDeviceLabel(previewDevice)}
         </Select.Trigger>
         <Select.Content class="max-h-72 min-w-44" portalProps={previewOverlayPortalProps}>
-          <Select.Item value="responsive" class="text-xs">Responsive</Select.Item>
+          <Select.Item value="responsive" class="text-xs">{t("preview.responsive")}</Select.Item>
           {#each PREVIEW_DEVICE_GROUPS as group (group.category)}
             {@const devices = getPreviewDevicesByCategory(group.category)}
             {#if devices.length > 0}
               <Select.Group>
-                <Select.GroupHeading>{group.label}</Select.GroupHeading>
+                <Select.GroupHeading>{t(group.labelKey)}</Select.GroupHeading>
                 {#each devices as device (device.id)}
                   <Select.Item value={device.id} class="text-xs">{device.label}</Select.Item>
                 {/each}
@@ -376,10 +377,10 @@
         </Select.Content>
       </Select.Root>
 
-      <div class="flex items-center gap-0.5" aria-label="Preview size">
+      <div class="flex items-center gap-0.5" aria-label={t("preview.size")}>
         <input
           type="number"
-          aria-label="Preview width"
+          aria-label={t("preview.width")}
           min={PREVIEW_DIMENSION_MIN}
           max={PREVIEW_DIMENSION_MAX}
           bind:value={previewWidthPx}
@@ -389,7 +390,7 @@
         <span class="text-muted-foreground/60 select-none text-xs" aria-hidden="true">×</span>
         <input
           type="number"
-          aria-label="Preview height"
+          aria-label={t("preview.height")}
           min={PREVIEW_DIMENSION_MIN}
           max={PREVIEW_DIMENSION_MAX}
           bind:value={previewHeightPx}
@@ -405,14 +406,14 @@
               {...props}
               variant="ghost"
               size="icon-sm"
-              aria-label="Reset preview"
+              aria-label={t("preview.reset")}
               onclick={resetPreview}
             >
               <RotateCcw />
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content portalProps={previewOverlayPortalProps}>Reset preview</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>{t("preview.reset")}</Tooltip.Content>
       </Tooltip.Root>
     </div>
 
@@ -421,7 +422,7 @@
       <Select.Root type="single" bind:value={locale}>
         <Select.Trigger
           size="sm"
-          aria-label="Preview locale"
+          aria-label={t("preview.locale")}
           class={ghostSelectTriggerClass}
         >
           {formatLocaleLabel(locale || DEFAULT_LOCALE)}
@@ -442,14 +443,14 @@
               {...props}
               variant="ghost"
               size="icon-sm"
-              aria-label="Copy URL"
+              aria-label={t("preview.copyUrl")}
               onclick={copyPreviewUrl}
             >
               <Copy />
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content portalProps={previewOverlayPortalProps}>Copy URL</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>{t("preview.copyUrl")}</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
@@ -459,14 +460,14 @@
               {...props}
               variant="ghost"
               size="icon-sm"
-              aria-label="Open in new tab"
+              aria-label={t("preview.openInNewTab")}
               onclick={openPreviewInNewTab}
             >
               <ExternalLink />
             </Button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content portalProps={previewOverlayPortalProps}>Open in new tab</Tooltip.Content>
+        <Tooltip.Content portalProps={previewOverlayPortalProps}>{t("preview.openInNewTab")}</Tooltip.Content>
       </Tooltip.Root>
 
       <Tooltip.Root>
@@ -476,7 +477,7 @@
               {...props}
               variant="ghost"
               size="icon-sm"
-              aria-label={isFullscreen ? "Exit fullscreen preview" : "Fullscreen preview"}
+              aria-label={isFullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
               onclick={toggleFullscreen}
             >
               {#if isFullscreen}
@@ -488,7 +489,7 @@
           {/snippet}
         </Tooltip.Trigger>
         <Tooltip.Content portalProps={previewOverlayPortalProps}>
-          {isFullscreen ? "Exit fullscreen preview" : "Fullscreen preview"}
+          {isFullscreen ? t("preview.exitFullscreen") : t("preview.fullscreen")}
         </Tooltip.Content>
       </Tooltip.Root>
     </div>
@@ -508,7 +509,7 @@
     >
       <iframe
         bind:this={iframeEl}
-        title="Page preview"
+        title={t("preview.pagePreview")}
         class="w-full border-0"
         style:height={iframeHeight}
         src={previewUrl}

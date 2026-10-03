@@ -6,6 +6,7 @@
   import { toggleMode } from "mode-watcher";
   import type { ButtonVariant } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
   import type { ClassValue } from "clsx";
 
   let {
@@ -21,5 +22,5 @@
   <MoonIcon
     class="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all! dark:scale-100 dark:rotate-0"
   />
-  <span class="sr-only">Toggle theme</span>
+  <span class="sr-only">{t("nav.toggleTheme")}</span>
 </Button>

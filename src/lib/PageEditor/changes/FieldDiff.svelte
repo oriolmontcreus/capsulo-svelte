@@ -7,6 +7,7 @@
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import FieldValueView from "./FieldValueView.svelte";
 	import RepeaterDiff from "./RepeaterDiff.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		field,
@@ -47,11 +48,11 @@
 	{:else}
 		<div class="grid grid-cols-2 gap-4">
 			<div class="space-y-1 opacity-70">
-				<div class="text-muted-foreground text-[10px] uppercase">Previous</div>
+				<div class="text-muted-foreground text-[10px] uppercase">{t("diff.previous")}</div>
 				<FieldValueView {field} value={change.oldValue} />
 			</div>
 			<div class="space-y-1">
-				<div class="text-muted-foreground text-[10px] uppercase">New</div>
+				<div class="text-muted-foreground text-[10px] uppercase">{t("diff.new")}</div>
 				<FieldValueView {field} value={change.newValue} />
 			</div>
 		</div>

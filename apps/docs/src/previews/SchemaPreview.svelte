@@ -7,6 +7,7 @@
 	import GlobalVariablesProvider from '$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte';
 	import { buildVariableItems } from '$lib/globals/variable-autocomplete/build-variable-items';
 	import { formatVariablePreviewFromValues } from '$lib/globals/variable-autocomplete/format-variable-preview';
+	import { setUiLocale } from '$lib/admin-i18n/i18n.svelte';
 
 	import { loadExampleSchema } from './example-schemas';
 	import './preview.css';
@@ -22,6 +23,9 @@
 	}
 
 	let { example, title, locales = ['en'], showErrors = false }: Props = $props();
+
+	// The docs are in English, so the admin components in the previews are too.
+	setUiLocale('en', { remember: false });
 
 	const schema = $derived(loadExampleSchema(example, title));
 

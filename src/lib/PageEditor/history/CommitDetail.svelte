@@ -17,6 +17,7 @@
 	import { loadRevisionWithParent } from "./history-documents";
 	import type { CommitEntry, CommitRevision } from "./history-model";
 	import AuthorAvatar from "./AuthorAvatar.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		commit,
@@ -104,8 +105,8 @@
 		);
 
 		status = result.ok
-			? { tone: "ok", text: `Recovered ${change.fieldName} into the ${pageDisplayName(revision.pageId)} draft.` }
-			: { tone: "error", text: result.errorMessage ?? "Could not recover that value." };
+			? { tone: "ok", text: t("history.recovered", { field: change.fieldName, page: pageDisplayName(revision.pageId) }) }
+			: { tone: "error", text: result.errorMessage ?? t("history.recoverFailed") };
 	}
 
 	async function restorePage(values: PageEditorValuesByInstance): Promise<void> {
@@ -120,9 +121,9 @@
 		status = result.ok
 			? {
 					tone: "ok",
-					text: `Restored ${pageDisplayName(revision.pageId)} to this revision. Review it on the Changes page.`
+					text: t("history.restored", { page: pageDisplayName(revision.pageId) })
 				}
-			: { tone: "error", text: result.errorMessage ?? "Could not restore that revision." };
+			: { tone: "error", text: result.errorMessage ?? t("history.restoreFailed") };
 	}
 </script>
 
@@ -134,15 +135,15 @@
 		{/if}
 		<p class="text-muted-foreground flex items-center gap-1.5 text-xs">
 			<AuthorAvatar name={commit.authorName} avatarUrl={commit.authorAvatarUrl} size="md" />
-			<span>{commit.authorName ?? "Unknown author"}</span>
+			<span>{commit.authorName ?? t("history.unknownAuthor")}</span>
 			<span aria-hidden="true">·</span>
 			<time datetime={commit.createdAt}>{formatAbsoluteTimestamp(commit.createdAt)}</time>
 		</p>
 	</header>
 
-	<nav aria-label="Pages in this commit" class="border-border border-b py-3">
+	<nav aria-label={t("history.pagesInCommit")} class="border-border border-b py-3">
 		<h3 class="text-muted-foreground mb-2 text-[10px] font-medium tracking-wide uppercase">
-			Changed pages ({commit.revisions.length})
+			{t("history.changedPages", { count: commit.revisions.length })}
 		</h3>
 		<ul class="flex flex-wrap gap-1.5">
 			{#each commit.revisions as revision (revision.revisionId)}
@@ -174,26 +175,26 @@
 			>
 				{status.text}
 				{#if status.tone === "ok"}
-					<a href="/admin/changes" class="underline">Go to Changes</a>.
+					<a href="/admin/changes" class="underline">{t("history.goToChanges")}</a>
 				{/if}
 			</p>
 		{/if}
 	</div>
 
 	{#await revisionViewPromise}
-		<p class="text-muted-foreground py-8 text-sm">Loading changes...</p>
+		<p class="text-muted-foreground py-8 text-sm">{t("history.loadingChanges")}</p>
 	{:then view}
 		{#if !view}
-			<p class="text-muted-foreground py-8 text-sm">This commit has no pages to show.</p>
+			<p class="text-muted-foreground py-8 text-sm">{t("history.noPages")}</p>
 		{:else if view.errorMessage}
 			<p class="text-destructive py-8 text-sm">{view.errorMessage}</p>
 		{:else}
 			<div class="flex items-center justify-between gap-4 py-4">
 				<p class="text-muted-foreground text-xs">
 					{#if view.isFirstRevision}
-						This commit created the page.
+						{t("history.createdPage")}
 					{:else}
-						Compared with the previous revision of this page.
+						{t("history.comparedWithPrevious")}
 					{/if}
 				</p>
 				<Button
@@ -202,14 +203,14 @@
 					disabled={isRestoring}
 					onclick={() => restorePage(view.revisionValues)}
 				>
-					{isRestoring ? "Restoring..." : "Restore this page to this revision"}
+					{isRestoring ? t("history.restoring") : t("history.restore")}
 				</Button>
 			</div>
 
 			<PageDiff
 				changeSet={view.changeSet}
-				emptyTitle="No content changes in this revision"
-				emptyDescription="This page was written without any field changing."
+				emptyTitle={t("history.noContentChangesTitle")}
+				emptyDescription={t("history.noContentChangesDescription")}
 				fieldAction={recoverAction}
 			/>
 		{/if}
@@ -220,9 +221,9 @@
 	<Button
 		variant="ghost"
 		size="xs"
-		title="Copy this value into the working draft"
+		title={t("history.recoverTitle")}
 		onclick={() => recoverField(change)}
 	>
-		Recover
+		{t("history.recover")}
 	</Button>
 {/snippet}

@@ -1,3 +1,4 @@
+import { t, type MessageKey } from "$lib/admin-i18n/i18n.svelte";
 export type PreviewDeviceId =
   | "responsive"
   | "iphone-se"
@@ -61,11 +62,11 @@ const PREVIEW_DEVICE_BY_ID = new Map(
 
 export const PREVIEW_DEVICE_GROUPS: {
   category: PreviewDeviceCategory;
-  label: string;
+  labelKey: MessageKey;
 }[] = [
-  { category: "phone", label: "Phone" },
-  { category: "tablet", label: "Tablet" },
-  { category: "desktop", label: "Desktop" },
+  { category: "phone", labelKey: "preview.phone" },
+  { category: "tablet", labelKey: "preview.tablet" },
+  { category: "desktop", labelKey: "preview.desktop" },
 ];
 
 export function getPreviewDevicesByCategory(
@@ -84,7 +85,8 @@ export function clampPreviewDimension(value: number): number {
 }
 
 export function getPreviewDeviceLabel(id: PreviewDeviceId): string {
-  return PREVIEW_DEVICE_BY_ID.get(id)?.label ?? "Responsive";
+  if (id === "responsive") return t("preview.responsive");
+  return PREVIEW_DEVICE_BY_ID.get(id)?.label ?? t("preview.responsive");
 }
 
 export function getPreviewDeviceDimensions(

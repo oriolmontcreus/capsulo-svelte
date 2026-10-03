@@ -15,6 +15,7 @@
 	import ContentSidebarTopbar from "./ContentSidebarTopbar.svelte";
 	import CapsuleGroupSection from "./CapsuleGroupSection.svelte";
 	import type { ContentSidebarProps, PageEditorSaveControls } from "./types";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	export type { PageEditorSaveControls };
 
@@ -74,7 +75,7 @@
 
 <aside
 	class="border-border bg-background flex min-h-0 shrink-0 flex-col overflow-hidden"
-	aria-label="Page settings"
+	aria-label={t("sidebar.label")}
 	style:width={width ? `${width}px` : undefined}
 >
 	<ContentSidebarTopbar

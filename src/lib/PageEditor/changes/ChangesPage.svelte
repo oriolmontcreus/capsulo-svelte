@@ -15,6 +15,7 @@
 	import ChangesSidebar from "./ChangesSidebar.svelte";
 	import CommitForm from "./CommitForm.svelte";
 	import PageDiff from "./PageDiff.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let changedPages = $state<ChangedPageSummary[]>([]);
 	let selectedPageId = $state<string | null>(null);
@@ -59,7 +60,7 @@
 		);
 
 		if (!result.ok) {
-			revertError = result.errorMessage ?? "Could not revert that field.";
+			revertError = result.errorMessage ?? t("changes.revertFailed");
 			return;
 		}
 
@@ -118,7 +119,7 @@
 <div class="flex h-full min-h-0 w-full">
 	<aside class="border-border flex w-72 shrink-0 flex-col border-r">
 		<div class="border-border flex h-11 shrink-0 items-center border-b px-4">
-			<h1 class="text-sm font-medium">Changes</h1>
+			<h1 class="text-sm font-medium">{t("changes.title")}</h1>
 		</div>
 		<div class="min-h-0 flex-1 overflow-y-auto">
 			<ChangesSidebar pages={changedPages} {issueCounts} bind:selectedPageId />
@@ -140,12 +141,12 @@
 		<ScrollArea class="h-full w-full">
 			<div class="mx-auto max-w-3xl p-6">
 				{#if isLoading}
-					<p class="text-muted-foreground text-sm">Loading changes...</p>
+					<p class="text-muted-foreground text-sm">{t("changes.loading")}</p>
 				{:else if changedPages.length === 0}
 					<div class="flex flex-col items-center justify-center py-16 text-center">
-						<p class="text-foreground/80 text-lg font-normal">Nothing to commit</p>
+						<p class="text-foreground/80 text-lg font-normal">{t("changes.nothingToCommit")}</p>
 						<p class="text-muted-foreground mt-1 text-sm">
-							Your local content matches the last committed version.
+							{t("changes.upToDate")}
 						</p>
 					</div>
 				{:else}
@@ -167,9 +168,9 @@
 	<Button
 		variant="ghost"
 		size="xs"
-		title="Discard this change and restore the committed value"
+		title={t("changes.revertTitle")}
 		onclick={() => revertField(change)}
 	>
-		Revert
+		{t("changes.revert")}
 	</Button>
 {/snippet}

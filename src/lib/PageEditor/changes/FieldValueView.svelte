@@ -6,6 +6,7 @@
 	import { isPasswordField, MASKED_VALUE } from "$lib/form-builder/fields/TextField/text-field.utils";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
 	import { repeaterItemTitle } from "./repeater-diff";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let { field, value }: { field: FieldDefinition; value: unknown } = $props();
 
@@ -36,11 +37,11 @@
 			{/each}
 		</ol>
 	{:else}
-		<span class="text-muted-foreground text-sm italic">empty</span>
+		<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 	{/if}
 {:else if field.type === "toggle"}
 	<span class="bg-muted inline-flex rounded px-2 py-0.5 text-sm">
-		{value ? "On" : "Off"}
+		{value ? t("diff.on") : t("diff.off")}
 	</span>
 {:else if field.type === "colorpicker"}
 	<span class="inline-flex items-center gap-2">
@@ -60,7 +61,7 @@
 	{:else if stringValue}
 		<span class="bg-muted inline-flex rounded px-2 py-0.5 text-sm">{selectLabel(stringValue)}</span>
 	{:else}
-		<span class="text-muted-foreground text-sm italic">empty</span>
+		<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 	{/if}
 {:else if field.type === "file-upload"}
 	{#if asArray.length > 0}
@@ -80,19 +81,19 @@
 			{/each}
 		</ul>
 	{:else}
-		<span class="text-muted-foreground text-sm italic">empty</span>
+		<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 	{/if}
 {:else if field.type === "rich-editor"}
 	{#if stringValue}
 		<!-- CMS content authored by an authenticated editor; rendered read-only for the diff. -->
 		<div class="prose prose-sm dark:prose-invert max-w-none">{@html stringValue}</div>
 	{:else}
-		<span class="text-muted-foreground text-sm italic">empty</span>
+		<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 	{/if}
 {:else if stringValue && isPasswordField(field)}
-	<span class="font-mono text-sm" aria-label="Hidden value">{MASKED_VALUE}</span>
+	<span class="font-mono text-sm" aria-label={t("diff.hiddenValue")}>{MASKED_VALUE}</span>
 {:else if stringValue}
 	<span class="text-sm whitespace-pre-wrap">{stringValue}</span>
 {:else}
-	<span class="text-muted-foreground text-sm italic">empty</span>
+	<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 {/if}

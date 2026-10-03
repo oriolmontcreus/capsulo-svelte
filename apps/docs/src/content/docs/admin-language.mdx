@@ -1,0 +1,57 @@
+---
+title: Admin language
+description: Show the CMS in English, Spanish or French, set a default for a project and let each editor pick their own.
+---
+
+The CMS at `/admin` is available in **English**, **Spanish** and **French**. This is the language of the CMS itself (buttons, menus, messages and validation errors). It has nothing to do with the languages of your site's content, which you set in `i18n.locales`: a Spanish-only site can have an editor who prefers English, and the other way round.
+
+## How the language is picked
+
+The first of these that applies wins:
+
+1. **The editor's own choice.** Every editor can pick a language from the language button in the CMS sidebar (or on the login page). It is saved on their account, so it follows them to other browsers and devices.
+2. **The project default:** `admin.locale` in `capsulo.config.ts`.
+3. **The browser's language**, if the CMS supports it (`es-MX` counts as Spanish).
+4. English.
+
+So when you build a site for a Spanish-speaking client, set `admin.locale: "es"` and the CMS greets them in Spanish from the very first screen, with no setup on their side.
+
+## Set the project default
+
+`npm create capsulo` asks for the CMS language and writes it for you (pass `--admin-locale es` to skip the question). To change it later, edit `capsulo.config.ts`:
+
+```ts
+// [!code word:admin]
+export default defineCapsuloConfig({
+  i18n: {
+    locales: ['es', 'en'],
+    defaultLocale: 'es',
+  },
+  // Language of the CMS for editors who haven't picked their own ("en", "es" or "fr").
+  admin: {
+    locale: 'es',
+  },
+});
+```
+
+Leave `admin` out to follow each editor's browser language instead. Changing the default doesn't override what editors already picked themselves.
+
+## What isn't translated
+
+The labels, descriptions, placeholders and item names in your schemas are yours, so they stay exactly as you wrote them. Write them in the language your editors read:
+
+```ts
+Text('title')
+  .label('Título')
+  .description('Aparece en la pestaña del navegador y en Google.');
+```
+
+Validation messages combine both: the sentence is in the editor's language and the field name is your label, for example "Título es obligatorio."
+
+## Adding a language
+
+The CMS's messages live in `src/lib/admin-i18n/messages`. `en.ts` is the source of truth, and the other dictionaries are typed against it, so a missing message fails the type check. To add a language:
+
+1. Copy `en.ts` to a new file (for example `de.ts`), type it as `Messages` and translate the values. Keep the `{placeholders}`; messages with `one`/`other` forms pick one by `count`.
+2. Register it in `src/lib/admin-i18n/core.ts` (`UI_LOCALES`, `UI_LOCALE_NAMES` and the dictionaries) and add the code to `CapsuloAdminLocale` in `src/lib/config/define-config.ts`.
+3. Contributing it to Capsulo? Also add it to `ADMIN_LOCALES` in `packages/create-capsulo`, so new projects can pick it.

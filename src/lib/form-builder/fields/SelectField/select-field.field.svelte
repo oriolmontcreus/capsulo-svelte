@@ -26,6 +26,7 @@
 		formatSelectTriggerLabel,
 		normalizeSelectValue,
 	} from "./modules/select-value";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: SelectFieldDefinition;
@@ -55,7 +56,7 @@
 	);
 	const triggerLabel = $derived(
 		field.multiple
-			? formatSelectTriggerLabel(field, multipleValue, allOptions)
+			? formatSelectTriggerLabel(multipleValue, allOptions, field.placeholder ?? t("select.placeholder"))
 			: "",
 	);
 	const hasMultipleSelection = $derived(field.multiple && multipleValue.length > 0);
@@ -173,7 +174,7 @@
 				class="w-full"
 				aria-invalid={error ? true : undefined}
 			>
-				<SelectPrimitive.Value placeholder={field.placeholder ?? "Select an option"} />
+				<SelectPrimitive.Value placeholder={field.placeholder ?? t("select.placeholder")} />
 			</SelectTrigger>
 
 			<SelectPortal>

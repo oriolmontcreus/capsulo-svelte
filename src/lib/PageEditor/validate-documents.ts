@@ -12,6 +12,7 @@ import type { FieldDefinition, SchemaValues } from "$lib/form-builder/core/types
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 import { getCapsuleDisplayTitle } from "$lib/PageEditor/ContentSidebar/capsule-instances";
 import { pageDisplayName } from "$lib/PageEditor/changes/changed-pages";
+import { repeaterItemLabel } from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
 
 export const VALIDATION_OPTIONS = { defaultLocale: DEFAULT_LOCALE, locales: LOCALES };
 
@@ -67,7 +68,7 @@ function describeIssuePath(fields: FieldDefinition[], values: SchemaValues, path
 		const itemId = path[index + 1];
 		const items = normalizeRepeaterItems(currentValues[field.name]?.[DEFAULT_LOCALE]);
 		const itemIndex = items.findIndex((item) => item._id === itemId);
-		labels.push(`${field.itemName ?? "Item"} ${itemIndex + 1}`);
+		labels.push(repeaterItemLabel(field, itemIndex));
 		currentFields = field.fields;
 		currentValues = itemIndex >= 0 ? repeaterItemValues(items[itemIndex]) : {};
 		index += 1;

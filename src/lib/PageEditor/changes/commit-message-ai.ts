@@ -8,6 +8,7 @@ import { pageDisplayName } from "./changed-pages";
 import { describeChanges, type CapsuleInfo } from "./commit-message-context";
 import { computePageChangeSet } from "./diff-model";
 import { capsuleKeyFromInstanceId, resolveInstanceDefaults } from "./schema-defaults";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 /** How many earlier messages the model sees to pick up the author's style. */
 const STYLE_EXAMPLES = 5;
@@ -90,7 +91,7 @@ export async function generateCommitMessage(options: {
 	const cleaned = cleanCommitMessage(message.content);
 	if (!cleaned) {
 		console.warn("[capsulo ai] the commit message came back empty", { raw: message.content });
-		throw new AgentError("The AI returned an empty commit message. Try again.", "model-error");
+		throw new AgentError(t("ai.emptyCommitMessage"), "model-error");
 	}
 	return cleaned;
 }

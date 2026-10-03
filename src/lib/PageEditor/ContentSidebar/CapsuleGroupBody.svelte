@@ -6,6 +6,7 @@
 	import type { SchemaValues } from "$lib/form-builder/core/types";
 	import type { FieldFocusRequest } from "$lib/form-builder/renderer/schema-renderer-context";
 	import type { FieldFocusTarget } from "./types";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	type Props = {
 		panelId: string;
@@ -42,8 +43,7 @@
 <div id={panelId}>
 	{#if !capsule}
 		<p class="text-destructive px-3 py-2.5 text-xs">
-			Capsule key "{capsuleKey}" is not registered. Schema renderer skipped for this
-			group.
+			{t("sidebar.capsuleNotRegistered", { key: capsuleKey })}
 		</p>
 	{:else}
 		{#each flatInstanceKeys as instanceKey, instanceIndex (instanceKey)}

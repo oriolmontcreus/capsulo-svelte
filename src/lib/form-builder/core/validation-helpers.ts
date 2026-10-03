@@ -1,4 +1,5 @@
 import type { FieldDefinition } from "./types";
+import { t } from "$lib/admin-i18n/core";
 
 /** Same tokens the editors highlight and the site replaces: `{{key}}`. */
 const VARIABLE_TOKEN_PATTERN = /\{\{\s*[^{}]+?\s*\}\}/;
@@ -24,10 +25,10 @@ export function checkLength(
 	// Count characters the way people do (an emoji is one), not UTF-16 code units.
 	const length = Array.from(text).length;
 	if (minLength !== undefined && length < minLength) {
-		return `${label} needs at least ${minLength} characters (has ${length}).`;
+		return t("validation.minLength", { label, min: minLength, length });
 	}
 	if (maxLength !== undefined && length > maxLength) {
-		return `${label} allows at most ${maxLength} characters (has ${length}).`;
+		return t("validation.maxLength", { label, max: maxLength, length });
 	}
 	return null;
 }
@@ -38,7 +39,7 @@ export function checkPattern(label: string, text: string, pattern: string | RegE
 	const source = typeof pattern === "string" ? pattern : pattern.source;
 	const flags = typeof pattern === "string" ? "" : pattern.flags.replace(/[gy]/g, "");
 	const anchored = new RegExp(`^(?:${source})$`, flags);
-	return anchored.test(text) ? null : `${label} has an invalid format.`;
+	return anchored.test(text) ? null : t("validation.invalidFormat", { label });
 }
 
 /**

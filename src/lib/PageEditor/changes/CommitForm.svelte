@@ -11,6 +11,7 @@
 	import type { IssueListEntry } from "$lib/PageEditor/validate-documents";
 	import type { CommitFailure } from "./commit";
 	import { generateCommitMessage } from "./commit-message-ai";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		message = $bindable(""),
@@ -83,7 +84,7 @@
 					loginNoticeOpen = true;
 				} else {
 					generateError =
-						error instanceof AgentError ? error.message : "Could not generate a commit message. Try again.";
+						error instanceof AgentError ? error.message : t("changes.generateFailed");
 				}
 			}
 		} finally {
@@ -97,7 +98,7 @@
 		<Textarea
 			bind:value={message}
 			rows={3}
-			placeholder="Describe what changed..."
+			placeholder={t("changes.messagePlaceholder")}
 			disabled={!hasChanges || isCommitting}
 			readonly={isGenerating}
 			aria-busy={isGenerating}
@@ -107,7 +108,7 @@
 					generation.abort();
 				}
 			}}
-			aria-label="Commit message"
+			aria-label={t("changes.messageLabel")}
 			class={AI_ENABLED ? "pr-9" : undefined}
 		/>
 		{#if AI_ENABLED}
@@ -119,10 +120,8 @@
 					"text-muted-foreground hover:text-foreground absolute top-1.5 right-1.5",
 					isGenerating && "pointer-events-none",
 				]}
-				title={isGenerating ? undefined : "Generate commit message with AI"}
-				aria-label={isGenerating
-					? "Generating commit message (Esc to stop)"
-					: "Generate commit message with AI"}
+				title={isGenerating ? undefined : t("changes.generateWithAi")}
+				aria-label={isGenerating ? t("changes.generating") : t("changes.generateWithAi")}
 				disabled={!hasChanges || isCommitting}
 				onclick={generate}
 			>
@@ -136,7 +135,7 @@
 			<Popover.Root bind:open={loginNoticeOpen}>
 				<Popover.Content customAnchor={aiButton} side="top" align="end" collisionPadding={8} class="w-72 gap-3">
 					<Popover.Header>
-						<Popover.Title>Cloudflare login needed</Popover.Title>
+						<Popover.Title>{t("changes.cloudflareLoginNeeded")}</Popover.Title>
 					</Popover.Header>
 					<AiNotice text="" code="dev-login-required" />
 					<Button
@@ -145,7 +144,7 @@
 						class="self-end"
 						onclick={() => (loginNoticeOpen = false)}
 					>
-						Dismiss
+						{t("changes.dismiss")}
 					</Button>
 				</Popover.Content>
 			</Popover.Root>
@@ -180,7 +179,7 @@
 		>
 			<p id="commit-issues-title" class="text-destructive flex items-center gap-1.5 text-xs font-medium">
 				<CircleAlertIcon class="size-3.5 shrink-0" aria-hidden="true" />
-				Fix {issues.length} {issues.length === 1 ? "issue" : "issues"} before committing
+				{t("changes.fixIssuesBeforeCommit", { count: issues.length })}
 			</p>
 			<ul class="max-h-48 space-y-1 overflow-y-auto">
 				{#each issues as issue (issue.key)}
@@ -209,6 +208,6 @@
 		{disabled}
 		onclick={() => oncommit()}
 	>
-		{isCommitting ? "Committing..." : "Commit changes"}
+		{isCommitting ? t("changes.committing") : t("changes.commit")}
 	</Button>
 </div>

@@ -50,13 +50,14 @@ export function toggleSelectValue(current: string[], optionValue: string): strin
 	return [...current, optionValue];
 }
 
+/** `placeholder` is shown when nothing is selected (the caller translates the default one). */
 export function formatSelectTriggerLabel(
-	field: SelectFieldDefinition,
 	values: string[],
 	options: SelectOption[],
+	placeholder: string,
 ): string {
 	if (values.length === 0) {
-		return field.placeholder ?? "Select an option";
+		return placeholder;
 	}
 
 	const labels = values
@@ -64,7 +65,7 @@ export function formatSelectTriggerLabel(
 		.filter((label) => label.length > 0);
 
 	if (labels.length === 0) {
-		return field.placeholder ?? "Select an option";
+		return placeholder;
 	}
 
 	return labels.join(", ");

@@ -5,17 +5,21 @@ import ModeWatcherClient from "$lib/components/ModeWatcherClient.svelte";
 import { getLocaleFromPathname } from "$lib/i18n/routing";
 import { PUBLISHED_ELEMENT_ID, getPublishedValues, getPublishedVariables } from "$lib/cms/published";
 import { ClientRouter } from "astro:transitions";
+import { CONFIGURED_UI_LOCALE, FALLBACK_UI_LOCALE } from "$lib/admin-i18n/core";
 
 interface Props {
 	fontFamily?: "sans" | "geist";
 }
 
 const { fontFamily = "sans" } = Astro.props as Props;
-const locale = getLocaleFromPathname(Astro.url.pathname);
+const isAdminPage = Astro.url.pathname.startsWith("/admin");
+// The admin speaks its own language (the editor's pick replaces it on load, see admin-i18n).
+const locale = isAdminPage
+	? (CONFIGURED_UI_LOCALE ?? FALLBACK_UI_LOCALE)
+	: getLocaleFromPathname(Astro.url.pathname);
 
 // Published CMS values and global variables for this page (seeded by src/middleware.ts),
 // embedded so islands hydrate with the same text the build rendered.
-const isAdminPage = Astro.url.pathname.startsWith("/admin");
 const values = isAdminPage ? {} : getPublishedValues();
 const variables = isAdminPage ? {} : getPublishedVariables();
 const publishedJson =

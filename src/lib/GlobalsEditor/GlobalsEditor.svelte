@@ -16,6 +16,7 @@
 
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
 	import { createGlobalsEditorDocument } from "./globals-editor-document.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let locale = $state(DEFAULT_LOCALE);
 	let values = $state<SchemaValues>({});
@@ -71,16 +72,16 @@
 			<div class="flex flex-col gap-2">
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex flex-col gap-2">
-						<h1 class="text-2xl font-normal tracking-tight">Global Variables</h1>
+						<h1 class="text-2xl font-normal tracking-tight">{t("globals.title")}</h1>
 						<p class="text-foreground-muted text-sm">
-							Site-wide settings used in capsule fields via
-							<code class="text-foreground/80">{'{{variable}}'}</code> tokens.
+							{t("globals.descriptionBefore")}
+							<code class="text-foreground/80">{'{{variable}}'}</code>{t("globals.descriptionAfter")}
 						</p>
 					</div>
 
 					<div class="flex shrink-0 items-center gap-2">
 						{#if document.hasUnsavedChanges && !isSaving}
-							<span class="text-muted-foreground text-xs">Unsaved changes</span>
+							<span class="text-muted-foreground text-xs">{t("globals.unsaved")}</span>
 						{/if}
 						<Select.Root type="single" bind:value={locale}>
 							<Select.Trigger
@@ -104,7 +105,7 @@
 							onclick={() => document.saveGlobalsDocument()}
 							disabled={saveDisabled}
 						>
-							{isSaving ? "Saving..." : "Save"}
+							{isSaving ? t("globals.saving") : t("globals.save")}
 						</Button>
 					</div>
 				</div>

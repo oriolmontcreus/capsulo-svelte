@@ -35,6 +35,7 @@
     round,
     setChannelValue,
   } from "./color-utils";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface Props {
     field: ColorPickerFieldDefinition;
@@ -330,7 +331,7 @@
             class="color-area relative h-[180px] w-full cursor-crosshair rounded-lg border border-border"
             onpointerdown={onAreaPointerDown}
             role="slider"
-            aria-label="Saturation and brightness"
+            aria-label={t("color.saturationBrightness")}
             aria-valuenow={round(hsva.s)}
             tabindex="0"
           >
@@ -348,7 +349,7 @@
           <!-- Hue slider -->
           <div class="flex flex-col gap-1 px-1">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-foreground">Hue</span>
+              <span class="text-foreground">{t("color.hue")}</span>
               <span class="text-muted-foreground tabular-nums"
                 >{formatHueOutput()}</span
               >
@@ -358,7 +359,7 @@
               class="color-hue-track relative h-3 w-full cursor-crosshair rounded-full"
               onpointerdown={onHuePointerDown}
               role="slider"
-              aria-label="Hue"
+              aria-label={t("color.hue")}
               aria-valuemin={0}
               aria-valuemax={360}
               aria-valuenow={round(hsva.h)}
@@ -375,7 +376,7 @@
           {#if includeAlpha}
             <div class="flex flex-col gap-1 px-1">
               <div class="flex items-center justify-between text-xs">
-                <span class="text-foreground">Alpha</span>
+                <span class="text-foreground">{t("color.alpha")}</span>
                 <span class="text-muted-foreground tabular-nums"
                   >{formatAlphaOutput()}</span
                 >
@@ -386,7 +387,7 @@
                 style="--alpha-color: {hsvaToCssColor({ ...hsva, a: 1 })};"
                 onpointerdown={onAlphaPointerDown}
                 role="slider"
-                aria-label="Alpha"
+                aria-label={t("color.alpha")}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={round(hsva.a * 100)}

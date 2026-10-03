@@ -7,6 +7,7 @@
 	} from "$lib/utils/format-timestamp";
 	import { groupCommitsByDay, type CommitEntry } from "./history-model";
 	import AuthorAvatar from "./AuthorAvatar.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		commits,
@@ -36,7 +37,7 @@
 </script>
 
 {#if commits.length === 0}
-	<p class="text-muted-foreground p-4 text-sm">No commits yet</p>
+	<p class="text-muted-foreground p-4 text-sm">{t("history.noCommits")}</p>
 {:else}
 	<div class="p-2">
 		{#each groups as group (group.key)}
@@ -62,7 +63,7 @@
 								<span class="line-clamp-2 w-full text-sm">{commit.subject}</span>
 								<span class="flex w-full items-center gap-1.5 text-[11px]">
 									<AuthorAvatar name={commit.authorName} avatarUrl={commit.authorAvatarUrl} />
-									<span class="truncate">{commit.authorName ?? "Unknown author"}</span>
+									<span class="truncate">{commit.authorName ?? t("history.unknownAuthor")}</span>
 									<span aria-hidden="true">·</span>
 									<time
 										datetime={commit.createdAt}
@@ -88,7 +89,7 @@
 					disabled={isLoadingMore}
 					onclick={() => onloadmore()}
 				>
-					{isLoadingMore ? "Loading..." : "Load more"}
+					{isLoadingMore ? t("history.loadingMore") : t("history.loadMore")}
 				</Button>
 			</div>
 		{/if}

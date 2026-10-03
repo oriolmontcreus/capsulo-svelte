@@ -1,6 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel } from "../../core/validation-helpers";
 import type { SelectFieldDefinition } from "./select-field.types";
+import { t } from "$lib/admin-i18n/core";
 
 /** Values of the schema's own options; internal links are built from the site's pages at runtime. */
 function staticOptionValues(field: SelectFieldDefinition): Set<string> | null {
@@ -15,13 +16,13 @@ export const selectFieldValidator: FieldValidator<SelectFieldDefinition> = {
 	validate(field, value) {
 		const label = fieldLabel(field);
 		const values = Array.isArray(value) ? value : [value];
-		if (!values.every((item): item is string => typeof item === "string")) return `${label} has an invalid value.`;
-		if (!field.multiple && values.length > 1) return `${label} takes one option.`;
+		if (!values.every((item): item is string => typeof item === "string")) return t("validation.invalidValue", { label });
+		if (!field.multiple && values.length > 1) return t("validation.oneOption", { label });
 
 		const allowed = staticOptionValues(field);
 		const unknown = allowed ? values.filter((item) => item !== "" && !allowed.has(item)) : [];
 		if (unknown.length > 0) {
-			return `${label} has an option that no longer exists (${unknown.map((item) => `"${item}"`).join(", ")}). Pick another one.`;
+			return t("validation.unknownOption", { label, options: unknown.map((item) => `"${item}"`).join(", ") });
 		}
 		return null;
 	},

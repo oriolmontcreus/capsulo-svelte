@@ -16,6 +16,7 @@
 	} from "./modules/repeater-values";
 	import type { RepeaterFieldDefinition, RepeaterItem } from "./repeater-field.types";
 	import RepeaterItemCard from "./repeater-item.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: RepeaterFieldDefinition;
@@ -31,8 +32,10 @@
 
 	const renderer = getSchemaRendererContext();
 	const items = $derived(Array.isArray(value) ? value : []);
-	const itemName = $derived(field.itemName ?? "item");
-	const pluralName = $derived(field.itemPluralName ?? (field.itemName ? `${field.itemName}s` : "items"));
+	const itemName = $derived(field.itemName ?? t("repeater.defaultItemNameLower"));
+	const pluralName = $derived(
+		field.itemPluralName ?? (field.itemName ? `${field.itemName}s` : t("repeater.defaultItemPluralLower")),
+	);
 	const canAdd = $derived(field.maxItems === undefined || items.length < field.maxItems);
 	const canRemove = $derived(items.length > (field.minItems ?? 0));
 	const editingOtherLocale = $derived(renderer.i18n.editingLocale !== renderer.i18n.defaultLocale);
@@ -169,9 +172,9 @@
 		{#if items.length > 1}
 			<Button variant="ghost" size="xs" class="text-muted-foreground ml-auto" onclick={toggleAll}>
 				{#if allExpanded}
-					<ChevronsDownUp aria-hidden="true" /> Collapse all
+					<ChevronsDownUp aria-hidden="true" /> {t("repeater.collapseAll")}
 				{:else}
-					<ChevronsUpDown aria-hidden="true" /> Expand all
+					<ChevronsUpDown aria-hidden="true" /> {t("repeater.expandAll")}
 				{/if}
 			</Button>
 		{/if}
@@ -184,7 +187,7 @@
 	{#if editingOtherLocale && items.length > 0}
 		<p class="text-muted-foreground flex items-start gap-1.5 text-xs">
 			<Languages class="mt-px size-3.5 shrink-0" aria-hidden="true" />
-			Adding, removing or reordering {pluralName} applies to every language.
+			{t("repeater.appliesToEveryLanguage", { items: pluralName })}
 		</p>
 	{/if}
 
@@ -231,17 +234,17 @@
 		</div>
 	{:else}
 		<div class="text-muted-foreground rounded-lg border border-dashed px-3 py-4 text-center text-sm">
-			No {pluralName} yet
+			{t("repeater.empty", { item: itemName, items: pluralName })}
 		</div>
 	{/if}
 
 	<div class="flex flex-col gap-1">
 		<Button variant="outline" size="sm" class="w-full border-dashed" disabled={!canAdd} onclick={addItem}>
-			<Plus aria-hidden="true" /> Add {itemName}
+			<Plus aria-hidden="true" /> {t("repeater.add", { item: itemName })}
 		</Button>
 		{#if !canAdd}
 			<p class="text-muted-foreground text-center text-xs">
-				Maximum of {field.maxItems} {field.maxItems === 1 ? itemName : pluralName} reached.
+				{t("repeater.maxReached", { max: field.maxItems ?? 0, items: field.maxItems === 1 ? itemName : pluralName })}
 			</p>
 		{/if}
 	</div>

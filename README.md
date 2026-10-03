@@ -84,6 +84,19 @@ Passwords fit the free plan's 10 ms CPU limit. The browser stretches them with P
 
 `capsulo pull --local` snapshots your local database instead, which is handy for checking a production build locally.
 
+## Admin language
+
+The CMS speaks English, Spanish and French. Each editor picks their language from the language button in the admin nav (it's saved on their account); editors who haven't picked one get `admin.locale` from `capsulo.config.ts`, else their browser's language, else English. It's independent of the site's content languages (`i18n`):
+
+```ts
+export default defineCapsuloConfig({
+	i18n: { /* ... */ },
+	admin: { locale: "es" }, // "en" | "es" | "fr"
+});
+```
+
+Messages live in `src/lib/admin-i18n/messages` (`en.ts` is the source of truth). Labels and descriptions in your schemas aren't translated: write them in your editors' language.
+
 ## AI agent
 
 The sparkles button in the admin nav (or `⌘.` / `Ctrl+.`) opens an AI agent that reads your pages and global variables, answers questions about them and edits them on request. Its edits land in the draft, like manual ones: each shows up in the chat with Review and Undo, pages go live from Changes, and global variables with Save. Chats stay in the browser.

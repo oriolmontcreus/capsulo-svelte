@@ -1,6 +1,6 @@
 import { requireUser } from "$lib/server/auth";
 import { commitPages, listCommits } from "$lib/server/content";
-import { HttpError, handle, isRecord, json, readJson } from "$lib/server/http";
+import { HttpError, handle, isRecord, json, readJson, requestUiLocale } from "$lib/server/http";
 import { requestRebuild } from "$lib/server/publish";
 import { scheduleUnusedUploadCleanup } from "$lib/server/uploads";
 
@@ -21,7 +21,7 @@ export const POST = handle(async (context) => {
 	const body = await readJson<unknown>(context.request);
 	if (!isRecord(body)) throw new HttpError(400, "Expected a JSON object.");
 
-	const result = await commitPages(user.id, body.message, body.pages);
+	const result = await commitPages(user.id, body.message, body.pages, requestUiLocale(context));
 	scheduleUnusedUploadCleanup();
 	return json({ ...result, rebuildRequested: requestRebuild() });
 });

@@ -1,6 +1,19 @@
 import { CAPSULO_API_BASE, capsuloFetch } from "$lib/api/capsulo-client";
 
 /**
+ * A failed upload. The message stays in English: public pages import this module (for
+ * `mediaUrl`), so it can't pull in the admin's translations; the admin formats `reason`.
+ */
+export class UploadError extends Error {
+	constructor(
+		readonly fileName: string,
+		readonly reason: string
+	) {
+		super(`Failed to upload "${fileName}": ${reason}`);
+	}
+}
+
+/**
  * Uploads a single file (stored in the project's KV namespace or R2 bucket) and returns its key,
  * `<32 hex chars>-<file name>`. The key is what gets persisted in the form value.
  *
@@ -18,7 +31,7 @@ export async function uploadFile(file: File, signal?: AbortSignal): Promise<stri
 			"X-File-Name": encodeURIComponent(file.name)
 		}
 	});
-	if (error !== null) throw new Error(`Failed to upload "${file.name}": ${error}`);
+	if (error !== null) throw new UploadError(file.name, error);
 	return data.key;
 }
 

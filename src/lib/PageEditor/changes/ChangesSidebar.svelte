@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ChangedPageSummary } from "./changed-pages";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		pages,
@@ -14,7 +15,7 @@
 </script>
 
 {#if pages.length === 0}
-	<div class="text-muted-foreground p-4 text-sm">No changes</div>
+	<div class="text-muted-foreground p-4 text-sm">{t("changes.noChanges")}</div>
 {:else}
 	<ul class="p-2">
 		{#each pages as page (page.pageId)}
@@ -32,9 +33,9 @@
 					{#if issueCounts[page.pageId]}
 						<span
 							class="bg-destructive/10 text-destructive ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
-							title="{issueCounts[page.pageId]} {issueCounts[page.pageId] === 1 ? 'field needs' : 'fields need'} attention"
+							title={t("changes.fieldsNeedAttention", { count: issueCounts[page.pageId] })}
 						>
-							{issueCounts[page.pageId]} {issueCounts[page.pageId] === 1 ? "issue" : "issues"}
+							{t("sidebar.issueCount", { count: issueCounts[page.pageId] })}
 						</span>
 					{/if}
 					<span

@@ -8,6 +8,7 @@ import { commitPageEditorDocuments } from "$lib/PageEditor/page-editor-documents
 import { validatePageValues } from "$lib/PageEditor/validate-documents";
 import { selectCommittableDocuments } from "./commit-selection";
 import { resolveInstanceDefaults } from "./schema-defaults";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 export type CommitFailure = {
 	pageId: string;
@@ -22,10 +23,6 @@ export type CommitResult = {
 	/** Shown after a successful commit: when the live site will reflect it. */
 	publishNotice: string | null;
 };
-
-const REBUILD_NOTICE = "Committed. The live site updates in about 1-2 minutes.";
-const NO_REBUILD_NOTICE =
-	"Committed. Auto-publish is not set up yet, so run `capsulo deploy` to update the live site.";
 
 async function resolveUserId(): Promise<string | null> {
 	let userId = get(session)?.user?.id ?? null;
@@ -54,7 +51,7 @@ export async function commitChanges(
 		return {
 			committedPageIds: [],
 			failures: [],
-			errorMessage: "You must be signed in to commit changes.",
+			errorMessage: t("commit.signInRequired"),
 			publishNotice: null
 		};
 	}
@@ -76,7 +73,7 @@ export async function commitChanges(
 		return {
 			committedPageIds: [],
 			failures: [],
-			errorMessage: `${issueCount} ${issueCount === 1 ? "field needs" : "fields need"} fixing before you can commit.`,
+			errorMessage: t("commit.fieldsNeedFixing", { count: issueCount }),
 			publishNotice: null
 		};
 	}
@@ -107,6 +104,6 @@ export async function commitChanges(
 		committedPageIds: committable.map((document) => document.pageId),
 		failures: [],
 		errorMessage: null,
-		publishNotice: result.rebuildRequested ? REBUILD_NOTICE : NO_REBUILD_NOTICE
+		publishNotice: t(result.rebuildRequested ? "commit.rebuildNotice" : "commit.noRebuildNotice")
 	};
 }

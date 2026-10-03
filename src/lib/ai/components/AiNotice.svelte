@@ -2,6 +2,7 @@
 	import CheckIcon from "@lucide/svelte/icons/check";
 	import CopyIcon from "@lucide/svelte/icons/copy";
 	import type { ChatEntry } from "../chat-storage";
+	import { formatDate, t } from "$lib/admin-i18n/i18n.svelte";
 
 	type NoticeCode = Extract<ChatEntry, { kind: "notice" }>["code"];
 
@@ -14,7 +15,7 @@
 	const resetTime = $derived.by(() => {
 		const now = new Date();
 		const reset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-		return reset.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+		return formatDate(reset, { hour: "numeric", minute: "2-digit" });
 	});
 
 	async function copyCommand() {
@@ -32,14 +33,14 @@
 	role={code ? "alert" : undefined}
 >
 	{#if code === "dev-login-required"}
-		<p>The AI agent calls Cloudflare Workers AI, which needs your Cloudflare login in local dev. Run this once in the project folder, then try again:</p>
+		<p>{t("ai.devLoginRequired")}</p>
 		<div class="bg-background border-border mt-2 flex items-center gap-2 rounded-md border px-2 py-1 font-mono">
 			<span class="flex-1">{LOGIN_COMMAND}</span>
 			<button
 				type="button"
 				class="text-muted-foreground hover:text-foreground"
 				onclick={copyCommand}
-				aria-label="Copy command"
+				aria-label={t("ai.copyCommand")}
 			>
 				{#if copied}
 					<CheckIcon class="size-3" aria-hidden="true" />
@@ -49,7 +50,7 @@
 			</button>
 		</div>
 	{:else if code === "quota-exceeded"}
-		<p>You've used today's free AI allowance. It resets at {resetTime} your time (00:00 UTC). Nothing is charged.</p>
+		<p>{t("ai.quotaExceeded", { time: resetTime })}</p>
 	{:else}
 		<p>{text}</p>
 	{/if}

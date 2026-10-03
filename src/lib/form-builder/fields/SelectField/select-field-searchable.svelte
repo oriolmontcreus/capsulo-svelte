@@ -25,6 +25,7 @@
     normalizeSelectValue,
     toggleSelectValue,
   } from "./modules/select-value";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface Props {
     field: SelectFieldDefinition;
@@ -57,10 +58,10 @@
   );
   const triggerLabel = $derived(
     field.multiple
-      ? formatSelectTriggerLabel(field, multipleValue, allOptions)
+      ? formatSelectTriggerLabel(multipleValue, allOptions, field.placeholder ?? t("select.placeholder"))
       : singleValue
         ? (selectedOption?.label ?? singleValue)
-        : (field.placeholder ?? "Select an option"),
+        : (field.placeholder ?? t("select.placeholder")),
   );
   const hasSelection = $derived(
     field.multiple ? multipleValue.length > 0 : Boolean(singleValue),
@@ -177,14 +178,14 @@
           bind:ref={searchInputRef}
           type="search"
           bind:value={searchQuery}
-          placeholder={field.searchPlaceholder ?? "Search..."}
+          placeholder={field.searchPlaceholder ?? t("select.searchPlaceholder")}
           class="h-9"
           autocomplete="off"
         />
       </div>
       <Command.List class="max-h-64 overflow-y-auto p-1">
         <Command.Empty class="text-muted-foreground py-6 text-center text-sm">
-          {field.emptyMessage ?? "No results found."}
+          {field.emptyMessage ?? t("select.noResults")}
         </Command.Empty>
         {#if filteredCount > 0}
           <SelectFieldSearchableList

@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
+import { getUiLocale, isUiLocale, setUiLocale, type UiLocale } from "$lib/admin-i18n/i18n.svelte";
 
 /** The signed-in editor, as returned by `/api/capsulo/auth/me`. */
 export type SessionUser = {
@@ -8,6 +9,8 @@ export type SessionUser = {
 	email: string | null;
 	name: string | null;
 	avatarUrl: string | null;
+	/** Admin UI language the editor picked; null follows the project default. */
+	uiLocale: UiLocale | null;
 };
 
 export type Session = { user: SessionUser };
@@ -18,9 +21,25 @@ export function sessionDisplayName(user: SessionUser | null | undefined): string
 	return user?.name?.trim() || user?.login || "";
 }
 
+/** The language saved on the account wins over this browser's (it may have been changed elsewhere). */
+function applyAccountUiLocale(user: SessionUser): void {
+	if (isUiLocale(user.uiLocale) && user.uiLocale !== getUiLocale()) setUiLocale(user.uiLocale);
+}
+
 export async function syncSession(): Promise<void> {
 	const { data } = await capsuloFetch<{ user: SessionUser | null }>("/auth/me");
 	session.set(data?.user ? { user: data.user } : null);
+	if (data?.user) applyAccountUiLocale(data.user);
+}
+
+/** Switches the admin language now and saves it on the signed-in editor's account. */
+export async function changeUiLocale(locale: UiLocale): Promise<void> {
+	setUiLocale(locale);
+	const { data } = await capsuloFetch<{ user: SessionUser }>("/auth/me", {
+		method: "PATCH",
+		body: jsonBody({ uiLocale: locale })
+	});
+	if (data?.user) session.set({ user: data.user });
 }
 
 export type SignInResult = { user: SessionUser; error: null } | { user: null; error: string };
@@ -45,6 +64,7 @@ export async function signIn(login: string, password: string): Promise<SignInRes
 	if (result.error !== null) return { user: null, error: result.error };
 
 	session.set({ user: result.data.user });
+	applyAccountUiLocale(result.data.user);
 	return { user: result.data.user, error: null };
 }
 

@@ -15,6 +15,7 @@ import { isFieldHidden, isFieldRequired, resolveConditionValues } from "./condit
 import { normalizeRepeaterItems, repeaterItemValues, resolveFieldValue } from "./translation-runtime";
 import type { FieldDefinition, FieldType, SchemaDefinition, SchemaValues } from "./types";
 import { fieldLabel } from "./validation-helpers";
+import { t } from "$lib/admin-i18n/core";
 
 export interface FieldValidator<TField extends FieldDefinition> {
 	/** Whether the value counts as "not filled in" for `required`. */
@@ -77,7 +78,7 @@ export function validateFieldValue(field: FieldDefinition, value: unknown): stri
 }
 
 function requiredMessage(field: FieldDefinition): string {
-	return getValidator(field)?.requiredMessage?.(field) ?? `${fieldLabel(field)} is required.`;
+	return getValidator(field)?.requiredMessage?.(field) ?? t("validation.required", { label: fieldLabel(field) });
 }
 
 /** Locales a field's values are stored under: translatable fields have one per locale. */

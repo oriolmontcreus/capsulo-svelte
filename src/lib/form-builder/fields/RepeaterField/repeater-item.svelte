@@ -17,6 +17,7 @@
 	import { getSchemaRendererContext } from "../../renderer/schema-renderer-context";
 	import { getRepeaterItemSummary, repeaterItemLabel } from "./modules/repeater-values";
 	import type { RepeaterFieldDefinition, RepeaterItem } from "./repeater-field.types";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: RepeaterFieldDefinition;
@@ -59,7 +60,7 @@
 	}: Props = $props();
 
 	const renderer = getSchemaRendererContext();
-	const itemName = $derived(field.itemName ?? "item");
+	const itemName = $derived(field.itemName ?? t("repeater.defaultItemNameLower"));
 	const summary = $derived(
 		getRepeaterItemSummary(field, item, renderer.i18n.editingLocale, renderer.i18n.defaultLocale),
 	);
@@ -93,8 +94,8 @@
 		<button
 			type="button"
 			class="text-muted-foreground hover:text-foreground flex size-7 shrink-0 cursor-grab items-center justify-center rounded-md active:cursor-grabbing"
-			aria-label="Drag to reorder {label}"
-			title="Drag to reorder"
+			aria-label={t("repeater.dragToReorderItem", { item: label })}
+			title={t("repeater.dragToReorder")}
 			onpointerdown={onHandlePointerDown}
 		>
 			<GripVertical class="size-4" aria-hidden="true" />
@@ -114,10 +115,10 @@
 			{#if errorCount > 0}
 				<span
 					class="bg-destructive/10 text-destructive shrink-0 rounded-full px-1.5 text-xs font-medium tabular-nums"
-					title="{errorCount} {errorCount === 1 ? 'field needs' : 'fields need'} attention"
+					title={t("repeater.fieldsNeedAttention", { count: errorCount })}
 				>
 					{errorCount}
-					<span class="sr-only">{errorCount === 1 ? "error" : "errors"}</span>
+					<span class="sr-only">{t("repeater.errors", { count: errorCount })}</span>
 				</span>
 			{/if}
 			<ChevronDown
@@ -134,7 +135,7 @@
 						bind:ref={menuTrigger}
 						variant="ghost"
 						size="icon-sm"
-						aria-label="Actions for {label}"
+						aria-label={t("repeater.actionsFor", { item: label })}
 					>
 						<Ellipsis aria-hidden="true" />
 					</Button>
@@ -142,13 +143,13 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end" class="w-44">
 				<DropdownMenu.Item disabled={index === 0} onSelect={() => onMove(index - 1)}>
-					<ArrowUp aria-hidden="true" /> Move up
+					<ArrowUp aria-hidden="true" /> {t("repeater.moveUp")}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item disabled={index === count - 1} onSelect={() => onMove(index + 1)}>
-					<ArrowDown aria-hidden="true" /> Move down
+					<ArrowDown aria-hidden="true" /> {t("repeater.moveDown")}
 				</DropdownMenu.Item>
 				<DropdownMenu.Item disabled={!canAdd} onSelect={onDuplicate}>
-					<Copy aria-hidden="true" /> Duplicate
+					<Copy aria-hidden="true" /> {t("repeater.duplicate")}
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item
@@ -156,7 +157,7 @@
 					disabled={!canRemove}
 					onSelect={() => (confirmOpen = true)}
 				>
-					<Trash2 aria-hidden="true" /> Delete
+					<Trash2 aria-hidden="true" /> {t("repeater.delete")}
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
@@ -164,13 +165,13 @@
 		<Popover.Root bind:open={confirmOpen}>
 			<Popover.Content customAnchor={menuTrigger} side="bottom" align="end" class="w-64 gap-3">
 				<Popover.Header>
-					<Popover.Title>Delete this {itemName}?</Popover.Title>
+					<Popover.Title>{t("repeater.deleteTitle", { item: itemName })}</Popover.Title>
 					<Popover.Description>
-						{summary ? `"${summary}"` : label} is removed in every language.
+						{t("repeater.deleteDescription", { item: summary ? `"${summary}"` : label })}
 					</Popover.Description>
 				</Popover.Header>
 				<div class="flex justify-end gap-2">
-					<Button variant="outline" size="sm" onclick={() => (confirmOpen = false)}>Cancel</Button>
+					<Button variant="outline" size="sm" onclick={() => (confirmOpen = false)}>{t("repeater.cancel")}</Button>
 					<Button
 						variant="destructive"
 						size="sm"
@@ -179,7 +180,7 @@
 							onRemove();
 						}}
 					>
-						Delete
+						{t("repeater.delete")}
 					</Button>
 				</div>
 			</Popover.Content>

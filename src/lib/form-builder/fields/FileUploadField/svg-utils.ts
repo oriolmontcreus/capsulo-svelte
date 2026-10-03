@@ -1,3 +1,5 @@
+import { t } from "$lib/admin-i18n/i18n.svelte";
+
 export function isSvgPath(path: string): boolean {
 	return /\.svg$/i.test(path);
 }
@@ -56,7 +58,7 @@ export interface SvgValidationResult {
 // Validates that a string is well-formed SVG with an <svg> root element.
 export function validateSvg(content: string): SvgValidationResult {
 	if (!content.trim()) {
-		return { valid: false, error: "SVG content cannot be empty" };
+		return { valid: false, error: t("svg.empty") };
 	}
 
 	try {
@@ -65,15 +67,15 @@ export function validateSvg(content: string): SvgValidationResult {
 
 		const parserError = doc.querySelector("parsererror");
 		if (parserError) {
-			return { valid: false, error: "Invalid SVG syntax" };
+			return { valid: false, error: t("svg.invalidSyntax") };
 		}
 
 		if (doc.documentElement.tagName.toLowerCase() !== "svg") {
-			return { valid: false, error: "Root element must be <svg>" };
+			return { valid: false, error: t("svg.rootMustBeSvg") };
 		}
 
 		return { valid: true, error: null };
 	} catch {
-		return { valid: false, error: "Invalid SVG format" };
+		return { valid: false, error: t("svg.invalidFormat") };
 	}
 }

@@ -1,6 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { checkLength, checkPattern, containsVariableToken, fieldLabel, isBlankString } from "../../core/validation-helpers";
 import type { TextFieldDefinition } from "./text-field.types";
+import { t } from "$lib/admin-i18n/core";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -23,12 +24,14 @@ function matchesStep(value: number, step: number, base: number): boolean {
 
 function validateNumber(field: TextFieldDefinition, value: unknown): string | null {
 	const label = fieldLabel(field);
-	if (typeof value !== "number" || !Number.isFinite(value)) return `${label} must be a number.`;
-	if (field.min !== undefined && value < field.min) return `${label} must be at least ${field.min}.`;
-	if (field.max !== undefined && value > field.max) return `${label} must be at most ${field.max}.`;
-	if (field.allowDecimals === false && !Number.isInteger(value)) return `${label} must be a whole number.`;
+	if (typeof value !== "number" || !Number.isFinite(value)) return t("validation.notNumber", { label });
+	if (field.min !== undefined && value < field.min) return t("validation.minNumber", { label, min: field.min });
+	if (field.max !== undefined && value > field.max) return t("validation.maxNumber", { label, max: field.max });
+	if (field.allowDecimals === false && !Number.isInteger(value)) return t("validation.wholeNumber", { label });
 	if (field.step !== undefined && !matchesStep(value, field.step, field.min ?? 0)) {
-		return `${label} must be in steps of ${field.step}${field.min ? ` from ${field.min}` : ""}.`;
+		return field.min
+			? t("validation.stepFrom", { label, step: field.step, min: field.min })
+			: t("validation.step", { label, step: field.step });
 	}
 	return null;
 }
@@ -42,16 +45,16 @@ export const textFieldValidator: FieldValidator<TextFieldDefinition> = {
 		if (field.inputType === "number") return validateNumber(field, value);
 
 		const label = fieldLabel(field);
-		if (typeof value !== "string") return `${label} must be text.`;
+		if (typeof value !== "string") return t("validation.notText", { label });
 		const lengthError = checkLength(label, value, field.minLength, field.maxLength);
 		if (lengthError) return lengthError;
 		// `{{variable}}` tokens are replaced on the site, so the raw text can't be format-checked.
 		if (containsVariableToken(value)) return null;
 		if (field.inputType === "email" && !EMAIL_PATTERN.test(value.trim())) {
-			return `${label} must be a valid email address.`;
+			return t("validation.email", { label });
 		}
 		if (field.inputType === "url" && !isUrl(value.trim())) {
-			return `${label} must be a full URL (https://...) or a path starting with "/".`;
+			return t("validation.url", { label });
 		}
 		return checkPattern(label, value, field.regex);
 	},

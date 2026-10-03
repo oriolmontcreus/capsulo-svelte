@@ -1,6 +1,7 @@
 import { CAPSULO_API_BASE } from "$lib/api/capsulo-client";
 import type { AiErrorCode, AiResponseBody } from "./protocol";
 import type { AiStreamEvent } from "./stream";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 export class AgentError extends Error {
 	constructor(
@@ -13,8 +14,8 @@ export class AgentError extends Error {
 
 async function readError(response: Response): Promise<AgentError> {
 	const payload = (await response.json().catch(() => null)) as { error?: string; code?: AiErrorCode } | null;
-	if (response.status === 401 && !payload?.code) return new AgentError("Your session expired. Sign in again.", "unauthorized");
-	return new AgentError(payload?.error ?? `The AI request failed (${response.status}).`, payload?.code ?? "model-error");
+	if (response.status === 401 && !payload?.code) return new AgentError(t("ai.sessionExpired"), "unauthorized");
+	return new AgentError(payload?.error ?? t("ai.requestFailed", { status: response.status }), payload?.code ?? "model-error");
 }
 
 /**
@@ -39,7 +40,7 @@ export async function requestAiStream(
 		});
 	} catch (error) {
 		if (signal.aborted) throw error;
-		throw new AgentError("Could not reach the server. Check your connection and try again.", "network");
+		throw new AgentError(t("ai.unreachable"), "network");
 	}
 	if (!response.ok || !response.body) throw await readError(response);
 
@@ -70,9 +71,9 @@ export async function requestAiStream(
 		if (result) return result;
 	} catch (error) {
 		if (signal.aborted || error instanceof AgentError) throw error;
-		throw new AgentError("The connection dropped before the reply finished. Try again.", "network");
+		throw new AgentError(t("ai.connectionDropped"), "network");
 	} finally {
 		reader.cancel().catch(() => {});
 	}
-	throw new AgentError("The connection dropped before the reply finished. Try again.", "network");
+	throw new AgentError(t("ai.connectionDropped"), "network");
 }

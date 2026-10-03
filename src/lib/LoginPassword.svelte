@@ -12,6 +12,7 @@
   } from "$lib/components/ui/field";
   import { Input } from "$lib/components/ui/input";
   import { Button } from "$lib/components/ui/button";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   const signedInUser = $derived($session?.user ?? null);
 
@@ -45,7 +46,7 @@
     errorMessage = "";
     const trimmedLogin = login.trim();
     if (!trimmedLogin || !password) {
-      errorMessage = "Enter your email or username and your password.";
+      errorMessage = t("login.missingCredentials");
       return;
     }
 
@@ -64,22 +65,22 @@
 
 <Card.Root class="mx-auto w-full max-w-sm">
   <Card.Header>
-    <Card.Title class="text-2xl">Sign in</Card.Title>
+    <Card.Title class="text-2xl">{t("login.title")}</Card.Title>
     <Card.Description class="text-balance">
-      Use the login and password your developer gave you.
+      {t("login.description")}
     </Card.Description>
   </Card.Header>
   <Card.Content class="flex flex-col gap-4">
     {#if signedInUser}
       <Button href={nextPath()} class="w-full" variant="secondary">
-        Continue as {sessionDisplayName(signedInUser)}
+        {t("login.continueAs", { name: sessionDisplayName(signedInUser) })}
         <ArrowRight data-icon="inline-end" />
       </Button>
     {/if}
     <form onsubmit={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel for={loginInputId}>Email or username</FieldLabel>
+          <FieldLabel for={loginInputId}>{t("login.loginLabel")}</FieldLabel>
           <FieldContent>
             <Input
               id={loginInputId}
@@ -95,7 +96,7 @@
           </FieldContent>
         </Field>
         <Field>
-          <FieldLabel for={passwordInputId}>Password</FieldLabel>
+          <FieldLabel for={passwordInputId}>{t("login.passwordLabel")}</FieldLabel>
           <FieldContent>
             <Input
               id={passwordInputId}
@@ -112,7 +113,7 @@
         </Field>
         <Field>
           <Button type="submit" class="w-full" variant="surface" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in..." : "Sign in"}
+            {isSubmitting ? t("login.submitting") : t("login.submit")}
           </Button>
         </Field>
       </FieldGroup>

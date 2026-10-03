@@ -14,6 +14,7 @@ import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes
 import { validateGlobalsContent, type ContentIssue } from "$lib/capsules/core/validate-content";
 import { VALIDATION_OPTIONS } from "$lib/PageEditor/validate-documents";
 import { session, syncSession } from "$lib/stores/session";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 const DRAFT_PERSIST_DEBOUNCE_MS = 250;
 
@@ -88,7 +89,7 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 			if (draft && !draftDiffers) void clearGlobalsDraft();
 			hasExistingDocument = globalsStore.hasExistingDocument;
 		} catch (error) {
-			loadError = error instanceof Error ? error.message : "Failed to load global variables";
+			loadError = error instanceof Error ? error.message : t("globals.loadFailedGeneric");
 		}
 		isLoading = false;
 		syncSaveState();
