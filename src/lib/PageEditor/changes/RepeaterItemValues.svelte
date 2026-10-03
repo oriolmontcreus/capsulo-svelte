@@ -3,6 +3,7 @@
 	import type { RepeaterFieldDefinition, RepeaterItem } from "$lib/form-builder/core/types";
 	import { normalizeForComparison } from "./diff-model";
 	import FieldValueView from "./FieldValueView.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	/** Read-only list of an item's filled-in child values, with a tag on translations. */
 	let { field, item }: { field: RepeaterFieldDefinition; item: RepeaterItem } = $props();
@@ -33,5 +34,5 @@
 		{/each}
 	</dl>
 {:else}
-	<span class="text-muted-foreground text-sm italic">empty</span>
+	<span class="text-muted-foreground text-sm italic">{t("diff.empty")}</span>
 {/if}

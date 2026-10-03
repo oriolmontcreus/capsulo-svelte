@@ -1,0 +1,58 @@
+---
+/**
+ * Keeps admin pages from showing the language they were prerendered in when the editor uses
+ * another one: islands stay invisible until they hydrate (and translate themselves), and the next
+ * page's island code is loaded before the client router shows it. Must come before the islands.
+ */
+import {
+	BUILD_UI_LOCALE,
+	CONFIGURED_UI_LOCALE,
+	FALLBACK_UI_LOCALE,
+	UI_LOCALE_COOKIE,
+	UI_LOCALES
+} from "$lib/admin-i18n/core";
+---
+
+<script
+	is:inline
+	define:vars={{
+		cookieName: UI_LOCALE_COOKIE,
+		locales: UI_LOCALES,
+		configured: CONFIGURED_UI_LOCALE ?? null,
+		fallback: FALLBACK_UI_LOCALE,
+		build: BUILD_UI_LOCALE
+	}}
+>
+	// Same order as resolveUiLocale (admin-i18n/core.ts), before any module loads: the editor's
+	// choice, admin.locale, the browser's language, the fallback.
+	try {
+		var prefix = cookieName + "=";
+		var cookie = document.cookie.split("; ").find(function (entry) {
+			return entry.indexOf(prefix) === 0;
+		});
+		var stored = cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+		var browser = (navigator.languages || [navigator.language]).map(function (language) {
+			return String(language).toLowerCase().split(/[-_]/)[0];
+		});
+		var locale =
+			locales.indexOf(stored) >= 0
+				? stored
+				: configured ||
+					browser.find(function (language) {
+						return locales.indexOf(language) >= 0;
+					}) ||
+					fallback;
+		if (locale !== build) document.documentElement.setAttribute("data-ui-pending", "");
+	} catch {}
+</script>
+
+<script>
+	import "$lib/admin-i18n/navigation-preload";
+</script>
+
+<style is:global>
+	/* Astro drops `ssr` once an island has hydrated, i.e. once it shows the editor's language. */
+	html[data-ui-pending] astro-island[ssr] {
+		visibility: hidden;
+	}
+</style>

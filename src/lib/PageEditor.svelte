@@ -30,6 +30,7 @@
     type PreviewDeviceId,
   } from "$lib/PageEditor/preview-devices";
   import { Button } from "$lib/components/ui/button";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
   type Props = {
     pageId?: string;
     entries?: import("$lib/capsules/core/types").CapsuleManifestEntry[];
@@ -138,7 +139,7 @@
         <BreadcrumbList class="text-xs">
           <BreadcrumbItem>
             <BreadcrumbLink href="/admin/page-editor">
-              Pages
+              {t("pageEditor.pages")}
             </BreadcrumbLink>
           </BreadcrumbItem>
 
@@ -165,7 +166,7 @@
         href="/admin/changes"
         class="h-7 px-3 text-white rounded-full border border-card"
       >
-        Review changes
+        {t("pageEditor.reviewChanges")}
       </Button>
     </nav>
 
@@ -186,7 +187,7 @@
       <!-- Resizer -->
       <div
         role="separator"
-        aria-label="Resize sidebar"
+        aria-label={t("pageEditor.resizeSidebar")}
         aria-orientation="vertical"
         aria-valuemin={sidebarMinWidth}
         aria-valuemax={sidebarMaxWidth}

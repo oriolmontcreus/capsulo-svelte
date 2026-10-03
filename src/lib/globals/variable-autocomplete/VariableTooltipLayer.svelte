@@ -5,6 +5,7 @@
 	import * as Tooltip from "$lib/components/ui/tooltip";
 
 	import { GLOBAL_VARIABLES_CONTEXT_KEY, type GlobalVariablesContext } from "./context";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	type Props = {
 		children: Snippet;
@@ -105,9 +106,9 @@
 				sideOffset={6}
 				onpointerdown={(event) => event.preventDefault()}
 			>
-				{#if previewText === "Empty"}
-					<span class="text-muted-foreground italic">Empty</span>
-				{:else if previewText === "Unknown variable"}
+				{#if previewText === t("variables.empty")}
+					<span class="text-muted-foreground italic">{previewText}</span>
+				{:else if previewText === t("variables.unknown")}
 					<span class="text-destructive">{previewText}</span>
 				{:else}
 					{previewText}

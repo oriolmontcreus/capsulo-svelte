@@ -23,6 +23,7 @@
   import CodeEditor from "./CodeEditor.svelte";
   import { formatSvg, validateSvg } from "./svg-utils";
   import { detectSvgBrightness } from "./image-brightness";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface Props {
     open: boolean;
@@ -71,9 +72,9 @@
 
     void (async () => {
       try {
-        if (!currentUrl) throw new Error("No SVG source provided");
+        if (!currentUrl) throw new Error(t("svg.noSource"));
         const response = await fetch(currentUrl);
-        if (!response.ok) throw new Error("Failed to load SVG");
+        if (!response.ok) throw new Error(t("svg.loadFailed"));
         const content = await response.text();
 
         if (cancelled) return;
@@ -84,14 +85,14 @@
         originalContent = formatted;
       } catch (err) {
         if (cancelled) return;
-        const message = err instanceof Error ? err.message : "Failed to load SVG";
+        const message = err instanceof Error ? err.message : t("svg.loadFailed");
         const isCorsError =
           message.includes("CORS") ||
           message.includes("NetworkError") ||
           message.includes("fetch");
         error =
           isCorsError && currentUrl
-            ? "Could not load the SVG (possible CORS/network issue). Try again."
+            ? t("svg.loadFailedNetwork")
             : message;
       } finally {
         if (!cancelled) isLoading = false;
@@ -185,7 +186,7 @@
       await onSave(svgContent);
       open = false;
     } catch (err) {
-      error = err instanceof Error ? err.message : "Failed to save SVG";
+      error = err instanceof Error ? err.message : t("svg.saveFailed");
     } finally {
       isSaving = false;
     }
@@ -210,10 +211,10 @@
     <DialogHeader class="shrink-0 border-b px-6 pt-6 pb-4">
       <DialogTitle class="flex items-center gap-2">
         <CodeIcon class="size-5" />
-        Edit SVG: {fileName}
+        {t("svg.editTitle", { name: fileName })}
       </DialogTitle>
       <DialogDescription>
-        Modify the SVG code on the left. The preview updates in real time on the right.
+        {t("svg.editDescription")}
       </DialogDescription>
     </DialogHeader>
 
@@ -234,7 +235,7 @@
       <div class="flex flex-1 gap-4 overflow-hidden p-6">
         <div class="flex flex-1 flex-col gap-2 overflow-hidden">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-medium">Code</p>
+            <p class="text-sm font-medium">{t("svg.code")}</p>
             {#if validationError}
               <div class="text-destructive flex items-center gap-2 text-sm">
                 <AlertCircleIcon class="size-4" />
@@ -251,7 +252,7 @@
 
         <div class="flex flex-1 flex-col gap-2 overflow-hidden">
           <div class="flex items-center justify-between">
-            <p class="text-sm font-medium">Preview</p>
+            <p class="text-sm font-medium">{t("svg.preview")}</p>
             <div
               class="bg-muted/50 flex items-center gap-2.5 rounded-full px-2.5 py-1.5"
             >
@@ -285,7 +286,7 @@
                 type="button"
                 onclick={() => (bgColor = "black")}
                 class="group flex cursor-pointer items-center gap-1.5"
-                aria-label="Dark background"
+                aria-label={t("svg.darkBackground")}
               >
                 <div
                   class={cn(
@@ -295,14 +296,14 @@
                       : "ring-border group-hover:ring-primary/50 ring-1",
                   )}
                 ></div>
-                <span class="text-muted-foreground text-[10px] font-medium">Dark</span>
+                <span class="text-muted-foreground text-[10px] font-medium">{t("svg.dark")}</span>
               </button>
 
               <button
                 type="button"
                 onclick={() => (bgColor = "white")}
                 class="group flex cursor-pointer items-center gap-1.5"
-                aria-label="Light background"
+                aria-label={t("svg.lightBackground")}
               >
                 <div
                   class={cn(
@@ -312,7 +313,7 @@
                       : "ring-border group-hover:ring-primary/50 ring-1",
                   )}
                 ></div>
-                <span class="text-muted-foreground text-[10px] font-medium">Light</span>
+                <span class="text-muted-foreground text-[10px] font-medium">{t("svg.light")}</span>
               </button>
             </div>
           </div>
@@ -322,7 +323,7 @@
             style:background-color={bgColor === "black" ? "#000" : "#fff"}
           >
             {#if validationError}
-              <p class="text-muted-foreground text-sm">Fix errors to see preview</p>
+              <p class="text-muted-foreground text-sm">{t("svg.fixErrors")}</p>
             {:else if svgContent.trim()}
               <div
                 bind:this={previewContainerEl}
@@ -341,7 +342,7 @@
                 </div>
               </div>
             {:else}
-              <p class="text-muted-foreground text-sm">Unable to generate preview</p>
+              <p class="text-muted-foreground text-sm">{t("svg.noPreview")}</p>
             {/if}
           </div>
         </div>
@@ -349,14 +350,14 @@
 
       <DialogFooter class="shrink-0 border-t px-6 pt-4 pb-6">
         <Button variant="outline" onclick={() => handleOpenChange(false)} disabled={isSaving}>
-          Cancel
+          {t("svg.cancel")}
         </Button>
         <Button onclick={handleSave} disabled={!hasChanges || isSaving || !!validationError}>
           {#if isSaving}
             <Loader2Icon class="mr-2 size-4 animate-spin" />
-            Saving...
+            {t("svg.saving")}
           {:else}
-            Save
+            {t("svg.save")}
           {/if}
         </Button>
       </DialogFooter>

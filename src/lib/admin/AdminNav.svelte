@@ -15,13 +15,17 @@
   import { signOut } from "$lib/stores/session";
   import { AI_ENABLED } from "$lib/ai/config";
   import { aiSidebar, toggleAiSidebar } from "$lib/ai/ai-sidebar-state.svelte";
+  import { t, type MessageKey } from "$lib/admin-i18n/i18n.svelte";
+  import LanguageSwitcher from "./LanguageSwitcher.svelte";
+  import { ADMIN_PORTAL_HOST } from "./portal-host";
+  import { BitsConfig } from "bits-ui";
 
   type AdminRoute = "page-editor" | "globals" | "changes" | "history";
 
   type NavItem = {
     id: AdminRoute;
     href: string;
-    label: string;
+    labelKey: MessageKey;
     icon: typeof FileTextIcon;
     matchPrefix: string;
   };
@@ -32,28 +36,28 @@
     {
       id: "page-editor",
       href: "/admin/page-editor",
-      label: "Page Editor",
+      labelKey: "nav.pageEditor",
       icon: FileTextIcon,
       matchPrefix: "/admin/page-editor",
     },
     {
       id: "globals",
       href: "/admin/globals",
-      label: "Global Variables",
+      labelKey: "nav.globals",
       icon: GlobeIcon,
       matchPrefix: "/admin/globals",
     },
     {
       id: "changes",
       href: "/admin/changes",
-      label: "Changes",
+      labelKey: "nav.changes",
       icon: GitCompareArrowsIcon,
       matchPrefix: "/admin/changes",
     },
     {
       id: "history",
       href: "/admin/history",
-      label: "History",
+      labelKey: "nav.history",
       icon: HistoryIcon,
       matchPrefix: "/admin/history",
     },
@@ -108,10 +112,12 @@
   });
 </script>
 
+<!-- The nav persists across navigations: its menus and tooltips must too. -->
+<BitsConfig defaultPortalTo={ADMIN_PORTAL_HOST}>
 <Tooltip.Provider delayDuration={150}>
   <aside
     class="border-border bg-background flex h-full w-11 shrink-0 flex-col border-r"
-    aria-label="Admin navigation"
+    aria-label={t("nav.label")}
   >
     <nav class="flex flex-col items-center gap-2 py-2">
       {#each navItems as item (item.id)}
@@ -134,11 +140,11 @@
                 )}
               >
                 <Icon class="size-3.5" aria-hidden="true" />
-                <span class="sr-only">{item.label}</span>
+                <span class="sr-only">{t(item.labelKey)}</span>
                 {#if item.id === "changes" && changedCount > 0}
                   <span
                     class="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 flex min-w-3.5 items-center justify-center rounded-full px-1 text-[9px] leading-none font-medium tabular-nums"
-                    aria-label="{changedCount} pages with changes"
+                    aria-label={t("nav.pagesWithChanges", { count: changedCount })}
                   >
                     {changedCount}
                   </span>
@@ -146,7 +152,7 @@
               </a>
             {/snippet}
           </Tooltip.Trigger>
-          <Tooltip.Content side="right">{item.label}</Tooltip.Content>
+          <Tooltip.Content side="right">{t(item.labelKey)}</Tooltip.Content>
         </Tooltip.Root>
       {/each}
     </nav>
@@ -174,13 +180,18 @@
                 )}
               >
                 <SparklesIcon class="size-3.5" aria-hidden="true" />
-                <span class="sr-only">AI agent</span>
+                <span class="sr-only">{t("nav.aiAgent")}</span>
               </button>
             {/snippet}
           </Tooltip.Trigger>
-          <Tooltip.Content side="right">AI agent ({aiShortcutLabel})</Tooltip.Content>
+          <Tooltip.Content side="right">{t("nav.aiAgentShortcut", { shortcut: aiShortcutLabel })}</Tooltip.Content>
         </Tooltip.Root>
       {/if}
+      <LanguageSwitcher
+        variant="ghost"
+        side="right"
+        class="text-muted-foreground hover:text-foreground size-8"
+      />
       <LightSwitch variant="ghost" class="size-8" />
       <Tooltip.Root>
         <Tooltip.Trigger>
@@ -196,12 +207,13 @@
               )}
             >
               <LogOutIcon class="size-3.5" aria-hidden="true" />
-              <span class="sr-only">Sign out</span>
+              <span class="sr-only">{t("nav.signOut")}</span>
             </button>
           {/snippet}
         </Tooltip.Trigger>
-        <Tooltip.Content side="right">Sign out</Tooltip.Content>
+        <Tooltip.Content side="right">{t("nav.signOut")}</Tooltip.Content>
       </Tooltip.Root>
     </div>
   </aside>
 </Tooltip.Provider>
+</BitsConfig>

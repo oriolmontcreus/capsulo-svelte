@@ -1,13 +1,16 @@
 /**
  * Timestamp formatting for the History page.
  *
- * Everything here uses the viewer's own locale and timezone (`undefined` locale
- * lets Intl resolve it) rather than a hardcoded one, so day grouping matches the
- * day the viewer actually experienced. Invalid and missing dates degrade to a
- * readable label instead of "Invalid Date"/"NaN".
+ * Dates are written in the admin's language and grouped by the viewer's own
+ * timezone, so day grouping matches the day the viewer actually experienced.
+ * Invalid and missing dates degrade to a readable label instead of
+ * "Invalid Date"/"NaN".
  */
 
-const UNKNOWN_LABEL = "Unknown date";
+import { getUiLocale, t, type UiLocale } from "$lib/admin-i18n/core";
+
+/** Day bucket for commits whose date is missing or unparseable. */
+const UNKNOWN_DAY_KEY = "unknown";
 
 const SECOND_MS = 1000;
 const MINUTE_MS = 60 * SECOND_MS;
@@ -25,26 +28,30 @@ const RELATIVE_UNITS: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[
   ["minute", MINUTE_MS],
 ];
 
-function createFormatter<T>(factory: () => T): () => T | null {
-  let cached: T | null | undefined;
+/** One formatter per admin language; null when Intl can't build it. */
+function createFormatter<T>(factory: (locale: UiLocale) => T): () => T | null {
+  const cached = new Map<UiLocale, T | null>();
   return () => {
-    if (cached !== undefined) return cached;
+    const locale = getUiLocale();
+    if (cached.has(locale)) return cached.get(locale) ?? null;
+    let formatter: T | null;
     try {
-      cached = factory();
+      formatter = factory(locale);
     } catch {
-      cached = null;
+      formatter = null;
     }
-    return cached;
+    cached.set(locale, formatter);
+    return formatter;
   };
 }
 
 const getDateTimeFormatter = createFormatter(
-  () => new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }),
+  (locale) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }),
 );
 
 const getDayFormatter = createFormatter(
-  () =>
-    new Intl.DateTimeFormat(undefined, {
+  (locale) =>
+    new Intl.DateTimeFormat(locale, {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -53,7 +60,7 @@ const getDayFormatter = createFormatter(
 );
 
 const getRelativeFormatter = createFormatter(
-  () => new Intl.RelativeTimeFormat(undefined, { numeric: "auto" }),
+  (locale) => new Intl.RelativeTimeFormat(locale, { numeric: "auto" }),
 );
 
 /** Milliseconds for a timestamp, or null when it is missing or unparseable. */
@@ -66,7 +73,7 @@ export function parseTimestamp(value: string | null | undefined): number | null 
 /** Local-day bucket key ("2026-09-17") used to group commits under a heading. */
 export function dayKey(value: string | null | undefined): string {
   const ms = parseTimestamp(value);
-  if (ms === null) return UNKNOWN_LABEL;
+  if (ms === null) return UNKNOWN_DAY_KEY;
   const date = new Date(ms);
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
@@ -76,7 +83,7 @@ export function dayKey(value: string | null | undefined): string {
 /** Full date and time, e.g. "17 Sept 2026, 14:32". Used for `title` attributes. */
 export function formatAbsoluteTimestamp(value: string | null | undefined): string {
   const ms = parseTimestamp(value);
-  if (ms === null) return UNKNOWN_LABEL;
+  if (ms === null) return t("date.unknown");
   return getDateTimeFormatter()?.format(ms) ?? new Date(ms).toISOString();
 }
 
@@ -89,11 +96,11 @@ export function formatDayGroup(
   nowMs: number = Date.now(),
 ): string {
   const ms = parseTimestamp(value);
-  if (ms === null) return UNKNOWN_LABEL;
+  if (ms === null) return t("date.unknown");
 
   const key = dayKey(value);
-  if (key === dayKey(new Date(nowMs).toISOString())) return "Today";
-  if (key === dayKey(new Date(nowMs - DAY_MS).toISOString())) return "Yesterday";
+  if (key === dayKey(new Date(nowMs).toISOString())) return t("date.today");
+  if (key === dayKey(new Date(nowMs - DAY_MS).toISOString())) return t("date.yesterday");
 
   return getDayFormatter()?.format(ms) ?? key;
 }
@@ -108,11 +115,11 @@ export function formatRelativeTimestamp(
   nowMs: number = Date.now(),
 ): string {
   const ms = parseTimestamp(value);
-  if (ms === null) return UNKNOWN_LABEL;
+  if (ms === null) return t("date.unknown");
 
   const deltaMs = ms - nowMs;
   const absMs = Math.abs(deltaMs);
-  if (absMs < JUST_NOW_MS) return "just now";
+  if (absMs < JUST_NOW_MS) return t("date.justNow");
 
   const formatter = getRelativeFormatter();
   if (!formatter) return formatAbsoluteTimestamp(value);
@@ -123,5 +130,5 @@ export function formatRelativeTimestamp(
     return formatter.format(amount, unit);
   }
 
-  return "just now";
+  return t("date.justNow");
 }

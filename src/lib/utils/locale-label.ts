@@ -1,7 +1,4 @@
-const englishLanguageNames =
-  typeof Intl !== "undefined" && typeof Intl.DisplayNames === "function"
-    ? new Intl.DisplayNames(["en"], { type: "language" })
-    : null;
+import { getUiLocale } from "$lib/admin-i18n/i18n.svelte";
 
 const nativeLanguageNamesCache: Record<string, Intl.DisplayNames | null | undefined> = {};
 
@@ -34,18 +31,19 @@ export function formatLocaleLabel(localeCode: string): string {
   const languageCode = normalizedLocaleCode.split("-")[0];
   if (!languageCode) return localeCode;
 
-  const englishName = englishLanguageNames?.of(languageCode);
+  // Native name, then the name in the admin's language: "Español (Spanish)", "English (inglés)".
+  const uiLanguageName = getNativeLanguageNames(getUiLocale())?.of(languageCode);
   const nativeName =
     getNativeLanguageNames(normalizedLocaleCode)?.of(languageCode) ??
     getNativeLanguageNames(languageCode)?.of(languageCode);
 
-  const formattedEnglishName = englishName ? capitalizeLabel(englishName) : null;
+  const formattedUiLanguageName = uiLanguageName ? capitalizeLabel(uiLanguageName) : null;
   const formattedNativeName = nativeName ? capitalizeLabel(nativeName) : null;
 
-  if (!formattedEnglishName && !formattedNativeName) return localeCode;
-  if (!formattedNativeName) return formattedEnglishName ?? localeCode;
-  if (!formattedEnglishName) return formattedNativeName;
-  if (formattedNativeName === formattedEnglishName) return formattedNativeName;
+  if (!formattedUiLanguageName && !formattedNativeName) return localeCode;
+  if (!formattedNativeName) return formattedUiLanguageName ?? localeCode;
+  if (!formattedUiLanguageName) return formattedNativeName;
+  if (formattedNativeName === formattedUiLanguageName) return formattedNativeName;
 
-  return `${formattedNativeName} (${formattedEnglishName})`;
+  return `${formattedNativeName} (${formattedUiLanguageName})`;
 }

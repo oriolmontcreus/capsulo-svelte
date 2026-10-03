@@ -7,6 +7,7 @@
 	import type { ComponentProps } from "svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import XIcon from '@lucide/svelte/icons/x';
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		ref = $bindable(null),
@@ -39,7 +40,7 @@
 				{#snippet child({ props })}
 					<Button variant="ghost" class="absolute top-4 right-4" size="icon-sm" {...props}>
 						<XIcon  />
-						<span class="sr-only">Close</span>
+						<span class="sr-only">{t("ui.close")}</span>
 					</Button>
 				{/snippet}
 			</DialogPrimitive.Close>

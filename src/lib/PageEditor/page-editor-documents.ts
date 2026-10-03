@@ -4,6 +4,7 @@ import {
 	serializePageEditorValues,
 	type PageEditorValuesByInstance
 } from "$lib/PageEditor/persistence";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 export type LoadPageEditorDocumentResult = {
 	valuesByInstance: PageEditorValuesByInstance;
@@ -65,7 +66,9 @@ export async function loadPageEditorDocumentMetadataFromDb(
 }
 
 /** Message recorded when a revision is written outside the Changes page. */
-const DEFAULT_COMMIT_MESSAGE = "Saved from editor";
+function defaultCommitMessage(): string {
+	return t("commit.defaultMessage");
+}
 
 export type CommitPageEditorDocumentsResult = {
 	commitId: string | null;
@@ -88,7 +91,7 @@ export async function commitPageEditorDocuments(
 		{
 			method: "POST",
 			body: jsonBody({
-				message: message.trim() || DEFAULT_COMMIT_MESSAGE,
+				message: message.trim() || defaultCommitMessage(),
 				pages: pages.map((page) => ({
 					pageId: page.pageId,
 					content: serializePageEditorValues(page.valuesByInstance)
@@ -125,7 +128,7 @@ export type SavePageEditorDocumentResult = {
 export async function savePageEditorDocumentToDb(
 	input: SavePageEditorDocumentInput
 ): Promise<SavePageEditorDocumentResult> {
-	const result = await commitPageEditorDocuments(input.comment ?? DEFAULT_COMMIT_MESSAGE, [
+	const result = await commitPageEditorDocuments(input.comment ?? defaultCommitMessage(), [
 		{ pageId: input.pageId, valuesByInstance: input.valuesByInstance }
 	]);
 	return { errorMessage: result.errorMessage, updatedAt: result.updatedAt };

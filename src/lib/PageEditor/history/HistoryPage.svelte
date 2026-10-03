@@ -8,6 +8,7 @@
 	import type { CommitEntry } from "./history-model";
 	import CommitDetail from "./CommitDetail.svelte";
 	import CommitList from "./CommitList.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let commits = $state<CommitEntry[]>([]);
 	let cursor = $state<string | null>(null);
@@ -138,21 +139,21 @@
 			: 'flex'}"
 	>
 		<div class="border-border flex h-11 shrink-0 items-center border-b px-4">
-			<h1 class="text-sm font-medium">History</h1>
+			<h1 class="text-sm font-medium">{t("history.title")}</h1>
 		</div>
 		<div class="min-h-0 flex-1">
 			<ScrollArea class="h-full w-full">
 				{#if isLoading}
-					<p class="text-muted-foreground p-4 text-sm">Loading history...</p>
+					<p class="text-muted-foreground p-4 text-sm">{t("history.loading")}</p>
 				{:else if hasCheckedAuth && !isAuthenticated}
 					<p class="text-muted-foreground p-4 text-xs">
-						Sign in to view the commit history.
-						<a href="/admin/login" class="underline">Go to login</a>.
+						{t("history.signInToView")}
+						<a href="/admin/login" class="underline">{t("sidebar.goToLogin")}</a>
 					</p>
 				{:else if errorMessage}
 					<div class="space-y-2 p-4">
 						<p class="text-destructive text-xs">{errorMessage}</p>
-						<Button variant="outline" size="sm" onclick={retry}>Try again</Button>
+						<Button variant="outline" size="sm" onclick={retry}>{t("history.tryAgain")}</Button>
 					</div>
 				{:else}
 					<CommitList
@@ -172,7 +173,7 @@
 		<ScrollArea class="h-full w-full">
 			{#if selectedCommit}
 				<div class="border-border flex h-11 items-center border-b px-4 md:hidden">
-					<Button variant="ghost" size="sm" onclick={clearCommit}>Back to history</Button>
+					<Button variant="ghost" size="sm" onclick={clearCommit}>{t("history.back")}</Button>
 				</div>
 				<CommitDetail
 					commit={selectedCommit}
@@ -182,21 +183,21 @@
 			{:else if !isLoading && hasCheckedAuth && isAuthenticated && !errorMessage}
 				<div class="flex flex-col items-center justify-center py-16 text-center">
 					{#if commits.length === 0}
-						<p class="text-foreground/80 text-lg font-normal">No history yet</p>
+						<p class="text-foreground/80 text-lg font-normal">{t("history.emptyTitle")}</p>
 						<p class="text-muted-foreground mt-1 text-sm">
-							Commit a change on the
-							<a href="/admin/changes" class="underline">Changes page</a>
-							and it will show up here.
+							{t("history.emptyBefore")}
+							<a href="/admin/changes" class="underline">{t("history.emptyLink")}</a>
+							{t("history.emptyAfter")}
 						</p>
 					{:else if selectedCommitId}
-						<p class="text-foreground/80 text-lg font-normal">Commit not loaded</p>
+						<p class="text-foreground/80 text-lg font-normal">{t("history.notLoadedTitle")}</p>
 						<p class="text-muted-foreground mt-1 text-sm">
-							That commit is older than the ones loaded so far. Use “Load more” to reach it.
+							{t("history.notLoadedDescription")}
 						</p>
 					{:else}
-						<p class="text-foreground/80 text-lg font-normal">Select a commit</p>
+						<p class="text-foreground/80 text-lg font-normal">{t("history.selectTitle")}</p>
 						<p class="text-muted-foreground mt-1 text-sm">
-							Pick one from the list to see what it changed.
+							{t("history.selectDescription")}
 						</p>
 					{/if}
 				</div>

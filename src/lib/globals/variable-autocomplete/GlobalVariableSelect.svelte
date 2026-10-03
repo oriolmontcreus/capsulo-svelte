@@ -5,6 +5,7 @@
 	import { cn } from "$lib/utils";
 
 	import type { VariableItem } from "./types";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	type Props = {
 		open: boolean;
@@ -101,15 +102,15 @@
 				<div class="flex h-[300px]">
 					<div class="flex w-1/2 flex-col border-r">
 						<div class="text-muted-foreground bg-muted/30 border-b p-2 text-xs">
-							<span class="font-semibold">Variables</span>
+							<span class="font-semibold">{t("variables.title")}</span>
 							{#if displaySearchQuery}
-								<span class="ml-1 opacity-70">- Filtering by "{displaySearchQuery}"</span>
+								<span class="ml-1 opacity-70">{t("variables.filtering", { query: displaySearchQuery })}</span>
 							{/if}
 						</div>
 						<div class="flex-1 overflow-y-auto">
 							{#if displayItems.length === 0}
 								<div class="text-muted-foreground py-2 text-center text-sm">
-									No variables found.
+									{t("variables.noneFound")}
 								</div>
 							{:else}
 								<ul bind:this={listEl}>
@@ -143,29 +144,29 @@
 
 					<div class="bg-muted/10 flex w-1/2 flex-col">
 						<div class="text-muted-foreground bg-muted/30 border-b p-2 text-xs">
-							<span class="font-semibold">Details</span>
+							<span class="font-semibold">{t("variables.details")}</span>
 						</div>
 						{#if selectedItem}
 							<div class="space-y-4 overflow-y-auto p-4">
 								<div>
-									<h4 class="text-muted-foreground mb-1 text-xs font-semibold">Value</h4>
+									<h4 class="text-muted-foreground mb-1 text-xs font-semibold">{t("variables.value")}</h4>
 									<div class="break-all text-sm">
 										{#if selectedItem.value}
 											{selectedItem.value}
 										{:else}
-											<span class="text-muted-foreground italic">Empty</span>
+											<span class="text-muted-foreground italic">{t("variables.empty")}</span>
 										{/if}
 									</div>
 								</div>
 								<div>
-									<h4 class="text-muted-foreground mb-1 text-xs font-semibold">Scope</h4>
+									<h4 class="text-muted-foreground mb-1 text-xs font-semibold">{t("variables.scope")}</h4>
 									<div class="flex items-center gap-2">
 										<span
 											class="flex h-5 w-5 items-center justify-center rounded bg-blue-200 text-[10px] font-bold text-blue-700 dark:bg-blue-800/40 dark:text-blue-300"
 										>
 											G
 										</span>
-										<span class="text-sm">{selectedItem.scope}</span>
+										<span class="text-sm">{selectedItem.scope === "Global" ? t("variables.scopeGlobal") : selectedItem.scope}</span>
 									</div>
 								</div>
 							</div>
@@ -173,7 +174,7 @@
 							<div
 								class="text-muted-foreground flex flex-1 items-center justify-center text-sm italic"
 							>
-								Select a variable to view details
+								{t("variables.selectToView")}
 							</div>
 						{/if}
 					</div>

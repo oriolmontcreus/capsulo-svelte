@@ -1,6 +1,7 @@
 <script lang="ts">
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import CapsuleInfoTooltip from "./CapsuleInfoTooltip.svelte";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   type Props = {
     title: string;
@@ -46,10 +47,10 @@
     <button
       type="button"
       class="bg-destructive/10 text-destructive hover:bg-destructive/15 my-auto mr-1 shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums"
-      title="Show the fields that need attention"
+      title={t("sidebar.showIssues")}
       onclick={onShowErrors}
     >
-      {issueCount} {issueCount === 1 ? "issue" : "issues"}
+      {t("sidebar.issueCount", { count: issueCount })}
     </button>
   {/if}
   <CapsuleInfoTooltip {capsuleKey} {instanceIds} />

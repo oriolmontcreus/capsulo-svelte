@@ -36,6 +36,9 @@
 	} from "../site-content";
 	import AiEditCard from "./AiEditCard.svelte";
 	import AiNotice from "./AiNotice.svelte";
+	import { formatDate, t } from "$lib/admin-i18n/i18n.svelte";
+	import { ADMIN_PORTAL_HOST } from "$lib/admin/portal-host";
+	import { BitsConfig } from "bits-ui";
 
 	let chat = $state<ChatRecord>(createChat());
 	let chats = $state<ChatRecord[]>([]);
@@ -68,18 +71,18 @@
 	const suggestions = $derived(
 		location.kind === "page"
 			? [
-					"What's on this page?",
-					"Fix any typos on this page",
-					"Are any translations missing on this page?",
+					t("ai.suggestPageWhat"),
+					t("ai.suggestPageTypos"),
+					t("ai.suggestPageTranslations"),
 				]
 			: location.kind === "globals"
 				? [
-						"What are the global variables used for?",
-						"Are any translations missing?",
+						t("ai.suggestGlobalsWhat"),
+						t("ai.suggestGlobalsTranslations"),
 					]
 				: [
-						"Which pages do we have?",
-						"Are any translations missing on the site?",
+						t("ai.suggestSitePages"),
+						t("ai.suggestSiteTranslations"),
 					],
 	);
 
@@ -194,7 +197,7 @@
 			);
 		} catch (error) {
 			if (abortController.signal.aborted) {
-				pushEntry({ id: createId(), kind: "notice", text: "Stopped." });
+				pushEntry({ id: createId(), kind: "notice", text: t("ai.stopped") });
 			} else if (error instanceof AgentError) {
 				pushEntry({
 					id: createId(),
@@ -209,7 +212,7 @@
 					text:
 						error instanceof Error
 							? error.message
-							: "Something went wrong.",
+							: t("ai.somethingWrong"),
 				});
 			}
 			closeOpenToolCalls(chat.transcript);
@@ -238,7 +241,7 @@
 			pushEntry({
 				id: createId(),
 				kind: "notice",
-				text: `Undo failed: ${result.errorMessage}`,
+				text: t("ai.undoFailed", { error: result.errorMessage }),
 			});
 			persist();
 			return;
@@ -265,7 +268,7 @@
 			pushEntry({
 				id: createId(),
 				kind: "notice",
-				text: `Kept ${result.skipped.length} ${result.skipped.length === 1 ? "field" : "fields"} that changed again after the edit.`,
+				text: t("ai.keptFields", { count: result.skipped.length }),
 			});
 		}
 		persist();
@@ -321,6 +324,8 @@
 	});
 </script>
 
+<!-- The sidebar persists across navigations: its menus and tooltips must too. -->
+<BitsConfig defaultPortalTo={ADMIN_PORTAL_HOST}>
 <!-- Before hydration the panel's visibility comes from <html data-ai-sidebar> (set by
      AdminLayout from localStorage), so a reload doesn't flash it in; after that, state. -->
 <aside
@@ -332,7 +337,7 @@
 				: "hidden"
 			: "hidden in-data-[ai-sidebar=open]:flex",
 	]}
-	aria-label="AI agent"
+	aria-label={t("ai.title")}
 >
 	<Tooltip.Provider delayDuration={150}>
 		<header
@@ -342,7 +347,7 @@
 				class="min-w-0 flex-1 truncate text-xs font-medium"
 				title={chat.title}
 			>
-				{chat.entries.length ? chat.title : "AI agent"}
+				{chat.entries.length ? chat.title : t("ai.title")}
 			</h2>
 
 			<Tooltip.Root>
@@ -356,11 +361,11 @@
 							disabled={running}
 						>
 							<PlusIcon aria-hidden="true" />
-							<span class="sr-only">New chat</span>
+							<span class="sr-only">{t("ai.newChat")}</span>
 						</Button>
 					{/snippet}
 				</Tooltip.Trigger>
-				<Tooltip.Content>New chat</Tooltip.Content>
+				<Tooltip.Content>{t("ai.newChat")}</Tooltip.Content>
 			</Tooltip.Root>
 
 			<DropdownMenu.Root
@@ -370,7 +375,7 @@
 					{#snippet child({ props })}
 						<Button {...props} variant="ghost" size="icon-xs">
 							<HistoryIcon aria-hidden="true" />
-							<span class="sr-only">Previous chats</span>
+							<span class="sr-only">{t("ai.previousChats")}</span>
 						</Button>
 					{/snippet}
 				</DropdownMenu.Trigger>
@@ -378,7 +383,7 @@
 					<DropdownMenu.Label
 						class="text-muted-foreground text-xs font-normal"
 					>
-						Chats in this browser
+						{t("ai.chatsInBrowser")}
 					</DropdownMenu.Label>
 					{#each chats
 						.filter((item) => item.entries.length > 0)
@@ -395,15 +400,15 @@
 							<span
 								class="text-muted-foreground shrink-0 text-[10px]"
 							>
-								{new Date(item.updatedAt).toLocaleDateString(
-									undefined,
-									{ month: "short", day: "numeric" },
-								)}
+								{formatDate(new Date(item.updatedAt), {
+									month: "short",
+									day: "numeric",
+								})}
 							</span>
 						</DropdownMenu.Item>
 					{:else}
 						<div class="text-muted-foreground px-2 py-1.5 text-xs">
-							No chats yet
+							{t("ai.noChats")}
 						</div>
 					{/each}
 				</DropdownMenu.Content>
@@ -419,11 +424,11 @@
 							onclick={() => setAiSidebarOpen(false)}
 						>
 							<XIcon aria-hidden="true" />
-							<span class="sr-only">Close</span>
+							<span class="sr-only">{t("ai.close")}</span>
 						</Button>
 					{/snippet}
 				</Tooltip.Trigger>
-				<Tooltip.Content>Close ({shortcutLabel})</Tooltip.Content>
+				<Tooltip.Content>{t("ai.closeShortcut", { shortcut: shortcutLabel })}</Tooltip.Content>
 			</Tooltip.Root>
 		</header>
 
@@ -433,11 +438,10 @@
 					{#if loaded && chat.entries.length === 0}
 						<div class="space-y-3 pt-6">
 							<p class="text-sm">
-								Ask about your content, or ask for a change.
+								{t("ai.intro")}
 							</p>
 							<p class="text-muted-foreground text-xs">
-								Changes are saved as drafts. You review them
-								here and publish them from Changes.
+								{t("ai.introDrafts")}
 							</p>
 							<div class="flex flex-col items-start gap-1.5 pt-2">
 								{#each suggestions as suggestion (suggestion)}
@@ -489,7 +493,7 @@
 										class="size-3 animate-spin"
 										aria-hidden="true"
 									/>
-									{progress ?? "Thinking"}…
+									{progress ?? t("ai.thinking")}…
 								</div>
 							{/if}
 						</div>
@@ -514,9 +518,9 @@
 					onkeydown={handleKeydown}
 					rows="1"
 					placeholder={location.kind === "page"
-						? "Ask about this page or request a change"
-						: "Ask about your site"}
-					aria-label="Message the AI agent"
+						? t("ai.placeholderPage")
+						: t("ai.placeholderSite")}
+					aria-label={t("ai.messageLabel")}
 					class="placeholder:text-muted-foreground max-h-[200px] min-h-6 flex-1 resize-none bg-transparent text-sm leading-6 outline-none"
 				></textarea>
 				{#if running}
@@ -527,7 +531,7 @@
 						onclick={stop}
 					>
 						<SquareIcon class="fill-current" aria-hidden="true" />
-						<span class="sr-only">Stop</span>
+						<span class="sr-only">{t("ai.stop")}</span>
 					</Button>
 				{:else}
 					<Button
@@ -536,13 +540,14 @@
 						disabled={!input.trim()}
 					>
 						<ArrowUpIcon aria-hidden="true" />
-						<span class="sr-only">Send</span>
+						<span class="sr-only">{t("ai.send")}</span>
 					</Button>
 				{/if}
 			</div>
 		</form>
 	</Tooltip.Provider>
 </aside>
+</BitsConfig>
 
 <style>
 	/* Compact Markdown for a 360px panel. Spacing comes from the wrapper's space-y-2. */

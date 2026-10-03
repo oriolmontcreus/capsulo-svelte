@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 
+import type { UiLocale } from "$lib/admin-i18n/core";
 import { HttpError, isRecord, nowIso, requireString } from "./http";
 import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
 import { assertValidGlobals, assertValidPages } from "./validate-content";
@@ -44,7 +45,8 @@ export async function getPage(pageId: string): Promise<StoredDocument | null> {
 export async function commitPages(
 	userId: string,
 	rawMessage: unknown,
-	rawPages: unknown
+	rawPages: unknown,
+	uiLocale: UiLocale
 ): Promise<{ commitId: string; updatedAt: string }> {
 	const message = requireString(rawMessage, "message", 10_000).trim();
 	if (!Array.isArray(rawPages) || rawPages.length === 0) throw new HttpError(400, '"pages" must be a non-empty array.');
@@ -59,7 +61,10 @@ export async function commitPages(
 		return { pageId, rawContent: entry.content, content: serializeDocument(entry.content, `pages[${index}].content`) };
 	});
 	// Required fields and format rules hold for every committed page, whoever sends it.
-	assertValidPages(pages.map((page) => ({ pageId: page.pageId, content: page.rawContent })));
+	assertValidPages(
+		pages.map((page) => ({ pageId: page.pageId, content: page.rawContent })),
+		uiLocale
+	);
 
 	const commitId = crypto.randomUUID();
 	const updatedAt = nowIso();
@@ -178,9 +183,13 @@ export async function getGlobals(): Promise<StoredDocument | null> {
 	return row ? { content: JSON.parse(row.content), updatedAt: row.updated_at } : null;
 }
 
-export async function saveGlobals(userId: string, content: unknown): Promise<{ updatedAt: string }> {
+export async function saveGlobals(
+	userId: string,
+	content: unknown,
+	uiLocale: UiLocale
+): Promise<{ updatedAt: string }> {
 	const serialized = serializeDocument(content, "content");
-	assertValidGlobals(content);
+	assertValidGlobals(content, uiLocale);
 	const updatedAt = nowIso();
 	await env.DB.prepare(
 		`INSERT INTO globals (id, content, created_by, updated_by, updated_at) VALUES (?, ?, ?, ?, ?)

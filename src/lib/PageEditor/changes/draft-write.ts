@@ -5,6 +5,7 @@ import {
 import { loadPageEditorDocumentFromDb } from "$lib/PageEditor/page-editor-documents";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 import { setDraftFieldValue, type DraftFieldTarget } from "./draft-values";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 /**
  * Dispatched after any draft write so the AdminNav dirty-count badge and an open
@@ -90,7 +91,7 @@ async function writeDraft(
 	} catch (error) {
 		return {
 			ok: false,
-			errorMessage: error instanceof Error ? error.message : "Failed to update the local draft."
+			errorMessage: error instanceof Error ? error.message : t("commit.draftUpdateFailed")
 		};
 	}
 

@@ -1,6 +1,8 @@
 ---
 import Layout from "./Layout.astro";
 import AdminNav from "$lib/admin/AdminNav.svelte";
+import AdminLanguageGuard from "$lib/admin/AdminLanguageGuard.astro";
+import { ADMIN_PORTAL_HOST_ID } from "$lib/admin/portal-host";
 import { ScrollArea } from "$lib/components/ui/scroll-area";
 import AiSidebar from "$lib/ai/components/AiSidebar.svelte";
 import { AI_ENABLED } from "$lib/ai/config";
@@ -23,6 +25,9 @@ const { activeRoute, scrollable = true } = Astro.props as Props;
 			location.replace("/admin/login?next=" + encodeURIComponent(location.pathname + location.search));
 		}
 	</script>
+	<AdminLanguageGuard />
+	<!-- Before the islands, so it exists when they mount their portals. -->
+	<div id={ADMIN_PORTAL_HOST_ID} transition:persist={ADMIN_PORTAL_HOST_ID}></div>
 	{AI_ENABLED && (
 		<script is:inline define:vars={{ storageKey: AI_SIDEBAR_STORAGE_KEY }}>
 			// Lets the AI sidebar render open before hydration, so a reload doesn't pop it in.

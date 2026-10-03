@@ -39,6 +39,9 @@ const HELP = `npm create capsulo@latest [directory] [-- --locales es,en --defaul
 Options:
   --locales <list>        Comma-separated locale codes (default: prompt)
   --default-locale <code>
+  --admin-locale <en|es|fr>
+                          Language of the CMS for your editors (default: prompt). Each editor
+                          can still pick their own from the CMS.
   --storage <kv|r2>       Where uploaded files are stored (default: prompt, recommended kv)
   --template <dir>        Use a local Capsulo checkout instead of GitHub (for Capsulo contributors)
   --no-install            Skip installing dependencies
@@ -133,6 +136,14 @@ const STORAGE_OPTIONS = {
 	r2: { label: "R2", hint: "files up to 100 MB and 10 GB free, but Cloudflare asks for a card to enable it" },
 };
 
+/** Languages the CMS itself is translated into (`admin.locale` in capsulo.config.ts). */
+const ADMIN_LOCALES = { en: "English", es: "Español", fr: "Français" };
+
+/** @param {string} value */
+function isAdminLocale(value) {
+	return Object.hasOwn(ADMIN_LOCALES, value);
+}
+
 /**
  * Swaps the template's KV upload binding for an R2 bucket.
  * @param {string} wrangler wrangler.jsonc source
@@ -149,9 +160,9 @@ function useR2Storage(wrangler, slug) {
 
 /**
  * @param {string} target
- * @param {{ slug: string, locales: string[], defaultLocale: string, cliSpec: string, storage: "kv" | "r2" }} options
+ * @param {{ slug: string, locales: string[], defaultLocale: string, adminLocale: string, cliSpec: string, storage: "kv" | "r2" }} options
  */
-async function personalize(target, { slug, locales, defaultLocale, cliSpec, storage }) {
+async function personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage }) {
 	await Promise.all(TEMPLATE_ONLY.map((entry) => rm(path.join(target, entry), { recursive: true, force: true })));
 
 	const packageFile = path.join(target, "package.json");
@@ -187,6 +198,10 @@ export default defineCapsuloConfig({
 		locales: ${JSON.stringify(locales)},
 		defaultLocale: ${JSON.stringify(defaultLocale)},
 		prefixDefaultLocale: ${locales.length > 1}
+	},
+	// Language of the CMS for editors who haven't picked their own ("en", "es" or "fr").
+	admin: {
+		locale: ${JSON.stringify(adminLocale)}
 	}
 });
 `,
@@ -214,6 +229,7 @@ async function main() {
 		options: {
 			locales: { type: "string" },
 			"default-locale": { type: "string" },
+			"admin-locale": { type: "string" },
 			storage: { type: "string" },
 			template: { type: "string" },
 			"no-install": { type: "boolean" },
@@ -277,6 +293,22 @@ async function main() {
 				));
 	if (!locales.includes(defaultLocale)) throw new Error(`The default locale must be one of: ${locales.join(", ")}.`);
 
+	const adminLocaleFlag = values["admin-locale"];
+	if (adminLocaleFlag !== undefined && !isAdminLocale(adminLocaleFlag)) {
+		throw new Error(`--admin-locale must be one of: ${Object.keys(ADMIN_LOCALES).join(", ")}.`);
+	}
+	const siteLanguage = defaultLocale.split("-")[0];
+	const adminLocale = /** @type {string} */ (
+		adminLocaleFlag ??
+			exitIfCancelled(
+				await p.select({
+					message: "CMS language for your editors (each editor can change it later)",
+					initialValue: isAdminLocale(siteLanguage) ? siteLanguage : "en",
+					options: Object.entries(ADMIN_LOCALES).map(([value, label]) => ({ value, label })),
+				}),
+			)
+	);
+
 	if (values.storage !== undefined && values.storage !== "kv" && values.storage !== "r2") {
 		throw new Error(`--storage must be "kv" or "r2", not "${values.storage}".`);
 	}
@@ -295,7 +327,7 @@ async function main() {
 	spinner.start(values.template ? "Copying the template" : "Downloading the template");
 	await copyTemplate(target, values.template);
 	const cliSpec = values.template ? `file:${path.resolve(values.template, "packages", "cli")}` : CLI_VERSION;
-	await personalize(target, { slug, locales, defaultLocale, cliSpec, storage });
+	await personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage });
 	spinner.stop("Project created.");
 
 	const packageManager = detectPackageManager();

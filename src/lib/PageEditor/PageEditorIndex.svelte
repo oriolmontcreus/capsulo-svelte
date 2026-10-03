@@ -16,6 +16,7 @@
   import FolderIcon from "@lucide/svelte/icons/folder";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import { onMount } from "svelte";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface PageCard {
     pageId: string;
@@ -121,9 +122,9 @@
   <!-- Header + Breadcrumb -->
   <div class="flex flex-col gap-2">
     <div class="flex flex-col gap-2">
-      <h1 class="text-2xl font-normal tracking-tight">Page Editor</h1>
+      <h1 class="text-2xl font-normal tracking-tight">{t("pageEditor.title")}</h1>
       <p class="text-foreground-muted text-sm">
-        Select a page or folder to edit capsule schemas.
+        {t("pageEditor.subtitle")}
       </p>
     </div>
 
@@ -138,7 +139,7 @@
               }}
               href="#"
             >
-              Pages
+              {t("pageEditor.pages")}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator>/</BreadcrumbSeparator>
@@ -172,12 +173,11 @@
   {#if totalItems === 0}
     <Card>
       <CardHeader>
-        <CardTitle class="text-lg">No detected pages</CardTitle>
+        <CardTitle class="text-lg">{t("pageEditor.noPagesTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <p class="text-foreground-muted text-sm">
-          The capsule manifest is empty. Add capsule usage in a public page and
-          refresh.
+          {t("pageEditor.noPagesDescription")}
         </p>
       </CardContent>
     </Card>
@@ -202,8 +202,7 @@
                 {routePath(...currentPath, folder.name)}
               </p>
               <p class="text-foreground-muted text-sm">
-                {folder.itemCount}
-                {folder.itemCount === 1 ? "page" : "pages"}
+                {t("pageEditor.folderPages", { count: folder.itemCount })}
               </p>
             </div>
           </div>
@@ -230,8 +229,8 @@
               {routePath(...currentPath, page.name)}
             </p>
             <div class="text-foreground-muted flex items-center gap-3 text-xs">
-              <span>{page.capsuleCount} capsules</span>
-              <span>{page.instanceCount} instances</span>
+              <span>{t("pageEditor.capsuleCount", { count: page.capsuleCount })}</span>
+              <span>{t("pageEditor.instanceCount", { count: page.instanceCount })}</span>
             </div>
           </div>
         </a>

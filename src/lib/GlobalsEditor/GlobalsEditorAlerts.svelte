@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { ContentIssue } from "$lib/capsules/core/validate-content";
 	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	type Props = {
 		hasCheckedAuth: boolean;
@@ -24,21 +25,21 @@
 
 {#if hasCheckedAuth && !isAuthenticated}
 	<div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
-		Sign in to load and save global variables.
-		<a href="/admin/login" class="underline">Go to login</a>.
+		{t("globals.signInToEdit")}
+		<a href="/admin/login" class="underline">{t("sidebar.goToLogin")}</a>
 	</div>
 {/if}
 
 {#if loadError}
 	<div class="text-destructive rounded-md border p-3 text-xs">
-		Failed to load global variables: {loadError}
+		{t("globals.loadFailed", { error: loadError })}
 	</div>
 {/if}
 
 {#if validationIssues.length > 0}
 	<div class="border-destructive/30 bg-destructive/5 space-y-1 rounded-md border p-3 text-xs" role="alert">
 		<p class="text-destructive font-medium">
-			Fix {validationIssues.length} {validationIssues.length === 1 ? "field" : "fields"} before saving:
+			{t("globals.fixBeforeSaving", { count: validationIssues.length })}
 		</p>
 		<ul class="list-disc space-y-0.5 pl-4">
 			{#each validationIssues as issue (`${issue.path.join(".")}@${issue.locale}`)}
@@ -55,12 +56,12 @@
 
 {#if saveError}
 	<div class="text-destructive rounded-md border p-3 text-xs">
-		Failed to save global variables: {saveError}
+		{t("globals.saveFailed", { error: saveError })}
 	</div>
 {/if}
 
 {#if isLoading}
 	<div class="text-muted-foreground rounded-md border border-dashed p-4 text-xs">
-		Loading global variables...
+		{t("globals.loading")}
 	</div>
 {/if}

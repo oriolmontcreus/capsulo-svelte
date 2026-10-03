@@ -16,6 +16,7 @@ Es el **fichero central de configuración** del proyecto Capsulo en este repo: v
 | **`app`** | Nombre visible del CMS, versión, `authWorkerUrl` (worker de login). |
 | **`ui`** | Regex para filtrar páginas en el árbol del admin, ancho del editor, **debounce de autosave** (`autoSaveDebounceMs`), período para no mostrar “Saving…” al cargar (`autoSaveBlockDurationMs`). |
 | **`i18n`** | `defaultLocale`, lista **`locales`**, `fallbackLocale` opcional. Alimenta traducciones y rutas Astro. |
+| **`admin`** | Opcional. **`locale`** (`"en"`, `"es"` o `"fr"`): idioma del propio CMS para los editores que no han elegido uno. Cada editor puede cambiarlo desde el admin (se guarda en su cuenta). No tiene nada que ver con los idiomas del contenido (`i18n`). |
 | **`storage`** | Opcional (p. ej. worker de subidas `uploadWorkerUrl`). |
 | **`cache`** | Nombre y versión de **IndexedDB** (`dbName`, `dbVersion`), caducidad de caché. |
 

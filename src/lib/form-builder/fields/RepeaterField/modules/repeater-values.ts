@@ -4,6 +4,7 @@ import {
 	resolveFieldValue,
 } from "../../../core/translation-runtime";
 import type { RepeaterFieldDefinition, RepeaterItem } from "../../../core/types";
+import { t } from "$lib/admin-i18n/core";
 
 function createRepeaterItemId(): string {
 	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -71,5 +72,5 @@ export function getRepeaterItemSummary(
 }
 
 export function repeaterItemLabel(field: RepeaterFieldDefinition, index: number): string {
-	return `${field.itemName ?? "Item"} ${index + 1}`;
+	return t("repeater.itemLabel", { itemName: field.itemName ?? t("repeater.defaultItemName"), number: index + 1 });
 }

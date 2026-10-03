@@ -3,8 +3,8 @@
  *
  * Run with:  npx tsx src/lib/utils/format-timestamp.test-manual.ts
  *
- * Relative-time assertions compare against Intl directly instead of hardcoding
- * English, so the check passes under any system locale.
+ * Outside the browser the admin speaks English (unless capsulo.config.ts sets
+ * `admin.locale`), so relative times are compared against English Intl output.
  */
 import assert from "node:assert/strict";
 import {
@@ -15,7 +15,7 @@ import {
   parseTimestamp,
 } from "./format-timestamp";
 
-const relative = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;

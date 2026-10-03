@@ -2,11 +2,12 @@
 	import type { Snippet } from "svelte";
 	import type { FieldChange, PageChangeSet } from "./diff-model";
 	import InstanceDiff from "./InstanceDiff.svelte";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		changeSet,
-		emptyTitle = "No changes to display",
-		emptyDescription = "This page matches the last committed version",
+		emptyTitle = undefined,
+		emptyDescription = undefined,
 		fieldAction,
 	}: {
 		changeSet: PageChangeSet | null;
@@ -19,8 +20,8 @@
 
 {#if !changeSet || changeSet.instances.length === 0}
 	<div class="flex flex-col items-center justify-center py-16 text-center">
-		<p class="text-foreground/80 text-lg font-normal">{emptyTitle}</p>
-		<p class="text-muted-foreground mt-1 text-sm">{emptyDescription}</p>
+		<p class="text-foreground/80 text-lg font-normal">{emptyTitle ?? t("diff.noChangesTitle")}</p>
+		<p class="text-muted-foreground mt-1 text-sm">{emptyDescription ?? t("diff.noChangesDescription")}</p>
 	</div>
 {:else}
 	<div class="space-y-10">

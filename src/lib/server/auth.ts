@@ -10,6 +10,7 @@ import {
 	verifierForKey
 } from "capsulo/password";
 
+import { UI_LOCALE_COOKIE, isUiLocale, type UiLocale } from "$lib/admin-i18n/core";
 import { HttpError, assertSameOrigin, nowIso } from "./http";
 
 const SESSION_COOKIE = "capsulo_session";
@@ -27,6 +28,8 @@ export type SessionUser = {
 	email: string | null;
 	name: string | null;
 	avatarUrl: string | null;
+	/** Admin UI language the editor picked; null follows the project default. */
+	uiLocale: UiLocale | null;
 };
 
 type UserRow = {
@@ -35,6 +38,7 @@ type UserRow = {
 	email: string | null;
 	name: string | null;
 	avatar_url: string | null;
+	ui_locale: string | null;
 	salt: string;
 	verifier: string;
 	kdf_iterations: number;
@@ -43,8 +47,17 @@ type UserRow = {
 	disabled_at: string | null;
 };
 
-function toSessionUser(row: Pick<UserRow, "id" | "login" | "email" | "name" | "avatar_url">): SessionUser {
-	return { id: row.id, login: row.login, email: row.email, name: row.name, avatarUrl: row.avatar_url };
+type SessionUserRow = Pick<UserRow, "id" | "login" | "email" | "name" | "avatar_url" | "ui_locale">;
+
+function toSessionUser(row: SessionUserRow): SessionUser {
+	return {
+		id: row.id,
+		login: row.login,
+		email: row.email,
+		name: row.name,
+		avatarUrl: row.avatar_url,
+		uiLocale: isUiLocale(row.ui_locale) ? row.ui_locale : null
+	};
 }
 
 async function findUserByLogin(login: string): Promise<UserRow | null> {
@@ -66,16 +79,14 @@ export async function getLoginChallenge(login: string): Promise<{ salt: string; 
 	return { salt: await fakeSaltFor(await instanceSecret(), login), iterations: DEFAULT_KDF_ITERATIONS };
 }
 
-const INVALID_CREDENTIALS = "Invalid login or password.";
-
 export async function verifyLogin(login: string, stretchedKey: string): Promise<SessionUser> {
 	const user = await findUserByLogin(login);
 	const verifier = await verifierForKey(stretchedKey);
-	if (!user || user.disabled_at || !verifier) throw new HttpError(401, INVALID_CREDENTIALS);
+	if (!user || user.disabled_at || !verifier) throw HttpError.translated(401, "api.invalidCredentials");
 
 	const now = nowIso();
 	if (user.locked_until && user.locked_until > now) {
-		throw new HttpError(429, "Too many failed attempts. Try again in a few minutes.");
+		throw HttpError.translated(429, "api.tooManyAttempts");
 	}
 
 	if (!timingSafeEqualHex(verifier, user.verifier)) {
@@ -89,7 +100,7 @@ export async function verifyLogin(login: string, stretchedKey: string): Promise<
 		)
 			.bind(lockedUntil ? 0 : failedAttempts, lockedUntil, user.id)
 			.run();
-		throw new HttpError(401, INVALID_CREDENTIALS);
+		throw HttpError.translated(401, "api.invalidCredentials");
 	}
 
 	if (user.failed_attempts > 0 || user.locked_until) {
@@ -129,6 +140,28 @@ export async function startSession(context: APIContext, userId: string): Promise
 	});
 }
 
+/**
+ * Mirrors the editor's admin language in a readable cookie, so static admin pages (and the login
+ * page after signing out) render in it before any API call. Carries no secret.
+ */
+export function rememberUiLocale(context: APIContext, locale: UiLocale): void {
+	context.cookies.set(UI_LOCALE_COOKIE, locale, {
+		secure: !import.meta.env.DEV,
+		sameSite: "lax",
+		path: "/",
+		maxAge: 365 * 24 * 60 * 60
+	});
+}
+
+/** Saves the editor's admin language (null: back to the project default). */
+export async function setUserUiLocale(context: APIContext, userId: string, locale: UiLocale | null): Promise<void> {
+	await env.DB.prepare("UPDATE users SET ui_locale = ?, updated_at = ? WHERE id = ?")
+		.bind(locale, nowIso(), userId)
+		.run();
+	if (locale) rememberUiLocale(context, locale);
+	else context.cookies.delete(UI_LOCALE_COOKIE, { path: "/" });
+}
+
 export async function endSession(context: APIContext): Promise<void> {
 	const token = context.cookies.get(SESSION_COOKIE)?.value;
 	if (token) {
@@ -142,12 +175,12 @@ async function userFromSessionCookie(context: APIContext): Promise<SessionUser |
 	const token = context.cookies.get(SESSION_COOKIE)?.value;
 	if (!token) return null;
 	const row = await env.DB.prepare(
-		`SELECT u.id, u.login, u.email, u.name, u.avatar_url
+		`SELECT u.id, u.login, u.email, u.name, u.avatar_url, u.ui_locale
 		 FROM sessions s JOIN users u ON u.id = s.user_id
 		 WHERE s.token_hash = ? AND s.expires_at > ? AND u.disabled_at IS NULL`
 	)
 		.bind(await sha256Hex(token), nowIso())
-		.first<Pick<UserRow, "id" | "login" | "email" | "name" | "avatar_url">>();
+		.first<SessionUserRow>();
 	return row ? toSessionUser(row) : null;
 }
 
@@ -183,6 +216,6 @@ export async function getCurrentUser(context: APIContext): Promise<SessionUser |
 export async function requireUser(context: APIContext): Promise<SessionUser> {
 	assertSameOrigin(context.request);
 	const user = await getCurrentUser(context);
-	if (!user) throw new HttpError(401, "Not signed in.");
+	if (!user) throw HttpError.translated(401, "api.notSignedIn");
 	return user;
 }

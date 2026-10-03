@@ -13,6 +13,7 @@ import {
 	type SitePage
 } from "./site-content";
 import { AI_TOOL_NAMES } from "./tools";
+import { t } from "$lib/admin-i18n/i18n.svelte";
 
 export type ToolOutcome = {
 	/** JSON sent back to the model. */
@@ -36,18 +37,18 @@ function parseArguments(call: AiToolCall): Record<string, unknown> {
 export function describeToolCall(call: AiToolCall): string {
 	const args = parseArguments(call);
 	const target = typeof args.target === "string" ? args.target : typeof args.pageId === "string" ? args.pageId : "";
-	const label = target === GLOBALS_TARGET ? "global variables" : target ? pageLabel(target) : "";
+	const label = target === GLOBALS_TARGET ? t("ai.globalVariables") : target ? pageLabel(target) : "";
 	switch (call.name) {
 		case AI_TOOL_NAMES.getPage:
-			return `Reading ${label || "a page"}`;
+			return label ? t("ai.progressReading", { target: label }) : t("ai.progressReadingPage");
 		case AI_TOOL_NAMES.getGlobals:
-			return "Reading global variables";
+			return t("ai.progressReadingGlobals");
 		case AI_TOOL_NAMES.searchContent:
-			return typeof args.query === "string" ? `Searching for “${args.query}”` : "Searching the site";
+			return typeof args.query === "string" ? t("ai.progressSearchingFor", { query: args.query }) : t("ai.progressSearching");
 		case AI_TOOL_NAMES.updateContent:
-			return `Editing ${label || "content"}`;
+			return label ? t("ai.progressEditing", { target: label }) : t("ai.progressEditingContent");
 		default:
-			return "Working";
+			return t("ai.progressWorking");
 	}
 }
 

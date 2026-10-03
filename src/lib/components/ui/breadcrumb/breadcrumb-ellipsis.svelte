@@ -2,6 +2,7 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { cn, type WithElementRef, type WithoutChildren } from "$lib/utils.js";
 	import MoreHorizontalIcon from '@lucide/svelte/icons/more-horizontal';
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		ref = $bindable(null),
@@ -19,5 +20,5 @@
 	{...restProps}
 >
 	<MoreHorizontalIcon  />
-	<span class="sr-only">More</span>
+	<span class="sr-only">{t("ui.more")}</span>
 </span>

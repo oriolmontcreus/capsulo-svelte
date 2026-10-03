@@ -5,6 +5,7 @@
 	import type { FieldChange, InstanceChange } from "./diff-model";
 	import FieldDiff from "./FieldDiff.svelte";
 	import { capsuleKeyFromInstanceId } from "./schema-defaults";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		instance,
@@ -30,11 +31,11 @@
 		<h3 class="text-lg font-medium tracking-tight">{title}</h3>
 		{#if instance.isNew}
 			<span class="rounded bg-green-600 px-1.5 py-0.5 text-[10px] font-medium text-white">
-				New
+				{t("diff.newInstance")}
 			</span>
 		{:else if instance.isRemoved}
 			<span class="bg-destructive rounded px-1.5 py-0.5 text-[10px] font-medium text-white">
-				Removed
+				{t("diff.removed")}
 			</span>
 		{/if}
 	</div>

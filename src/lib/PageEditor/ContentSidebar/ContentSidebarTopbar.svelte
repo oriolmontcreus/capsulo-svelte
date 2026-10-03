@@ -2,6 +2,7 @@
   import { Button } from "$lib/components/ui/button";
   import * as Tooltip from "$lib/components/ui/tooltip";
   import CopyMinusIcon from "@lucide/svelte/icons/copy-minus";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   type Props = {
     disabled?: boolean;
@@ -13,7 +14,7 @@
 
 <header
   class="border-border flex h-8 shrink-0 items-center justify-end border-b"
-  aria-label="Content sidebar toolbar"
+  aria-label={t("sidebar.toolbar")}
 >
   <Tooltip.Root>
     <Tooltip.Trigger>
@@ -23,7 +24,7 @@
           variant="ghost"
           size="icon-sm"
           class="text-muted-foreground hover:text-foreground size-7"
-          aria-label="Collapse all capsules"
+          aria-label={t("sidebar.collapseAll")}
           {disabled}
           onclick={onCollapseAll}
         >
@@ -31,6 +32,6 @@
         </Button>
       {/snippet}
     </Tooltip.Trigger>
-    <Tooltip.Content side="bottom">Collapse all capsules</Tooltip.Content>
+    <Tooltip.Content side="bottom">{t("sidebar.collapseAll")}</Tooltip.Content>
   </Tooltip.Root>
 </header>

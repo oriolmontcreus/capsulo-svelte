@@ -7,10 +7,11 @@
     FieldLabel,
   } from "$lib/components/ui/field";
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
-  import { fileNameFromPath, mediaUrl, uploadFile } from "./storage";
+  import { UploadError, fileNameFromPath, mediaUrl, uploadFile } from "./storage";
   import { isSvgPath } from "./svg-utils";
   import ImageZoomModal from "./ImageZoomModal.svelte";
   import SvgEditorModal from "./SvgEditorModal.svelte";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface Props {
     field: FileUploadFieldDefinition;
@@ -116,14 +117,20 @@
     return upload;
   }
 
+  function uploadErrorMessage(error: unknown, fileName: string): string {
+    if (error instanceof UploadError) {
+      return t("upload.failedWithError", { name: error.fileName, error: error.reason });
+    }
+    return error instanceof Error ? error.message : t("upload.failed", { name: fileName });
+  }
+
   /** Uploads `file`; resolves to its key, or null if it was cancelled or failed. */
   async function runUpload(file: File, upload: PendingUpload): Promise<string | null> {
     try {
       return await uploadFile(file, upload.controller.signal);
     } catch (uploadError) {
       if (!upload.controller.signal.aborted) {
-        localError =
-          uploadError instanceof Error ? uploadError.message : `Failed to upload "${file.name}".`;
+        localError = uploadErrorMessage(uploadError, file.name);
       }
       return null;
     } finally {
@@ -138,11 +145,11 @@
     const accepted: File[] = [];
     for (const file of files) {
       if (field.maxSize && file.size > field.maxSize) {
-        localError = `"${file.name}" exceeds the ${formatBytes(field.maxSize)} limit.`;
+        localError = t("upload.tooLarge", { name: file.name, limit: formatBytes(field.maxSize) });
         continue;
       }
       if (field.accept && !matchesAccept(file, field.accept)) {
-        localError = `"${file.name}" is not an accepted file type.`;
+        localError = t("upload.wrongType", { name: file.name });
         continue;
       }
       accepted.push(file);
@@ -164,7 +171,7 @@
     const queued: { file: File; upload: PendingUpload }[] = [];
     for (const file of accepted) {
       if (maxFiles && totalCount >= maxFiles) {
-        localError = `You can upload at most ${maxFiles} file${maxFiles === 1 ? "" : "s"}.`;
+        localError = t("upload.maxFiles", { count: maxFiles });
         break;
       }
       queued.push({ file, upload: startUpload(file) });
@@ -257,7 +264,12 @@
     const file = new File([content], fileNameFromPath(path), {
       type: "image/svg+xml",
     });
-    const key = await uploadFile(file);
+    let key: string;
+    try {
+      key = await uploadFile(file);
+    } catch (error) {
+      throw new Error(uploadErrorMessage(error, file.name));
+    }
     const current = currentPaths();
     const index = current.indexOf(path);
     onValueChange(
@@ -299,12 +311,13 @@
     >
       <Upload class="text-muted-foreground size-5" />
       <span class="text-muted-foreground">
-        <span class="text-foreground font-medium">Click to upload</span> or drag and drop
+        <span class="text-foreground font-medium">{t("upload.clickToUpload")}</span>
+        {t("upload.orDragAndDrop")}
       </span>
       {#if field.maxSize || maxFiles}
         <span class="text-muted-foreground text-xs">
-          {#if maxFiles}Up to {maxFiles} file{maxFiles === 1 ? "" : "s"}{/if}
-          {#if field.maxSize}{maxFiles ? " · " : ""}Max {formatBytes(field.maxSize)}{/if}
+          {#if maxFiles}{t("upload.upToFiles", { count: maxFiles })}{/if}
+          {#if field.maxSize}{maxFiles ? " · " : ""}{t("upload.maxSize", { size: formatBytes(field.maxSize) })}{/if}
         </span>
       {/if}
     </button>
@@ -329,7 +342,7 @@
               <button
                 type="button"
                 onclick={() => openZoom(url)}
-                aria-label="Zoom {fileNameFromPath(path)}"
+                aria-label={t("upload.zoom", { name: fileNameFromPath(path) })}
                 class="size-full cursor-zoom-in"
               >
                 <img
@@ -356,7 +369,7 @@
               <button
                 type="button"
                 onclick={() => editSvg(path)}
-                aria-label="Edit {fileNameFromPath(path)}"
+                aria-label={t("upload.edit", { name: fileNameFromPath(path) })}
                 class="bg-background/80 hover:bg-background rounded-full p-1"
               >
                 <Pencil class="size-3.5" />
@@ -365,7 +378,7 @@
             <button
               type="button"
               onclick={() => removePath(path)}
-              aria-label="Remove {fileNameFromPath(path)}"
+              aria-label={t("upload.remove", { name: fileNameFromPath(path) })}
               class="bg-background/80 hover:bg-background rounded-full p-1"
             >
               <X class="size-3.5" />
@@ -404,7 +417,7 @@
             <button
               type="button"
               onclick={() => cancelPending(upload.id)}
-              aria-label="Cancel upload of {upload.name}"
+              aria-label={t("upload.cancel", { name: upload.name })}
               class="bg-background/80 hover:bg-background rounded-full p-1"
             >
               <X class="size-3.5" />

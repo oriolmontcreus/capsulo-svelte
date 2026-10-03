@@ -10,6 +10,7 @@
   } from "$lib/components/ui/select";
   import { cn } from "$lib/utils";
   import { detectImageBrightness, detectSvgBrightness } from "./image-brightness";
+  import { t } from "$lib/admin-i18n/i18n.svelte";
 
   interface Props {
     src: string;
@@ -147,7 +148,7 @@
     <img
       bind:this={imgEl}
       {src}
-      alt="Zoomed"
+      alt={t("image.zoomed")}
       draggable="false"
       onload={handleImageLoad}
       class="max-h-full max-w-full select-none object-contain"
@@ -192,7 +193,7 @@
             bgColor = "black";
           }}
           class="group flex items-center gap-1.5"
-          aria-label="Dark background"
+          aria-label={t("svg.darkBackground")}
         >
           <div
             class={cn(
@@ -202,7 +203,7 @@
                 : "ring-1 ring-white/30 group-hover:ring-white/50",
             )}
           ></div>
-          <span class="text-[10px] font-medium text-white/70">Dark</span>
+          <span class="text-[10px] font-medium text-white/70">{t("svg.dark")}</span>
         </button>
 
         <button
@@ -212,7 +213,7 @@
             bgColor = "white";
           }}
           class="group flex items-center gap-1.5"
-          aria-label="Light background"
+          aria-label={t("svg.lightBackground")}
         >
           <div
             class={cn(
@@ -222,7 +223,7 @@
                 : "ring-1 ring-white/30 group-hover:ring-white/50",
             )}
           ></div>
-          <span class="text-[10px] font-medium text-white/70">Light</span>
+          <span class="text-[10px] font-medium text-white/70">{t("svg.light")}</span>
         </button>
       </div>
     </div>
@@ -235,7 +236,7 @@
           onClose();
         }}
         class="flex size-[44px] cursor-pointer items-center justify-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur-sm transition-all hover:bg-black/80"
-        aria-label="Close"
+        aria-label={t("image.close")}
       >
         <XIcon size={18} />
       </button>

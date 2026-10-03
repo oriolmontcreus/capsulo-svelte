@@ -28,6 +28,7 @@ import {
 	schemaForInstance,
 	selectOptionValues
 } from "./site-content";
+import { t } from "$lib/admin-i18n/core";
 
 /** One field/locale the agent changed. `before` is what the editor showed (defaults included). */
 export type EditedField = {
@@ -307,7 +308,7 @@ export async function applyContentUpdate(target: string, changes: RequestedChang
 		edit: {
 			id: createId(),
 			target,
-			targetLabel: isGlobals ? "Global variables" : pageLabel(target),
+			targetLabel: isGlobals ? t("ai.globalVariablesTarget") : pageLabel(target),
 			fields,
 			createdAt: new Date().toISOString()
 		},

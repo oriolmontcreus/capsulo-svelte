@@ -6,6 +6,7 @@
 	import RepeaterDiff from "./RepeaterDiff.svelte";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
 	import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	/** Item-level diff of a repeater: added, removed, moved and edited items. */
 	let {
@@ -29,7 +30,7 @@
 </script>
 
 {#if changes.length === 0}
-	<span class="text-muted-foreground text-sm italic">No item changes</span>
+	<span class="text-muted-foreground text-sm italic">{t("diff.noItemChanges")}</span>
 {:else}
 	<ul class="space-y-2">
 		{#each changes as change (`${change.kind}-${change.item._id}`)}
@@ -37,12 +38,12 @@
 			<li class="border-border space-y-2 rounded-md border px-3 py-2">
 				<div class="flex min-w-0 items-center gap-2">
 					{#if change.kind === "added"}
-						<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.added}">Added</span>
+						<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.added}">{t("diff.added")}</span>
 					{:else if change.kind === "removed"}
-						<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.removed}">Removed</span>
+						<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.removed}">{t("diff.removed")}</span>
 					{:else}
 						{#if change.changes.length > 0}
-							<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.changed}">Edited</span>
+							<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.changed}">{t("diff.edited")}</span>
 						{/if}
 						{#if change.moved}
 							<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.moved}">

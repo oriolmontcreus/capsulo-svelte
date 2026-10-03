@@ -3,6 +3,7 @@
 	import KeyIcon from "@lucide/svelte/icons/key";
 	import LayersIcon from "@lucide/svelte/icons/layers";
 	import MoreHorizontalIcon from "@lucide/svelte/icons/more-horizontal";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	type Props = {
 		capsuleKey: string;
@@ -12,7 +13,7 @@
 	let { capsuleKey, instanceIds }: Props = $props();
 
 	const instanceCountLabel = $derived(
-		`${instanceIds.length} instance${instanceIds.length === 1 ? "" : "s"}`,
+		t("pageEditor.instanceCount", { count: instanceIds.length }),
 	);
 </script>
 
@@ -30,7 +31,7 @@
 				type="button"
 				{...props}
 				class="text-muted-foreground hover:bg-transparent focus-visible:ring-ring inline-flex shrink-0 cursor-pointer items-center bg-transparent px-2 py-1.5 outline-none focus-visible:ring-2"
-				aria-label={`Capsule info: key ${capsuleKey}, ${instanceCountLabel}`}
+				aria-label={t("sidebar.capsuleInfo", { key: capsuleKey, instances: instanceCountLabel })}
 			>
 				<MoreHorizontalIcon class="size-3.5" aria-hidden="true" />
 			</button>
@@ -41,14 +42,14 @@
 		class="flex min-w-48 flex-col items-stretch gap-3 px-3 py-2.5 text-left"
 	>
 		<div class="flex flex-col gap-1">
-			{@render infoLabel(KeyIcon, "Key")}
+			{@render infoLabel(KeyIcon, t("sidebar.key"))}
 			<div class="pl-5">
 				<p class="font-mono text-xs leading-snug break-all">{capsuleKey}</p>
 			</div>
 		</div>
 
 		<div class="flex flex-col gap-1">
-			{@render infoLabel(LayersIcon, "Instances")}
+			{@render infoLabel(LayersIcon, t("sidebar.instances"))}
 			<div class="pl-5">
 				{#if instanceIds.length > 0}
 					<ul class="flex flex-col gap-1">
@@ -57,7 +58,7 @@
 						{/each}
 					</ul>
 				{:else}
-					<p class="text-background/60 text-xs">No instances</p>
+					<p class="text-background/60 text-xs">{t("sidebar.noInstances")}</p>
 				{/if}
 			</div>
 		</div>

@@ -6,6 +6,7 @@
 	import type { FieldChange } from "$lib/PageEditor/changes/diff-model";
 	import type { EditRecord } from "../edits";
 	import { GLOBALS_TARGET, findField, schemaForInstance } from "../site-content";
+	import { t } from "$lib/admin-i18n/i18n.svelte";
 
 	let {
 		edit,
@@ -61,11 +62,10 @@
 	<div class="flex items-center gap-2 px-3 py-2">
 		<div class="min-w-0 flex-1">
 			<div class="truncate font-medium">
-				Changed <a {href} class="hover:underline">{edit.targetLabel}</a>
+				{t("ai.changed")} <a {href} class="hover:underline">{edit.targetLabel}</a>
 			</div>
 			<div class="text-muted-foreground">
-				{edit.fields.length}
-				{edit.fields.length === 1 ? "field" : "fields"} · draft
+				{t("ai.fieldsDraft", { count: edit.fields.length })}
 			</div>
 		</div>
 		<Button
@@ -74,15 +74,15 @@
 			aria-expanded={reviewing}
 			onclick={() => (reviewing = !reviewing)}
 		>
-			{reviewing ? "Hide" : "Review"}
+			{reviewing ? t("ai.hide") : t("ai.review")}
 		</Button>
 		{#if edit.undoneAt}
 			<span class="text-muted-foreground flex h-6 items-center gap-1 px-2">
-				<CheckIcon class="size-3" aria-hidden="true" /> Undone
+				<CheckIcon class="size-3" aria-hidden="true" /> {t("ai.undone")}
 			</span>
 		{:else}
 			<Button variant="outline" size="xs" disabled={undoing} onclick={undo}>
-				<Undo2Icon aria-hidden="true" /> Undo
+				<Undo2Icon aria-hidden="true" /> {t("ai.undo")}
 			</Button>
 		{/if}
 	</div>
@@ -96,7 +96,7 @@
 				{#if row.definition}
 					<FieldDiff field={row.definition} change={row.change} />
 				{:else}
-					<div class="text-muted-foreground">{row.field.fieldName}: field no longer exists</div>
+					<div class="text-muted-foreground">{t("ai.fieldGone", { field: row.field.fieldName })}</div>
 				{/if}
 			{/each}
 		</div>

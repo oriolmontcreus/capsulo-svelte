@@ -1,6 +1,18 @@
 import type { APIContext } from "astro";
 
+import {
+	UI_LOCALE_COOKIE,
+	resolveUiLocale,
+	translate,
+	type MessageKey,
+	type MessageParams,
+	type UiLocale
+} from "$lib/admin-i18n/core";
+
 export class HttpError extends Error {
+	/** Set for errors editors can see: sent in the admin language of the request. */
+	translation?: { key: MessageKey; params?: MessageParams };
+
 	constructor(
 		readonly status: number,
 		message: string,
@@ -9,6 +21,27 @@ export class HttpError extends Error {
 	) {
 		super(message);
 	}
+
+	/** An error whose message is an admin UI message, translated per request. */
+	static translated(
+		status: number,
+		key: MessageKey,
+		params?: MessageParams,
+		details?: Record<string, unknown>
+	): HttpError {
+		const error = new HttpError(status, translate("en", key, params), details);
+		error.translation = { key, params };
+		return error;
+	}
+}
+
+/** The admin language of the editor making the request (their choice, else Accept-Language). */
+export function requestUiLocale(context: Pick<APIContext, "cookies" | "request">): UiLocale {
+	const acceptLanguage = context.request.headers.get("Accept-Language") ?? "";
+	return resolveUiLocale({
+		stored: context.cookies.get(UI_LOCALE_COOKIE)?.value,
+		browserLanguages: acceptLanguage.split(",").map((part) => part.split(";")[0] ?? "")
+	});
 }
 
 export function json(data: unknown, init?: ResponseInit): Response {
@@ -27,7 +60,10 @@ export function handle(
 			return await run(context);
 		} catch (error) {
 			if (error instanceof HttpError) {
-				return json({ ...error.details, error: error.message }, { status: error.status });
+				const message = error.translation
+					? translate(requestUiLocale(context), error.translation.key, error.translation.params)
+					: error.message;
+				return json({ ...error.details, error: message }, { status: error.status });
 			}
 			console.error("[capsulo api]", error);
 			return json({ error: "Internal error." }, { status: 500 });
