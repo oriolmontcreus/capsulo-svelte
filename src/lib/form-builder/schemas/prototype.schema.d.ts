@@ -3,5 +3,9 @@
 export interface PrototypeSchemaData {
 	title: string;
 	description?: string;
-	published: boolean;
+	published?: boolean;
+	category?: string;
+	accentColor?: string;
+	backgroundColor?: string;
+	themeColor?: string;
 }

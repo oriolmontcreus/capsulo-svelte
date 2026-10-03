@@ -1,3 +1,4 @@
+import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 import type { FieldDefinition, RepeaterFieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
 import type { PageChangeSet } from "./diff-model";
 import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
@@ -55,6 +56,7 @@ export function formatValue(value: unknown, field: FieldDefinition | undefined):
 		return "(empty)";
 	}
 	if (field?.type === "toggle") return value ? "on" : "off";
+	if (isPasswordField(field)) return '"(hidden value)"';
 
 	let text: string;
 	if (field?.type === "select") {

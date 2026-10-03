@@ -3,13 +3,16 @@
 	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 	import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
 	import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
+	import { isPasswordField, MASKED_VALUE } from "$lib/form-builder/fields/TextField/text-field.utils";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
 	import { repeaterItemTitle } from "./repeater-diff";
 
 	let { field, value }: { field: FieldDefinition; value: unknown } = $props();
 
 	const asArray = $derived(Array.isArray(value) ? (value as string[]) : []);
-	const stringValue = $derived(typeof value === "string" ? value : "");
+	const stringValue = $derived(
+		typeof value === "string" ? value : typeof value === "number" && Number.isFinite(value) ? String(value) : "",
+	);
 
 	function selectLabel(optionValue: string): string {
 		const selectField = field as SelectFieldDefinition;
@@ -86,6 +89,8 @@
 	{:else}
 		<span class="text-muted-foreground text-sm italic">empty</span>
 	{/if}
+{:else if stringValue && isPasswordField(field)}
+	<span class="font-mono text-sm" aria-label="Hidden value">{MASKED_VALUE}</span>
 {:else if stringValue}
 	<span class="text-sm whitespace-pre-wrap">{stringValue}</span>
 {:else}

@@ -14,6 +14,7 @@ import { valuesEqual } from "$lib/PageEditor/changes/diff-model";
 import { setDraftFieldValue } from "$lib/PageEditor/changes/draft-values";
 import { updatePageDraft } from "$lib/PageEditor/changes/draft-write";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 import { createId } from "./chat-storage";
 import { sanitizeRichText } from "./sanitize-html";
 import {
@@ -112,6 +113,11 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
 				if (valuesEqual(rawChild, previousChild[DEFAULT_LOCALE])) continue;
 				return { error: `${childPath} is a file upload; the AI agent can't change files. Leave it out.` };
 			}
+			if (isPasswordField(child)) {
+				// The agent is shown "(hidden)" instead of the value; echoing it back keeps it.
+				if (rawChild === "(hidden)" || rawChild === null || valuesEqual(rawChild, previousChild[DEFAULT_LOCALE])) continue;
+				return { error: `${childPath} is a password field; the AI agent can't change it. Leave it out.` };
+			}
 			if (child.type === "repeater") {
 				const nested = validateRepeater(child, rawChild, previousChild[DEFAULT_LOCALE], childPath);
 				if ("error" in nested) return nested;
@@ -161,6 +167,9 @@ function validateValue(field: FieldDefinition, raw: unknown, locale: string, pre
 	switch (field.type) {
 		case "text":
 		case "textarea": {
+			if (isPasswordField(field)) {
+				return { error: `${name} is a password field; the AI agent can't change it. Ask the user to type it in the editor.` };
+			}
 			if (field.type === "text" && field.inputType === "number") {
 				const number = raw === null || raw === "" ? null : typeof raw === "string" ? Number(raw.trim()) : raw;
 				if (number !== null && (typeof number !== "number" || !Number.isFinite(number))) {

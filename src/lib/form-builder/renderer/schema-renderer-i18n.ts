@@ -124,6 +124,9 @@ function resolveRenderValue(
   if (field.type === "file-upload") {
     return Array.isArray(resolvedValue) ? (resolvedValue as string[]) : [];
   }
+  if (field.type === "text" && field.inputType === "number") {
+    return typeof resolvedValue === "number" && Number.isFinite(resolvedValue) ? resolvedValue : null;
+  }
   if (field.type === "select" && (field as SelectFieldDefinition).multiple) {
     return normalizeSelectValue(
       field as SelectFieldDefinition,

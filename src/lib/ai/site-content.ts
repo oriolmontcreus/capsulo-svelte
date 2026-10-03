@@ -1,3 +1,4 @@
+import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 import capsuleManifest from "virtual:capsule-manifest";
 import { globalsSchema } from "$/config/globals/globals.schema";
 import { getCapsuleByKey } from "$lib/capsules/core/registry";
@@ -109,6 +110,7 @@ function presentFieldValue(field: FieldDefinition, value: SchemaValues[string] |
 			return presented;
 		});
 	}
+	if (isPasswordField(field)) return value?.[DEFAULT_LOCALE] ? "(hidden)" : null;
 	if (!isTranslatable(field)) return value?.[DEFAULT_LOCALE] ?? null;
 	const perLocale: Record<string, unknown> = {};
 	for (const locale of LOCALES) perLocale[locale] = value?.[locale] ?? null;
@@ -155,7 +157,7 @@ function describeField(field: FieldDefinition, indent = ""): string {
 	if (field.type === "colorpicker" && field.onlyPresets && field.presetColors?.length) {
 		parts.push(`only: ${field.presetColors.join(", ")}`);
 	}
-	if (field.type === "file-upload") parts.push("read-only for you");
+	if (field.type === "file-upload" || isPasswordField(field)) parts.push("read-only for you");
 	if (field.type === "repeater") {
 		if (field.minItems) parts.push(`min ${field.minItems} items`);
 		if (field.maxItems !== undefined) parts.push(`max ${field.maxItems} items`);

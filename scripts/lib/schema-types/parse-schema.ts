@@ -24,14 +24,34 @@ function isSelectBuilder(builder: string): boolean {
   return builder === "Select" || builder === "select";
 }
 
-function resolveFieldType(builder: string, multiple: boolean): string {
+function resolveFieldType(builder: string, multiple: boolean, inputType?: string): string {
   if (isSelectBuilder(builder)) return multiple ? "string[]" : "string";
+  if ((builder === "Text" || builder === "text") && inputType === "number") return "number | null";
   return BUILDER_TS_TYPE_MAP[builder] ?? "any";
 }
 
 function parseBooleanMethodArg(args: readonly ts.Expression[]): boolean {
   const firstArg = args[0];
   return firstArg ? firstArg.kind !== ts.SyntaxKind.FalseKeyword : true;
+}
+
+/**
+ * `.required()` / `.required(true)` always require the field. A condition function (or any
+ * other expression) may not, so the generated type keeps such fields optional.
+ */
+function isAlwaysTrueArg(args: readonly ts.Expression[]): boolean {
+  const firstArg = args[0];
+  return !firstArg || firstArg.kind === ts.SyntaxKind.TrueKeyword;
+}
+
+/** `.hidden(false)` never hides; anything else may, and hidden fields are not validated. */
+function mayHide(arg: ts.Expression | undefined): boolean {
+  return !arg || arg.kind !== ts.SyntaxKind.FalseKeyword;
+}
+
+/** A required number is a number once valid; an optional one may be null (left empty). */
+function finalizeType(type: string, required: boolean): string {
+  return required && type === "number | null" ? "number" : type;
 }
 
 function getStringLiteralValue(
@@ -65,6 +85,8 @@ function parseFieldFromObjectLiteral(
     hasDefaultValue: false,
     multiple: false,
   };
+  let hidden = false;
+  let inputType: string | undefined;
 
   for (const property of node.properties) {
     if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) {
@@ -92,6 +114,14 @@ function parseFieldFromObjectLiteral(
       values.hasDefaultValue = true;
     }
 
+    if (key === "hidden" && mayHide(property.initializer)) {
+      hidden = true;
+    }
+
+    if (key === "inputType") {
+      inputType = getStringLiteralValue(property.initializer);
+    }
+
     if (key === "multiple") {
       values.multiple = parseBooleanMethodArg([property.initializer]);
     }
@@ -99,13 +129,14 @@ function parseFieldFromObjectLiteral(
   if (!values.name) return undefined;
 
   const builder = values.builder ?? "ObjectField";
+  const required = (values.required ?? false) && !hidden;
   return {
     name: values.name,
     builder,
-    required: values.required ?? false,
+    required,
     hasDefaultValue: values.hasDefaultValue ?? false,
     multiple: values.multiple ?? false,
-    type: resolveFieldType(builder, values.multiple ?? false),
+    type: finalizeType(resolveFieldType(builder, values.multiple ?? false, inputType), required),
   };
 }
 
@@ -138,6 +169,8 @@ function parseFieldFromBuilderChain(
   let required = false;
   let hasDefaultValue = false;
   let multiple = false;
+  let hidden = false;
+  let inputType: string | undefined;
   let itemName: string | undefined;
 
   for (const method of methods) {
@@ -150,7 +183,15 @@ function parseFieldFromBuilderChain(
     }
 
     if (method.name === "required") {
-      required = parseBooleanMethodArg(method.args);
+      required = isAlwaysTrueArg(method.args);
+    }
+
+    if (method.name === "hidden" && mayHide(method.args[0])) {
+      hidden = true;
+    }
+
+    if (method.name === "type") {
+      inputType = getStringLiteralValue(method.args[0]);
     }
 
     if (method.name === "multiple") {
@@ -180,13 +221,14 @@ function parseFieldFromBuilderChain(
     };
   }
 
+  const effectiveRequired = required && !hidden;
   return {
     name: fieldName,
     builder,
-    required,
+    required: effectiveRequired,
     hasDefaultValue,
     multiple,
-    type: resolveFieldType(builder, multiple),
+    type: finalizeType(resolveFieldType(builder, multiple, inputType), effectiveRequired),
   };
 }
 
