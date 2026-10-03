@@ -21,6 +21,8 @@
   } from "$lib/components/ui/breadcrumb";
 
   import ContentSidebar from "./PageEditor/ContentSidebar";
+  import type { FieldFocusTarget } from "./PageEditor/ContentSidebar/types";
+  import { LOCALES } from "$lib/config/i18n-config";
   import "./PageEditor/ContentSidebar/capsule-group-colors.css";
   import Preview from "./PageEditor/Preview.svelte";
   import {
@@ -34,6 +36,10 @@
   };
 
   let { pageId, entries = [] }: Props = $props();
+
+  // "Fix this" links from the Changes page: /admin/page-editor/<page>?focus=<instance>&field=<path>&locale=<code>
+  let focusTarget = $state<FieldFocusTarget | null>(null);
+  let showAllErrors = $state(false);
 
   let previewDevice = $state<PreviewDeviceId>(DEFAULT_PREVIEW_DEVICE);
   let previewWidthPx = $state(390);
@@ -106,6 +112,16 @@
 
   onMount(() => {
     void ensureGlobalsLoaded();
+
+    const params = new URLSearchParams(window.location.search);
+    const instanceId = params.get("focus");
+    const field = params.get("field");
+    const requestedLocale = params.get("locale");
+    if (requestedLocale && LOCALES.includes(requestedLocale)) locale = requestedLocale;
+    if (instanceId && field) {
+      focusTarget = { instanceId, path: field.split(".") };
+      showAllErrors = true;
+    }
   });
 </script>
 
@@ -163,6 +179,8 @@
         bind:locale
         bind:valuesByInstance
         bind:saveControls
+        {focusTarget}
+        bind:showAllErrors
       />
 
       <!-- Resizer -->

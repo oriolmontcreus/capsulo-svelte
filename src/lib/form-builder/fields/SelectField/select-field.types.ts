@@ -1,4 +1,5 @@
 import type {
+	FieldCondition,
 	FieldBuilder,
 	SelectFieldDefinition,
 	SelectOption,
@@ -19,7 +20,8 @@ export interface SelectFieldBuilder extends FieldBuilder<SelectFieldDefinition> 
 	label(value: string): this;
 	description(value: string): this;
 	placeholder(value: string): this;
-	required(value?: boolean): this;
+	required(value?: FieldCondition): this;
+	hidden(value?: FieldCondition): this;
 	multiple(value?: boolean): this;
 	defaultValue(value: string | string[]): this;
 	options(value: SelectOption[]): this;

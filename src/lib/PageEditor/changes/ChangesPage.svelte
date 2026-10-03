@@ -2,6 +2,12 @@
 	import { onMount } from "svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
+	import {
+		toIssueListEntries,
+		validatePageValues,
+		type IssueListEntry,
+	} from "$lib/PageEditor/validate-documents";
 	import { listChangedPages, getPageChangeSet, type ChangedPageSummary } from "./changed-pages";
 	import { commitChanges, type CommitFailure } from "./commit";
 	import { applyFieldValueToDraft } from "./draft-write";
@@ -20,6 +26,14 @@
 	let failures = $state<CommitFailure[]>([]);
 	let publishNotice = $state<string | null>(null);
 	let revertError = $state<string | null>(null);
+	/** Validation problems in the pages about to be committed; any one blocks the commit. */
+	let issues = $state<IssueListEntry[]>([]);
+	const issueCounts = $derived(
+		issues.reduce<Record<string, number>>((counts, issue) => {
+			counts[issue.pageId] = (counts[issue.pageId] ?? 0) + 1;
+			return counts;
+		}, {}),
+	);
 
 	/** Bumped after a revert so the diff re-reads the draft it just changed. */
 	let draftRevision = $state(0);
@@ -53,8 +67,20 @@
 		await refresh();
 	}
 
+	async function validateChangedPages(): Promise<void> {
+		const changedIds = new Set(changedPages.map((page) => page.pageId));
+		const documents = (await loadAllPageEditorCacheDocuments()).filter((document) =>
+			changedIds.has(document.pageId),
+		);
+		issues = toIssueListEntries(
+			documents.flatMap((document) => validatePageValues(document.pageId, document.valuesByInstance)),
+			Object.fromEntries(documents.map((document) => [document.pageId, document.valuesByInstance])),
+		);
+	}
+
 	async function refresh(): Promise<void> {
 		changedPages = await listChangedPages();
+		await validateChangedPages();
 		if (!selectedPageId || !changedPages.some((page) => page.pageId === selectedPageId)) {
 			selectedPageId = changedPages[0]?.pageId ?? null;
 		}
@@ -62,7 +88,7 @@
 	}
 
 	async function commit(): Promise<void> {
-		if (isCommitting) return;
+		if (isCommitting || issues.length > 0) return;
 		isCommitting = true;
 		errorMessage = null;
 		failures = [];
@@ -95,7 +121,7 @@
 			<h1 class="text-sm font-medium">Changes</h1>
 		</div>
 		<div class="min-h-0 flex-1 overflow-y-auto">
-			<ChangesSidebar pages={changedPages} bind:selectedPageId />
+			<ChangesSidebar pages={changedPages} {issueCounts} bind:selectedPageId />
 		</div>
 		<CommitForm
 			bind:message
@@ -105,6 +131,7 @@
 			{errorMessage}
 			{failures}
 			{publishNotice}
+			{issues}
 			oncommit={commit}
 		/>
 	</aside>

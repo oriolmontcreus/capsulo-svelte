@@ -1,3 +1,4 @@
+import type { FieldCondition } from "../../core/types";
 import type { ColorPickerFieldBuilder, ColorPickerFieldDefinition } from "./color-picker-field.types";
 
 class ColorPickerFieldBuilderImpl implements ColorPickerFieldBuilder {
@@ -21,8 +22,13 @@ class ColorPickerFieldBuilderImpl implements ColorPickerFieldBuilder {
 		return this;
 	}
 
-	required(value = true): this {
+	required(value: FieldCondition = true): this {
 		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 

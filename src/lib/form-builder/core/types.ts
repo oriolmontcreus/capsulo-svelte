@@ -1,3 +1,5 @@
+import type { Component } from "svelte";
+
 export type FieldType =
 	| "text"
 	| "textarea"
@@ -8,20 +10,56 @@ export type FieldType =
 	| "file-upload"
 	| "repeater";
 
+/**
+ * Values a field condition sees: each sibling field's value in the default locale
+ * (inside a repeater item, the item's own fields).
+ */
+export type ConditionValues = Record<string, unknown>;
+
+/** A fixed flag, or a function of the sibling values (e.g. `(values) => values.showCta === true`). */
+export type FieldCondition = boolean | ((values: ConditionValues) => boolean);
+
+/** Text or a Svelte component (e.g. an icon) shown before or after an input. */
+export type FieldAdornment = string | Component;
+
 export interface BaseFieldDefinition {
 	type: FieldType;
 	name: string;
 	label?: string;
 	description?: string;
-	required?: boolean;
+	/** Required fields must have a value in the default locale before content can be committed. */
+	required?: FieldCondition;
+	/** Hidden fields are not shown or validated; their stored value is kept. */
+	hidden?: FieldCondition;
 	translatable?: boolean;
 }
+
+export type TextInputType = "text" | "email" | "url" | "password" | "number";
 
 export interface TextFieldDefinition extends BaseFieldDefinition {
 	type: "text";
 	placeholder?: string;
-	defaultValue?: string;
+	/** A number for `inputType: "number"`, a string otherwise. */
+	defaultValue?: string | number;
+	/** Defaults to "text". "number" stores a JSON number (or null when empty). */
+	inputType?: TextInputType;
+	minLength?: number;
+	maxLength?: number;
+	/** Smallest allowed number (`inputType: "number"`). */
+	min?: number;
+	/** Largest allowed number (`inputType: "number"`). */
+	max?: number;
+	/** Allowed increment for numbers, e.g. 0.01 for two decimals. */
+	step?: number;
+	/** `false` allows whole numbers only. */
+	allowDecimals?: boolean;
+	/** The whole value must match this pattern. */
+	regex?: string | RegExp;
+	prefix?: FieldAdornment;
+	suffix?: FieldAdornment;
 }
+
+export type TextareaResize = "none" | "vertical" | "horizontal" | "both";
 
 export interface TextareaFieldDefinition extends BaseFieldDefinition {
 	type: "textarea";
@@ -29,13 +67,27 @@ export interface TextareaFieldDefinition extends BaseFieldDefinition {
 	defaultValue?: string;
 	rows?: number;
 	autoresize?: boolean;
+	minLength?: number;
 	maxLength?: number;
+	/** The whole value must match this pattern. */
+	regex?: string | RegExp;
+	resize?: TextareaResize;
+	/** Lower height bound, in rows, when auto-resizing. */
+	minRows?: number;
+	/** Upper height bound, in rows, when auto-resizing. */
+	maxRows?: number;
+	prefix?: FieldAdornment;
+	suffix?: FieldAdornment;
 }
 
 export interface RichEditorFieldDefinition extends BaseFieldDefinition {
 	type: "rich-editor";
 	placeholder?: string;
 	defaultValue?: string;
+	/** Minimum length of the visible text (markup not counted). */
+	minLength?: number;
+	/** Maximum length of the visible text (markup not counted). */
+	maxLength?: number;
 }
 
 export interface ToggleFieldDefinition extends BaseFieldDefinition {
@@ -156,4 +208,4 @@ export interface RepeaterItem {
 }
 
 /** What a field component receives and emits. */
-export type FieldValue = string | boolean | string[] | RepeaterItem[];
+export type FieldValue = string | number | null | boolean | string[] | RepeaterItem[];

@@ -85,6 +85,22 @@ export function createSchemaInitialValues(
   return initialValues;
 }
 
+/**
+ * Stored values on top of the schema defaults, field by field (a stored locale wins over the
+ * default for that locale). This is what the editor shows and what gets validated.
+ */
+export function withSchemaDefaults(
+  schema: FieldsSource,
+  values: SchemaValues | undefined,
+  defaultLocale: string,
+): SchemaValues {
+  const merged = createSchemaInitialValues(schema, defaultLocale);
+  for (const [fieldName, localizedValues] of Object.entries(values ?? {})) {
+    merged[fieldName] = { ...(merged[fieldName] ?? {}), ...(localizedValues ?? {}) };
+  }
+  return merged;
+}
+
 function isRenderableField(field: FieldDefinition): boolean {
   return (
     field.type === "text" ||
@@ -123,6 +139,9 @@ function resolveRenderValue(
   }
   if (field.type === "file-upload") {
     return Array.isArray(resolvedValue) ? (resolvedValue as string[]) : [];
+  }
+  if (field.type === "text" && field.inputType === "number") {
+    return typeof resolvedValue === "number" && Number.isFinite(resolvedValue) ? resolvedValue : null;
   }
   if (field.type === "select" && (field as SelectFieldDefinition).multiple) {
     return normalizeSelectValue(

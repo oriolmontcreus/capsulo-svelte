@@ -3,6 +3,7 @@ import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 
 import { HttpError, isRecord, nowIso, requireString } from "./http";
 import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
+import { assertValidGlobals, assertValidPages } from "./validate-content";
 
 const CONTENT_FORMAT_VERSION = 1;
 const GLOBALS_ID = "globals";
@@ -55,8 +56,10 @@ export async function commitPages(
 		const pageId = requireString(entry.pageId, `pages[${index}].pageId`, 300);
 		if (seen.has(pageId)) throw new HttpError(400, `Page "${pageId}" appears twice.`);
 		seen.add(pageId);
-		return { pageId, content: serializeDocument(entry.content, `pages[${index}].content`) };
+		return { pageId, rawContent: entry.content, content: serializeDocument(entry.content, `pages[${index}].content`) };
 	});
+	// Required fields and format rules hold for every committed page, whoever sends it.
+	assertValidPages(pages.map((page) => ({ pageId: page.pageId, content: page.rawContent })));
 
 	const commitId = crypto.randomUUID();
 	const updatedAt = nowIso();
@@ -176,6 +179,8 @@ export async function getGlobals(): Promise<StoredDocument | null> {
 }
 
 export async function saveGlobals(userId: string, content: unknown): Promise<{ updatedAt: string }> {
+	const serialized = serializeDocument(content, "content");
+	assertValidGlobals(content);
 	const updatedAt = nowIso();
 	await env.DB.prepare(
 		`INSERT INTO globals (id, content, created_by, updated_by, updated_at) VALUES (?, ?, ?, ?, ?)
@@ -184,7 +189,7 @@ export async function saveGlobals(userId: string, content: unknown): Promise<{ u
 		   updated_by = excluded.updated_by,
 		   updated_at = excluded.updated_at`
 	)
-		.bind(GLOBALS_ID, serializeDocument(content, "content"), userId, userId, updatedAt)
+		.bind(GLOBALS_ID, serialized, userId, userId, updatedAt)
 		.run();
 	return { updatedAt };
 }

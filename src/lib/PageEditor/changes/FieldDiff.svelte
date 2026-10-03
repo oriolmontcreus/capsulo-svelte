@@ -2,6 +2,7 @@
 	import type { Snippet } from "svelte";
 	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
 	import type { FieldDefinition } from "$lib/form-builder/core/types";
+	import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 	import type { FieldChange } from "./diff-model";
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import FieldValueView from "./FieldValueView.svelte";
@@ -18,7 +19,7 @@
 		action?: Snippet<[FieldChange]>;
 	} = $props();
 
-	const isInline = $derived(field.type === "text" || field.type === "textarea");
+	const isInline = $derived((field.type === "text" || field.type === "textarea") && !isPasswordField(field));
 	const showLocale = $derived(change.locale !== DEFAULT_LOCALE);
 	const label = $derived(field.label ?? field.name);
 

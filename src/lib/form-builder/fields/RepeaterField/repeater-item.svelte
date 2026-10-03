@@ -28,6 +28,8 @@
 		canRemove: boolean;
 		/** Unique DOM id stem for this item. */
 		idPrefix: string;
+		/** This item's path from the schema root: [...repeater path, item id]. */
+		path: string[];
 		dragging: boolean;
 		onChange: (item: RepeaterItem) => void;
 		onToggle: () => void;
@@ -46,6 +48,7 @@
 		canAdd,
 		canRemove,
 		idPrefix,
+		path,
 		dragging,
 		onChange,
 		onToggle,
@@ -63,6 +66,7 @@
 	const label = $derived(repeaterItemLabel(field, index));
 	const values = $derived(repeaterItemValues(item));
 	const contentId = $derived(`${idPrefix}-content`);
+	const errorCount = $derived(renderer.validation.errorCountWithin(path));
 
 	let menuTrigger = $state<HTMLElement | null>(null);
 	let confirmOpen = $state(false);
@@ -107,6 +111,15 @@
 			<span class="truncate text-sm font-medium" class:text-muted-foreground={!summary}>
 				{summary ?? label}
 			</span>
+			{#if errorCount > 0}
+				<span
+					class="bg-destructive/10 text-destructive shrink-0 rounded-full px-1.5 text-xs font-medium tabular-nums"
+					title="{errorCount} {errorCount === 1 ? 'field needs' : 'fields need'} attention"
+				>
+					{errorCount}
+					<span class="sr-only">{errorCount === 1 ? "error" : "errors"}</span>
+				</span>
+			{/if}
 			<ChevronDown
 				class="text-muted-foreground ml-auto size-4 shrink-0 transition-transform {expanded ? 'rotate-180' : ''}"
 				aria-hidden="true"
@@ -181,6 +194,7 @@
 				context={renderer.i18n}
 				translatableLocaleMode={renderer.translatableLocaleMode}
 				{idPrefix}
+				{path}
 				onFieldChange={updateChild}
 			/>
 		</div>

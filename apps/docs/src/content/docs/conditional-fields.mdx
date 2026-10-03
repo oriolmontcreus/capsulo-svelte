@@ -1,0 +1,62 @@
+---
+title: Conditional fields
+description: Show, hide and require fields based on other values, and how Capsulo validates content before it goes live.
+---
+
+Every field takes `hidden()` and `required()`. Pass `true` (the default) for a fixed rule, or a function that receives the other fields' values for a rule that changes as editors fill in the form.
+
+```ts
+// [!code word:hidden]
+// [!code word:required]
+Text('ctaUrl')
+  .label('Button link')
+  .hidden((values) => values.showCta !== true)
+  .required((values) => values.showCta === true);
+```
+
+## Conditions
+
+A condition is a function `(values) => boolean`. `values` holds every field of the same capsule, as your component would receive it in the default language: a `Toggle` is a `boolean`, a `Select` a `string` (or `string[]`), a `Text` with `type("number")` a `number` or `null`, and a `Repeater` an array of items.
+
+Inside a repeater, a child field's condition receives **its own item's** values, so each item can show or require different fields.
+
+Keep conditions small and side-effect free: they run on every keystroke. If one throws, Capsulo treats it as `false` and logs the error in the browser console, so a broken condition can't lock editors out.
+
+<Previews>
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="conditional/toggle" title="Shown when a toggle is on" />
+
+<ComponentPreview showMargin={false} class="border-b" example="conditional/select" title="Required by a select" showErrors />
+
+<ComponentPreview showMargin={false} class="col-span-full" example="conditional/repeater" title="Per repeater item" />
+
+</Previews>
+
+## Hidden fields
+
+A hidden field disappears from the editor and is **not validated**, even when it's marked `required()`. Its stored value is kept, so turning the toggle back on restores what the editor typed. Your component still receives the value: check the same condition there before rendering it.
+
+```svelte
+{#if data.showCta}
+  <a href={data.ctaUrl}>{data.ctaLabel}</a>
+{/if}
+```
+
+## Validation
+
+Capsulo validates content against its schema. A field passes when:
+
+- **`required()`**: it has a value in the **default language**. Translations may be left empty; the site falls back to the default language for them. A `Toggle` must be on, a `FileUpload` needs a file and a `Repeater` needs at least one item.
+- **Format rules** (`minLength`, `maxLength`, `regex`, `type("email")`, `type("url")`, `min`, `max`, `step`, `allowDecimals`, a repeater's `minItems`/`maxItems`, a select's options): every language that has a value follows them.
+
+Where it runs:
+
+- **In the editor**: a field shows its error as soon as it's edited. Each capsule's header counts its issues; click the count to show them all.
+- **On the Changes page**: the Commit button stays disabled while any page being committed has an issue. Each issue links straight to the field, in the right capsule, repeater item and language.
+- **Global variables**: Save refuses invalid values and lists what to fix.
+- **The AI agent**: its edits follow the same rules, and it can't make a capsule invalid.
+- **The API**: the Worker runs the same validation and rejects invalid commits with `422`, so a modified client can't get around it.
+
+## Types
+
+The generated `.schema.d.ts` follows the rules: a field with `required()` is a required property. A field that is only conditionally required, or that can be hidden, stays optional (`?`), since it may be empty when your component renders.

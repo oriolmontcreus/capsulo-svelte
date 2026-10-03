@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount } from "svelte";
+	import { onDestroy, onMount, type Snippet } from "svelte";
 	import { Editor } from "@tiptap/core";
 
 	import { cn } from "$lib/utils";
@@ -31,7 +31,14 @@
 		invalid?: boolean;
 		rows?: number;
 		autoresize?: boolean;
+		/** Multiline: stop growing at this many rows and scroll instead. */
+		maxRows?: number;
+		/** Multiline: let the user drag the box's size (CSS `resize`). */
+		resize?: "none" | "vertical" | "horizontal" | "both";
 		maxLength?: number;
+		/** Shown inside the box, before / after the text (e.g. a unit or an icon). */
+		prefix?: Snippet;
+		suffix?: Snippet;
 		class?: string;
 	};
 
@@ -44,7 +51,11 @@
 		invalid = false,
 		rows = 3,
 		autoresize = true,
+		maxRows,
+		resize = "none",
 		maxLength,
+		prefix,
+		suffix,
 		class: className = ""
 	}: Props = $props();
 
@@ -72,18 +83,25 @@
 		)
 	);
 
+	const adornmentClass =
+		"text-muted-foreground flex shrink-0 items-center text-sm select-none [&_svg:not([class*='size-'])]:size-4";
+
 	const editorClass = $derived(
 		singleLine ? singlelineEditorClass : multilineEditorClass
 	);
 
 	const multilineMinHeight = $derived(getMultilineMinHeight(rows));
 
+	const multilineMaxHeight = $derived(maxRows ? getMultilineMinHeight(maxRows) : undefined);
+
 	const surfaceStyle = $derived(
 		singleLine
 			? undefined
-			: autoresize
-				? `min-height:${multilineMinHeight};`
-				: `height:${multilineMinHeight};overflow-y:auto;`
+			: [
+					autoresize ? `min-height:${multilineMinHeight};` : `height:${multilineMinHeight};overflow-y:auto;`,
+					multilineMaxHeight ? `max-height:${multilineMaxHeight};overflow-y:auto;` : "",
+					resize !== "none" ? `resize:${resize};` : ""
+				].join("")
 	);
 
 	function emitValue(updatedEditor: Editor): void {
@@ -111,7 +129,8 @@
 		if (!proseMirror) return;
 
 		surfaceEl.style.height = "auto";
-		const nextHeight = Math.max(proseMirror.scrollHeight, parseInt(multilineMinHeight, 10));
+		const contentHeight = Math.max(proseMirror.scrollHeight, parseInt(multilineMinHeight, 10));
+		const nextHeight = multilineMaxHeight ? Math.min(contentHeight, parseInt(multilineMaxHeight, 10)) : contentHeight;
 		surfaceEl.style.height = `${nextHeight}px`;
 	}
 
@@ -195,21 +214,29 @@
 	<VariableTooltipLayer>
 		<div
 			bind:this={surfaceEl}
-			class={surfaceClass}
+			class={cn(surfaceClass, (prefix || suffix) && "flex", (prefix || suffix) && (singleLine ? "items-center" : "items-start"))}
 			style={surfaceStyle}
 			aria-invalid={invalid ? "true" : undefined}
 			data-slot={singleLine ? "input" : "textarea"}
 		>
+			{#if prefix}
+				<span class={cn(adornmentClass, "pl-2.5", !singleLine && "pt-2")}>{@render prefix()}</span>
+			{/if}
 			<div
 				bind:this={element}
 				{id}
 				role="textbox"
 				aria-multiline={!singleLine}
+				aria-invalid={invalid ? "true" : undefined}
 				class={cn(
 					editorClass,
+					(prefix || suffix) && "min-w-0 flex-1",
 					singleLine ? "variable-tiptap-singleline" : "variable-tiptap-multiline"
 				)}
 			></div>
+			{#if suffix}
+				<span class={cn(adornmentClass, "pr-2.5", !singleLine && "pt-2")}>{@render suffix()}</span>
+			{/if}
 		</div>
 	</VariableTooltipLayer>
 </VariableAutocompleteLayer>

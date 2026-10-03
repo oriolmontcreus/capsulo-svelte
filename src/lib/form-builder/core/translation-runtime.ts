@@ -91,13 +91,15 @@ export function createInitialFieldValue(
 			? getSelectInitialValue(field as SelectFieldDefinition)
 			: field.type === "file-upload"
 				? (field.defaultValue ?? [])
-				: field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "colorpicker"
-					? (field.defaultValue ?? "")
-					: field.type === "toggle"
-						? (field.defaultValue ?? false)
-						: field.type === "repeater"
-							? createRepeaterItems(field, normalizedDefaultLocale, (index) => `${field.name}-default-${index}`)
-							: "";
+				: field.type === "text" && field.inputType === "number"
+					? (field.defaultValue ?? null)
+					: field.type === "text" || field.type === "textarea" || field.type === "rich-editor" || field.type === "colorpicker"
+						? (field.defaultValue ?? "")
+						: field.type === "toggle"
+							? (field.defaultValue ?? false)
+							: field.type === "repeater"
+								? createRepeaterItems(field, normalizedDefaultLocale, (index) => `${field.name}-default-${index}`)
+								: "";
 
 	return {
 		[normalizedDefaultLocale]: seedValue
@@ -159,7 +161,8 @@ function resolveValue(
 	}));
 }
 
-function resolveFieldValues(
+/** Resolves each field for a locale (repeater items included), as the public site receives them. */
+export function resolveFieldValues(
 	fields: FieldDefinition[],
 	values: SchemaValues,
 	targetLocale: string,
@@ -192,7 +195,9 @@ export function getSchemaDefaultValues(
 
 	for (const field of schema.fields) {
 		const defaultValue =
-			field.type === "text" || field.type === "textarea" || field.type === "rich-editor"
+			field.type === "text" && field.inputType === "number"
+				? (field.defaultValue ?? null)
+				: field.type === "text" || field.type === "textarea" || field.type === "rich-editor"
 				? (field.defaultValue ?? "")
 				: field.type === "repeater"
 					? resolveValue(field, createInitialFieldValue(field, defaultLocale), locale, defaultLocale)

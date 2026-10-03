@@ -35,8 +35,13 @@ The `RichEditor` builder provides a fluent API to configure the field.
       type: 'string',
     },
     required: {
-      description: 'Marks the field as required. Publishing fails while it has no text in the default locale.',
-      type: 'boolean',
+      description: 'Marks the field as required. Publishing fails while it has no text in the default locale. Pass a function of the other fields\' values to require it only in some cases.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
+    hidden: {
+      description: 'Hides the field and skips its validation. Pass a function of the other fields\' values to hide it only in some cases. See <a href="/docs/conditional-fields/">Conditional fields</a>.',
+      type: 'boolean | (values) => boolean',
       default: 'true',
     },
     defaultValue: {
@@ -47,6 +52,14 @@ The `RichEditor` builder provides a fluent API to configure the field.
       description: 'Stores content per locale instead of one shared value.',
       type: 'boolean',
       default: 'true',
+    },
+    minLength: {
+      description: 'The fewest visible characters allowed. Markup like <code>&lt;strong&gt;</code> doesn\'t count.',
+      type: 'number',
+    },
+    maxLength: {
+      description: 'The most visible characters allowed. Markup doesn\'t count.',
+      type: 'number',
     },
   }}
 />
@@ -59,8 +72,10 @@ Your component gets an HTML `string` in the current locale, like `<p><strong>Hel
 
 <Previews>
 
-<ComponentPreview showMargin={false} class="border-r" example="rich-editor/basic" title="Basic rich editor" />
+<ComponentPreview showMargin={false} class="border-b border-r" example="rich-editor/basic" title="Basic rich editor" />
 
-<ComponentPreview showMargin={false} example="rich-editor/default-value" title="Default content" />
+<ComponentPreview showMargin={false} class="border-b" example="rich-editor/default-value" title="Default content" />
+
+<ComponentPreview showMargin={false} class="col-span-full" example="rich-editor/max-length" title="Length limit" showErrors />
 
 </Previews>

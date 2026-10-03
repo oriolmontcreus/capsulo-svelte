@@ -15,6 +15,13 @@ export function createCollapsedCapsulesState() {
 		collapsedCapsuleKeys = next;
 	}
 
+	function expand(capsuleKey: string): void {
+		if (!collapsedCapsuleKeys.has(capsuleKey)) return;
+		const next = new Set(collapsedCapsuleKeys);
+		next.delete(capsuleKey);
+		collapsedCapsuleKeys = next;
+	}
+
 	function collapseAll(capsuleKeys: string[]): void {
 		collapsedCapsuleKeys = new Set(capsuleKeys);
 	}
@@ -22,6 +29,7 @@ export function createCollapsedCapsulesState() {
 	return {
 		isExpanded,
 		toggle,
+		expand,
 		collapseAll,
 	};
 }

@@ -22,9 +22,12 @@
 		value: RepeaterItem[];
 		onValueChange: (value: RepeaterItem[]) => void;
 		error?: string;
+		/** This repeater's path from the schema root (field names and item ids). */
+		path?: string[];
 	}
 
-	let { field, value, onValueChange, error }: Props = $props();
+	let { field, value, onValueChange, error, path }: Props = $props();
+	const fieldPath = $derived(path ?? [field.name]);
 
 	const renderer = getSchemaRendererContext();
 	const items = $derived(Array.isArray(value) ? value : []);
@@ -49,6 +52,26 @@
 			? dropIndex
 			: null,
 	);
+
+	// Open the items that hold errors when every error is shown (after a blocked commit), and
+	// the item a "go to field" link points into. Once per item, so closing it again sticks.
+	let autoOpened: Record<string, true> = {};
+	$effect(() => {
+		const request = renderer.validation.focusRequest;
+		const showAll = renderer.validation.showAll;
+		for (const item of items) {
+			const itemPath = [...fieldPath, item._id];
+			const focused =
+				request !== null &&
+				request.path.length > itemPath.length &&
+				itemPath.every((segment, index) => request.path[index] === segment);
+			const hasErrors = showAll && renderer.validation.errorCountWithin(itemPath) > 0;
+			if ((focused || hasErrors) && !autoOpened[item._id]) {
+				autoOpened[item._id] = true;
+				expanded[item._id] = true;
+			}
+		}
+	});
 
 	function itemDomId(item: RepeaterItem): string {
 		return `${field.name}-${item._id}`;
@@ -134,7 +157,12 @@
 
 <Field data-invalid={error ? "true" : undefined} role="group" aria-labelledby={labelId}>
 	<div class="flex items-center gap-2">
-		<span id={labelId} class="text-sm leading-snug font-medium">{field.label ?? field.name}</span>
+		<span id={labelId} class="text-sm leading-snug font-medium">
+			{field.label ?? field.name}
+			{#if field.required}
+				<span class="text-destructive">*</span>
+			{/if}
+		</span>
 		<Badge variant="secondary" class="tabular-nums">
 			{items.length}{field.maxItems !== undefined ? ` / ${field.maxItems}` : ""}
 		</Badge>
@@ -186,6 +214,7 @@
 						{canAdd}
 						{canRemove}
 						idPrefix={itemDomId(item)}
+						path={[...fieldPath, item._id]}
 						dragging={dragIndex === index}
 						onChange={(next) => updateItem(index, next)}
 						onToggle={() => (expanded[item._id] = !expanded[item._id])}

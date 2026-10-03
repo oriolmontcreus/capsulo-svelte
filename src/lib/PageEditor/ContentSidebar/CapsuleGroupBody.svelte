@@ -4,6 +4,8 @@
 	import type { RegisteredCapsule } from "$lib/capsules/core/types";
 	import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
 	import type { SchemaValues } from "$lib/form-builder/core/types";
+	import type { FieldFocusRequest } from "$lib/form-builder/renderer/schema-renderer-context";
+	import type { FieldFocusTarget } from "./types";
 
 	type Props = {
 		panelId: string;
@@ -14,6 +16,8 @@
 		locale: string;
 		valuesByInstance: PageEditorValuesByInstance;
 		schemaHydrationVersion: number;
+		focusTarget?: FieldFocusTarget | null;
+		showAllErrors?: boolean;
 		onInstanceValuesChange: (instanceId: string, values: SchemaValues) => void;
 	};
 
@@ -26,8 +30,13 @@
 		locale,
 		valuesByInstance,
 		schemaHydrationVersion,
+		focusTarget = null,
+		showAllErrors = false,
 		onInstanceValuesChange,
 	}: Props = $props();
+
+	// One request object per target, so each renderer handles it once.
+	const focusRequest = $derived<FieldFocusRequest | null>(focusTarget ? { path: focusTarget.path } : null);
 </script>
 
 <div id={panelId}>
@@ -55,6 +64,8 @@
 						defaultLocale={DEFAULT_LOCALE}
 						editingLocale={locale}
 						translatableLocaleMode="active-only"
+						{showAllErrors}
+						focusRequest={focusTarget?.instanceId === instanceId ? focusRequest : null}
 						onValuesChange={(nextValues) =>
 							onInstanceValuesChange(instanceId, nextValues)}
 					/>

@@ -1,4 +1,5 @@
 import type {
+	FieldCondition,
 	FieldBuilder,
 	RichEditorFieldDefinition,
 } from "../../core/types";
@@ -10,8 +11,13 @@ export interface RichEditorFieldBuilder
 	label(value: string): this;
 	description(value: string): this;
 	placeholder(value: string): this;
-	required(value?: boolean): this;
+	required(value?: FieldCondition): this;
+	hidden(value?: FieldCondition): this;
 	defaultValue(value: string): this;
 	translatable(value?: boolean): this;
+	/** Minimum visible-text length (markup not counted). */
+	minLength(value: number): this;
+	/** Maximum visible-text length (markup not counted). */
+	maxLength(value: number): this;
 }
 

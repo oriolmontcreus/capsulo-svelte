@@ -1,4 +1,5 @@
 import type {
+	FieldCondition,
 	FieldBuilder,
 	FileUploadFieldDefinition,
 	ResponsiveColumns,
@@ -10,7 +11,8 @@ export interface FileUploadFieldBuilder
 	extends FieldBuilder<FileUploadFieldDefinition> {
 	label(value: string): this;
 	description(value: string): this;
-	required(value?: boolean): this;
+	required(value?: FieldCondition): this;
+	hidden(value?: FieldCondition): this;
 	defaultValue(value: string[]): this;
 	accept(value: string): this;
 	maxSize(bytes: number): this;

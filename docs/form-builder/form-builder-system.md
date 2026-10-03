@@ -72,13 +72,13 @@ Responsibilities:
 - `src/lib/form-builder/fields/<FieldName>/*.types.ts`
 - `src/lib/form-builder/fields/<FieldName>/*.builder.ts`
 - `src/lib/form-builder/fields/<FieldName>/*.field.svelte`
-- `src/lib/form-builder/fields/<FieldName>/*.zod.ts`
+- `src/lib/form-builder/fields/<FieldName>/*.validation.ts`
 
 Responsibilities:
 
 - local field config and fluent API
 - local UI component for that field
-- local validation conversion for that field
+- local validation rules for that field (`isEmpty`, `validate`)
 
 ### Runtime Rendering Layer
 
@@ -92,14 +92,25 @@ Responsibilities:
 - manage current values
 - emit value updates upward
 
-### Validation Composition Layer
+### Conditions & Validation Layer
 
-- `src/lib/form-builder/core/schema-to-zod.ts`
+- `src/lib/form-builder/core/conditions.ts`
+- `src/lib/form-builder/core/validation.ts` (+ `validation-helpers.ts`)
+- `src/lib/capsules/core/validate-content.ts` (pages / globals, schema defaults merged)
+- `src/lib/form-builder/core/schema-to-zod.ts` (a Zod view of the same validator)
 
 Responsibilities:
 
-- map each field definition to field-specific zod
-- compose form-level schema (`z.object`)
+- evaluate `hidden()` / `required()` conditions: a boolean, or a function of the sibling
+  values resolved to the default locale (repeater children see their own item)
+- `validateSchemaValues`: skip hidden fields; `required` = filled in the **default locale**;
+  format rules (`*.validation.ts`) on every locale that has a value; recurse into repeater items
+- one validator for every caller: inline editor errors (`SchemaRenderer`), the Changes page
+  commit gate (`PageEditor/validate-documents.ts`), the globals Save, the AI agent
+  (`ai/edits.ts`) and the Worker API (`server/validate-content.ts`, answers 422)
+
+Conditions are functions, so schemas must stay real module imports. Never pass a schema
+through JSON or Astro island props (they drop the functions): import it where it renders.
 
 ---
 
@@ -111,7 +122,7 @@ Responsibilities:
 4. Each field is resolved through `field-registry`.
 5. Field components emit value updates.
 6. Renderer updates and emits the aggregate values object.
-7. Validation uses `schema-to-zod` + field zod mappers.
+7. Validation uses `validateSchemaValues` + the field `*.validation.ts` rules.
 
 Key principle: rendering and validation are both derived from the same schema contract.
 
@@ -163,7 +174,7 @@ Before merging any form-builder change, verify:
 - **Renderer dispatch stays exhaustive**
   - New field types are wired in `field-registry`.
 - **Validation path remains aligned**
-  - New field type is mapped in `schema-to-zod`.
+  - New field type has a validator registered in `core/validation.ts`.
 - **Output shape remains consumer-friendly**
   - Emitted values remain plain and predictable (`field -> locale -> value`).
 - **Backwards compatibility reviewed**
@@ -181,12 +192,12 @@ Use this exact sequence:
    - `*.types.ts`
    - `*.builder.ts`
    - `*.field.svelte`
-   - `*.zod.ts`
+   - `*.validation.ts`
 2. Extend union types in `core/types.ts`.
 3. Register visual component in `renderer/field-registry.ts`.
-4. Register validation mapper in `core/schema-to-zod.ts`.
+4. Register its validator in `core/validation.ts` (and its `hidden`/`required` builder methods).
 5. Add one schema example using the new field.
-6. Verify values emission shape and zod behavior.
+6. Verify values emission shape and validation (`core/validation.test-manual.ts`).
 7. Check the type-dependent consumers: `renderer/schema-renderer-i18n.ts` (`isRenderableField`,
    `resolveRenderValue`), `core/translation-runtime.ts` (initial and default values),
    `scripts/lib/schema-types/parse-schema.ts` (generated TS type), the Changes views
@@ -201,8 +212,8 @@ If any of those steps is skipped, the system becomes partially wired.
 
 - Adding builder methods without updating field type definitions.
 - Adding field `type` in types but forgetting renderer registry wiring.
-- Rendering a new field but not mapping it in zod composition.
-- Returning non-serializable objects in schema definitions.
+- Rendering a new field but not registering its validator.
+- Serializing schemas (JSON, Astro island props): condition functions get dropped.
 - Embedding UI layout semantics into schema field data.
 - Changing emitted values shape in renderer without updating consumers.
 
@@ -212,7 +223,7 @@ If any of those steps is skipped, the system becomes partially wired.
 
 - Keep schema and builder files in `.ts` (not `.tsx`).
 - Keep field UI rendering inside `*.field.svelte`.
-- Keep validation rules close to field modules (`*.zod.ts`).
+- Keep validation rules close to field modules (`*.validation.ts`).
 - Prefer additive changes over rewrites.
 - Maintain clear folder boundaries by responsibility.
 
@@ -222,10 +233,10 @@ If any of those steps is skipped, the system becomes partially wired.
 
 Current system implementation includes a minimal baseline:
 
-- one field type (`text`)
-- fluent builder
-- registry-based renderer
+- eight field types (text, textarea, rich-editor, toggle, select, colorpicker, file-upload, repeater)
+- fluent builders with `hidden()` / `required()` conditions
+- registry-based renderer with inline validation errors
 - aggregated values emission
-- minimal required validation with zod
+- one shared validator, enforced in the editor, the commit/save gates and the API
 
 This baseline is intentional: it is the reference contract to extend from.

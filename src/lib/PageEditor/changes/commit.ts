@@ -5,6 +5,7 @@ import {
 	savePageEditorDocumentToCache
 } from "$lib/PageEditor/page-editor-cache";
 import { commitPageEditorDocuments } from "$lib/PageEditor/page-editor-documents";
+import { validatePageValues } from "$lib/PageEditor/validate-documents";
 import { selectCommittableDocuments } from "./commit-selection";
 import { resolveInstanceDefaults } from "./schema-defaults";
 
@@ -63,6 +64,21 @@ export async function commitChanges(
 	const committable = selectCommittableDocuments(documents, pageIds, resolveInstanceDefaults);
 	if (committable.length === 0) {
 		return { committedPageIds: [], failures: [], errorMessage: null, publishNotice: null };
+	}
+
+	// The Changes page already blocks this; checked again so no caller can skip it. The API
+	// runs the same validation and rejects invalid pages too.
+	const issueCount = committable.reduce(
+		(count, document) => count + validatePageValues(document.pageId, document.valuesByInstance).length,
+		0
+	);
+	if (issueCount > 0) {
+		return {
+			committedPageIds: [],
+			failures: [],
+			errorMessage: `${issueCount} ${issueCount === 1 ? "field needs" : "fields need"} fixing before you can commit.`,
+			publishNotice: null
+		};
 	}
 
 	const result = await commitPageEditorDocuments(

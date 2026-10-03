@@ -50,6 +50,16 @@ The `Repeater` builder provides a fluent API to configure the field.
       type: 'string',
       default: '"items"',
     },
+    required: {
+      description: 'Requires at least one item before content can be committed, without adding an empty item up front like <code>minItems(1)</code> does. Pass a function of the other fields\' values to require it only in some cases.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
+    hidden: {
+      description: 'Hides the list and skips its validation. Pass a function of the other fields\' values to hide it only in some cases. See <a href="/docs/conditional-fields/">Conditional fields</a>.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
     minItems: {
       description:
         'The fewest items allowed. The field starts with that many items and items can\'t be deleted below it. Use <code>minItems(1)</code> to require at least one item.',

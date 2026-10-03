@@ -3,7 +3,7 @@ title: Text
 description: A fundamental component for capturing single-line text.
 ---
 
-The `Text` field captures single-line text such as titles, names, emails or links. It supports placeholders, validation, translations and global variables: type `{{` to insert one.
+The `Text` field captures single-line text such as titles, names, emails or links. It supports placeholders, validation (formats like email, URL or a pattern, and number ranges), translations and global variables: type `{{` to insert one.
 
 ## Usage
 
@@ -35,8 +35,13 @@ The `Text` builder provides a fluent API to configure the field.
       type: 'string',
     },
     required: {
-      description: 'Marks the field as required. Publishing fails while it is empty in the default locale.',
-      type: 'boolean',
+      description: 'Marks the field as required. Publishing fails while it is empty in the default locale. Pass a function of the other fields\' values to require it only in some cases.',
+      type: 'boolean | (values) => boolean',
+      default: 'true',
+    },
+    hidden: {
+      description: 'Hides the field and skips its validation. Pass a function of the other fields\' values to hide it only in some cases. See <a href="/docs/conditional-fields/">Conditional fields</a>.',
+      type: 'boolean | (values) => boolean',
       default: 'true',
     },
     defaultValue: {
@@ -48,12 +53,58 @@ The `Text` builder provides a fluent API to configure the field.
       type: 'boolean',
       default: 'true',
     },
+    type: {
+      description: 'The kind of value. <code>email</code> and <code>url</code> check the format (a URL is a full address like <code>https://…</code> or a site path like <code>/contact</code>). <code>password</code> masks the input and keeps the value out of diffs and the AI agent. <code>number</code> stores a number.',
+      type: '"text" | "email" | "url" | "password" | "number"',
+      default: '"text"',
+    },
+    minLength: {
+      description: 'The fewest characters allowed.',
+      type: 'number',
+    },
+    maxLength: {
+      description: 'The most characters allowed. Longer input is cut at the limit.',
+      type: 'number',
+    },
+    regex: {
+      description: 'A pattern the whole value must match, like <code>"[a-z0-9-]+"</code> for a slug.',
+      type: 'string | RegExp',
+    },
+    min: {
+      description: 'The smallest number allowed (<code>type("number")</code>).',
+      type: 'number',
+    },
+    max: {
+      description: 'The largest number allowed (<code>type("number")</code>).',
+      type: 'number',
+    },
+    step: {
+      description: 'The increment numbers must follow, counted from <code>min</code> (or 0). <code>0.01</code> allows two decimals.',
+      type: 'number',
+    },
+    allowDecimals: {
+      description: 'Pass <code>false</code> to allow whole numbers only.',
+      type: 'boolean',
+      default: 'true',
+    },
+    prefix: {
+      description: 'Text or an icon component shown inside the input, before the value (e.g. <code>"€"</code>).',
+      type: 'string | Component',
+    },
+    suffix: {
+      description: 'Text or an icon component shown inside the input, after the value (e.g. <code>"kg"</code>).',
+      type: 'string | Component',
+    },
   }}
 />
+
+Format rules (`minLength`, `regex`, `type`, `min`…) check every language that has a value, and block committing until they pass. Values that contain a global variable skip the format checks, because the variable is only replaced on the site.
 
 ## Value
 
 Your component gets a `string` in the current locale. A `required()` field is typed `string`; otherwise it's `string | undefined`.
+
+With `type("number")` it gets a `number`, or `null` while the field is empty: `number` when the field is `required()`, otherwise `number | null | undefined`.
 
 ## Examples
 
@@ -65,6 +116,14 @@ Your component gets a `string` in the current locale. A `required()` field is ty
 
 <ComponentPreview showMargin={false} class="border-r" example="text/global-variables" title="Global variables" />
 
-<ComponentPreview showMargin={false} example="text/translatable" title="Translatable" locales={['en', 'es']} />
+<ComponentPreview showMargin={false} class="border-b" example="text/translatable" title="Translatable" locales={['en', 'es']} />
+
+<ComponentPreview showMargin={false} class="border-b border-r" example="text/number" title="Number" />
+
+<ComponentPreview showMargin={false} class="border-b" example="text/email-url" title="Email and URL" />
+
+<ComponentPreview showMargin={false} class="border-r" example="text/pattern" title="Pattern" showErrors />
+
+<ComponentPreview showMargin={false} example="text/length" title="Length limits" showErrors />
 
 </Previews>

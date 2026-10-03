@@ -1,4 +1,4 @@
-import type { BuildableField, FieldDefinition } from "../../core/types";
+import type { BuildableField, FieldCondition, FieldDefinition } from "../../core/types";
 import type { RepeaterFieldBuilder, RepeaterFieldDefinition } from "./repeater-field.types";
 
 function assertCount(method: string, count: number): void {
@@ -25,6 +25,16 @@ class RepeaterFieldBuilderImpl implements RepeaterFieldBuilder {
 
 	description(value: string): this {
 		this.field.description = value;
+		return this;
+	}
+
+	required(value: FieldCondition = true): this {
+		this.field.required = value;
+		return this;
+	}
+
+	hidden(value: FieldCondition = true): this {
+		this.field.hidden = value;
 		return this;
 	}
 

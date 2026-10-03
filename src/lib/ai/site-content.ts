@@ -1,3 +1,4 @@
+import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 import capsuleManifest from "virtual:capsule-manifest";
 import { globalsSchema } from "$/config/globals/globals.schema";
 import { getCapsuleByKey } from "$lib/capsules/core/registry";
@@ -109,6 +110,7 @@ function presentFieldValue(field: FieldDefinition, value: SchemaValues[string] |
 			return presented;
 		});
 	}
+	if (isPasswordField(field)) return value?.[DEFAULT_LOCALE] ? "(hidden)" : null;
 	if (!isTranslatable(field)) return value?.[DEFAULT_LOCALE] ?? null;
 	const perLocale: Record<string, unknown> = {};
 	for (const locale of LOCALES) perLocale[locale] = value?.[locale] ?? null;
@@ -126,8 +128,21 @@ const MAX_OPTIONS_IN_CONTEXT = 25;
 function describeField(field: FieldDefinition, indent = ""): string {
 	const parts: string[] = [field.type];
 	if (isTranslatable(field)) parts.push("translatable");
-	if (field.required) parts.push("required");
-	if (field.type === "textarea" && field.maxLength) parts.push(`max ${field.maxLength} chars`);
+	if (field.required === true) parts.push(`required${isTranslatable(field) ? ` in ${DEFAULT_LOCALE}` : ""}`);
+	if (typeof field.required === "function") parts.push("required in some cases (the update tool says when)");
+	if (typeof field.hidden === "function") parts.push("only shown in some cases");
+	if (field.type === "text" && field.inputType && field.inputType !== "text") parts.push(field.inputType);
+	if (field.type === "text" || field.type === "textarea" || field.type === "rich-editor") {
+		if (field.minLength) parts.push(`min ${field.minLength} chars`);
+		if (field.maxLength) parts.push(`max ${field.maxLength} chars`);
+	}
+	if (field.type === "text" && field.inputType === "number") {
+		if (field.min !== undefined) parts.push(`min ${field.min}`);
+		if (field.max !== undefined) parts.push(`max ${field.max}`);
+		if (field.step !== undefined) parts.push(`step ${field.step}`);
+		if (field.allowDecimals === false) parts.push("whole numbers");
+	}
+	if ((field.type === "text" || field.type === "textarea") && field.regex) parts.push(`must match /${typeof field.regex === "string" ? field.regex : field.regex.source}/`);
 	if (field.type === "select") {
 		if (field.multiple) parts.push("multiple");
 		if (field.internalLinks) {
@@ -142,7 +157,7 @@ function describeField(field: FieldDefinition, indent = ""): string {
 	if (field.type === "colorpicker" && field.onlyPresets && field.presetColors?.length) {
 		parts.push(`only: ${field.presetColors.join(", ")}`);
 	}
-	if (field.type === "file-upload") parts.push("read-only for you");
+	if (field.type === "file-upload" || isPasswordField(field)) parts.push("read-only for you");
 	if (field.type === "repeater") {
 		if (field.minItems) parts.push(`min ${field.minItems} items`);
 		if (field.maxItems !== undefined) parts.push(`max ${field.maxItems} items`);

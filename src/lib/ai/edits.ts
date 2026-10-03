@@ -1,5 +1,6 @@
 import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
 import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
+import { validateFieldValue, validateSchemaValues, validationIssueKey } from "$lib/form-builder/core/validation";
 import type {
 	FieldDefinition,
 	LocalizedFieldValue,
@@ -13,6 +14,7 @@ import { valuesEqual } from "$lib/PageEditor/changes/diff-model";
 import { setDraftFieldValue } from "$lib/PageEditor/changes/draft-values";
 import { updatePageDraft } from "$lib/PageEditor/changes/draft-write";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
 import { createId } from "./chat-storage";
 import { sanitizeRichText } from "./sanitize-html";
 import {
@@ -111,6 +113,11 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
 				if (valuesEqual(rawChild, previousChild[DEFAULT_LOCALE])) continue;
 				return { error: `${childPath} is a file upload; the AI agent can't change files. Leave it out.` };
 			}
+			if (isPasswordField(child)) {
+				// The agent is shown "(hidden)" instead of the value; echoing it back keeps it.
+				if (rawChild === "(hidden)" || rawChild === null || valuesEqual(rawChild, previousChild[DEFAULT_LOCALE])) continue;
+				return { error: `${childPath} is a password field; the AI agent can't change it. Leave it out.` };
+			}
 			if (child.type === "repeater") {
 				const nested = validateRepeater(child, rawChild, previousChild[DEFAULT_LOCALE], childPath);
 				if ("error" in nested) return nested;
@@ -145,6 +152,12 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
 	return { value: items };
 }
 
+/** Runs the field's format rules (the same ones the editor and the commit check use). */
+function checked(field: FieldDefinition, value: unknown): Validated {
+	const message = validateFieldValue(field, value);
+	return message ? { error: message } : { value };
+}
+
 /**
  * Coerces and checks a value against its field definition. Returns an error message or the
  * value to store. `previous` is the stored value, which repeaters merge item edits into.
@@ -154,18 +167,22 @@ function validateValue(field: FieldDefinition, raw: unknown, locale: string, pre
 	switch (field.type) {
 		case "text":
 		case "textarea": {
-			if (typeof raw !== "string") return { error: `${name} needs a string.` };
-			if (field.type === "textarea" && field.maxLength && raw.length > field.maxLength) {
-				return { error: `${name} allows at most ${field.maxLength} characters (got ${raw.length}).` };
+			if (isPasswordField(field)) {
+				return { error: `${name} is a password field; the AI agent can't change it. Ask the user to type it in the editor.` };
 			}
-			if (field.required && raw.trim() === "") return { error: `${name} is required.` };
-			return { value: field.type === "text" ? raw.replace(/\s*\n\s*/g, " ") : raw };
+			if (field.type === "text" && field.inputType === "number") {
+				const number = raw === null || raw === "" ? null : typeof raw === "string" ? Number(raw.trim()) : raw;
+				if (number !== null && (typeof number !== "number" || !Number.isFinite(number))) {
+					return { error: `${name} needs a number (or null to clear it).` };
+				}
+				return checked(field, number);
+			}
+			if (typeof raw !== "string") return { error: `${name} needs a string.` };
+			return checked(field, field.type === "text" ? raw.replace(/\s*\n\s*/g, " ") : raw);
 		}
 		case "rich-editor": {
 			if (typeof raw !== "string") return { error: `${name} needs an HTML string.` };
-			const html = sanitizeRichText(raw);
-			if (field.required && html.replace(/<[^>]*>/g, "").trim() === "") return { error: `${name} is required.` };
-			return { value: html };
+			return checked(field, sanitizeRichText(raw));
 		}
 		case "toggle": {
 			if (typeof raw === "boolean") return { value: raw };
@@ -267,7 +284,7 @@ export async function applyContentUpdate(target: string, changes: RequestedChang
 	});
 	if (resolved.length === 0) return { edit: null, errors };
 
-	const fields: EditedField[] = [];
+	let fields: EditedField[] = [];
 	for (const change of resolved) {
 		const before = current[change.instanceId]?.[change.field.name]?.[change.locale];
 		if (valuesEqual(before, change.value)) continue;
@@ -278,6 +295,9 @@ export async function applyContentUpdate(target: string, changes: RequestedChang
 		if (existing >= 0) fields[existing].after = change.value;
 		else fields.push({ instanceId: change.instanceId, fieldName: change.field.name, locale: change.locale, before, after: change.value });
 	}
+	const blocked = findNewValidationIssues(current, fields);
+	errors.push(...blocked.errors);
+	fields = fields.filter((item) => !blocked.instanceIds.has(item.instanceId));
 	if (fields.length === 0) return { edit: null, errors: errors.length ? errors : ["Every value was already the same; nothing changed."] };
 
 	const writeError = await writeFields(target, fields.map((item) => ({ ...item, value: item.after })));
@@ -293,6 +313,42 @@ export async function applyContentUpdate(target: string, changes: RequestedChang
 		},
 		errors
 	};
+}
+
+/**
+ * Required fields and conditions depend on sibling values, so each changed instance is checked
+ * as a whole. An edit may not add validation issues; issues that were already there don't block
+ * it (the agent may be fixing one field at a time). Blocked instances are left untouched.
+ */
+function findNewValidationIssues(
+	current: PageEditorValuesByInstance,
+	fields: EditedField[]
+): { instanceIds: Set<string>; errors: string[] } {
+	const options = { defaultLocale: DEFAULT_LOCALE, locales: LOCALES };
+	const blocked = { instanceIds: new Set<string>(), errors: [] as string[] };
+
+	for (const instanceId of new Set(fields.map((item) => item.instanceId))) {
+		const schema = schemaForInstance(instanceId);
+		if (!schema) continue;
+		const before = current[instanceId] ?? {};
+		const writes = fields.filter((item) => item.instanceId === instanceId).map((item) => ({ ...item, value: item.after }));
+		const after = setValues({ [instanceId]: before }, writes)[instanceId] as SchemaValues;
+
+		const describe = (issue: { path: string[]; locale: string; message: string }) =>
+			`${issue.path.join(".")}${issue.locale === DEFAULT_LOCALE ? "" : ` (${issue.locale})`}: ${issue.message}`;
+		const existing = new Set(
+			validateSchemaValues(schema, before, options).map((issue) => `${validationIssueKey(issue.path, issue.locale)} ${issue.message}`)
+		);
+		const added = validateSchemaValues(schema, after, options).filter(
+			(issue) => !existing.has(`${validationIssueKey(issue.path, issue.locale)} ${issue.message}`)
+		);
+		if (added.length === 0) continue;
+
+		blocked.instanceIds.add(instanceId);
+		blocked.errors.push(`Nothing in "${instanceId}" was changed, because it would become invalid: ${added.map(describe).join("; ")}`);
+	}
+
+	return blocked;
 }
 
 type FieldWrite = { instanceId: string; fieldName: string; locale: string; value: unknown };

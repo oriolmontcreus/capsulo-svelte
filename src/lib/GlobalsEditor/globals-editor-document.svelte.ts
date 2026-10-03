@@ -11,6 +11,8 @@ import {
 import { saveGlobalsDocumentToDb } from "$lib/globals/globals-documents";
 import { clearGlobalsDraft, loadGlobalsDraft, saveGlobalsDraft } from "$lib/globals/globals-draft";
 import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
+import { validateGlobalsContent, type ContentIssue } from "$lib/capsules/core/validate-content";
+import { VALIDATION_OPTIONS } from "$lib/PageEditor/validate-documents";
 import { session, syncSession } from "$lib/stores/session";
 
 const DRAFT_PERSIST_DEBOUNCE_MS = 250;
@@ -39,6 +41,9 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 	let saveError = $state<string | null>(null);
 	let schemaHydrationVersion = $state(0);
 	let hasUnsavedChanges = $state(false);
+	/** Set by a blocked save; cleared once the values are valid again. */
+	let validationIssues = $state<ContentIssue[]>([]);
+	let showAllErrors = $state(false);
 
 	function applyHydratedValues(nextValues: SchemaValues): void {
 		context.setValues(nextValues);
@@ -92,6 +97,14 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 	async function saveGlobalsDocument(): Promise<void> {
 		if (!currentUserId || context.getIsSaving() || !isAuthenticated) return;
 
+		// Same rules the API enforces: required fields filled, formats right.
+		const issues = validateGlobalsContent(globalsSchema, context.getValues(), VALIDATION_OPTIONS);
+		validationIssues = issues;
+		if (issues.length > 0) {
+			showAllErrors = true;
+			return;
+		}
+
 		context.setIsSaving(true);
 		saveError = null;
 		syncSaveState();
@@ -116,6 +129,15 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		hasUnsavedChanges = false;
 		context.setIsSaving(false);
 		syncSaveState();
+	}
+
+	function setupValidationEffect(): void {
+		// After a blocked save, keep the list current as fields get fixed.
+		$effect(() => {
+			const values = context.getValues();
+			if (!showAllErrors) return;
+			validationIssues = validateGlobalsContent(globalsSchema, values, VALIDATION_OPTIONS);
+		});
 	}
 
 	function setupSaveStateEffect(): void {
@@ -144,6 +166,7 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 
 	setupSaveStateEffect();
 	setupDraftPersistenceEffect();
+	setupValidationEffect();
 
 	function initialize(): void {
 		syncSaveState();
@@ -178,6 +201,16 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 		},
 		get hasUnsavedChanges() {
 			return hasUnsavedChanges;
+		},
+		get validationIssues() {
+			return validationIssues;
+		},
+		get showAllErrors() {
+			return showAllErrors;
+		},
+		/** Show every error now, e.g. when opened from a "fix this" link. */
+		revealErrors() {
+			showAllErrors = true;
 		},
 		saveGlobalsDocument,
 		initialize,

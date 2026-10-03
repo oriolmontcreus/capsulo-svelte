@@ -7,6 +7,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Popover from "$lib/components/ui/popover";
 	import { Textarea } from "$lib/components/ui/textarea";
+	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
+	import type { IssueListEntry } from "$lib/PageEditor/validate-documents";
 	import type { CommitFailure } from "./commit";
 	import { generateCommitMessage } from "./commit-message-ai";
 
@@ -18,6 +20,7 @@
 		errorMessage = null,
 		failures = [],
 		publishNotice = null,
+		issues = [],
 		oncommit,
 	}: {
 		message?: string;
@@ -28,6 +31,8 @@
 		errorMessage?: string | null;
 		failures?: CommitFailure[];
 		publishNotice?: string | null;
+		/** Validation problems that must be fixed first; the commit stays disabled meanwhile. */
+		issues?: IssueListEntry[];
 		oncommit: () => void;
 	} = $props();
 
@@ -39,7 +44,10 @@
 
 	const isGenerating = $derived(generation !== null);
 	const trimmed = $derived(message.trim());
-	const disabled = $derived(!hasChanges || trimmed.length === 0 || isCommitting || isGenerating);
+	const hasIssues = $derived(issues.length > 0);
+	const disabled = $derived(
+		!hasChanges || trimmed.length === 0 || isCommitting || isGenerating || hasIssues,
+	);
 
 	/**
 	 * Fills the message from the pending changes, in the style of the author's recent
@@ -162,6 +170,37 @@
 				<li><span class="font-medium">{failure.pageId}</span>: {failure.message}</li>
 			{/each}
 		</ul>
+	{/if}
+
+	{#if hasIssues}
+		<div
+			class="border-destructive/30 bg-destructive/5 space-y-1.5 rounded-md border p-2"
+			role="alert"
+			aria-labelledby="commit-issues-title"
+		>
+			<p id="commit-issues-title" class="text-destructive flex items-center gap-1.5 text-xs font-medium">
+				<CircleAlertIcon class="size-3.5 shrink-0" aria-hidden="true" />
+				Fix {issues.length} {issues.length === 1 ? "issue" : "issues"} before committing
+			</p>
+			<ul class="max-h-48 space-y-1 overflow-y-auto">
+				{#each issues as issue (issue.key)}
+					<li>
+						<a
+							href={issue.href}
+							class="hover:bg-destructive/10 block rounded px-1.5 py-1 text-xs leading-snug"
+						>
+							<span class="text-muted-foreground block truncate">
+								{issue.pageName} › {issue.capsuleTitle} › {issue.location.join(" › ")}
+								{#if issue.locale}
+									<span class="bg-muted rounded px-1 text-[10px] uppercase">{issue.locale}</span>
+								{/if}
+							</span>
+							<span class="text-foreground">{issue.message}</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</div>
 	{/if}
 
 	<Button

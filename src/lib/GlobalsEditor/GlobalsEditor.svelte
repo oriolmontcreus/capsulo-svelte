@@ -7,6 +7,7 @@
 	import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
 	import type { SchemaValues } from "$lib/form-builder/core/types";
 	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
+	import type { FieldFocusRequest } from "$lib/form-builder/renderer/schema-renderer-context";
 	import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
 	import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
 	import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
@@ -44,7 +45,19 @@
 		return buildVariableItems(values, locale);
 	}
 
+	// "Fix this" links: /admin/globals?field=<name>&locale=<code>
+	let focusRequest = $state<FieldFocusRequest | null>(null);
+
 	onMount(() => {
+		const params = new URLSearchParams(window.location.search);
+		const requestedLocale = params.get("locale");
+		if (requestedLocale && LOCALES.includes(requestedLocale)) locale = requestedLocale;
+		const field = params.get("field");
+		if (field) {
+			focusRequest = { path: field.split(".") };
+			document.revealErrors();
+		}
+
 		document.initialize();
 		const onDraftReplaced = () => void document.reloadDraft();
 		window.addEventListener(GLOBALS_DRAFT_REPLACED_EVENT, onDraftReplaced);
@@ -103,6 +116,7 @@
 				loadError={document.loadError}
 				saveError={document.saveError}
 				isLoading={document.isLoading}
+				validationIssues={document.validationIssues}
 			/>
 
 			{#if !document.isLoading}
@@ -113,6 +127,8 @@
 						defaultLocale={DEFAULT_LOCALE}
 						editingLocale={locale}
 						translatableLocaleMode="active-only"
+						showAllErrors={document.showAllErrors}
+						{focusRequest}
 						initialValues={values}
 						onValuesChange={(nextValues) => {
 							values = nextValues;

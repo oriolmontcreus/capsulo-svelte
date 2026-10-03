@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { BitsConfig } from 'bits-ui';
 	import * as Tooltip from '$lib/components/ui/tooltip';
-	import type { SchemaDefinition } from '$lib/form-builder/core/types';
 	import SchemaRenderer from '$lib/form-builder/renderer/SchemaRenderer.svelte';
 	import { createSchemaInitialValues } from '$lib/form-builder/renderer/schema-renderer-i18n';
 	import { globalsSchema } from '$/config/globals/globals.schema';
@@ -9,15 +8,22 @@
 	import { buildVariableItems } from '$lib/globals/variable-autocomplete/build-variable-items';
 	import { formatVariablePreviewFromValues } from '$lib/globals/variable-autocomplete/format-variable-preview';
 
+	import { loadExampleSchema } from './example-schemas';
 	import './preview.css';
 
 	interface Props {
-		schema: SchemaDefinition;
+		/** Example file under src/examples, without `.ts`; its schema is built here, in the browser. */
+		example: string;
+		title: string;
 		/** Locales the preview edits; more than one shows a translatable field once per locale. */
 		locales?: string[];
+		/** Show validation errors right away instead of after an edit. */
+		showErrors?: boolean;
 	}
 
-	let { schema, locales = ['en'] }: Props = $props();
+	let { example, title, locales = ['en'], showErrors = false }: Props = $props();
+
+	const schema = $derived(loadExampleSchema(example, title));
 
 	const defaultLocale = $derived(locales[0] ?? 'en');
 	// Global variables at the defaults of the starter's globals schema ("My Awesome Site", ...).
@@ -50,7 +56,7 @@
 			<BitsConfig defaultPortalTo={portal}>
 				<Tooltip.Provider delayDuration={150}>
 					<GlobalVariablesProvider {getPreview} {getVariableItems}>
-						<SchemaRenderer {schema} {locales} {defaultLocale} />
+						<SchemaRenderer {schema} {locales} {defaultLocale} showAllErrors={showErrors} />
 					</GlobalVariablesProvider>
 				</Tooltip.Provider>
 			</BitsConfig>
