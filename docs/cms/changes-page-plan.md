@@ -194,9 +194,11 @@ Today the cache stores only the current draft (`valuesByInstance` + `updatedAt`)
 
 ---
 
-## Phase 7 — Globals into the workflow (deferred scope)
+## Phase 7 — Globals into the workflow (done)
 
-> Only after pages flow is solid. Brings globals to parity.
+> Done: the globals draft lives in `page-editor-cache` under `GLOBALS_DOCUMENT_ID` ("@globals",
+> a one-instance page), history is in `globals_history` (migration 0004), and `POST /commits`
+> takes `globals` next to `pages`. The direct-save `PUT /globals` is gone.
 
 1. Add an IndexedDB baseline+draft cache for globals (reuse `page-editor-cache` with a reserved key `globals`, or a sibling store).
 2. Make `GlobalsEditor` autosave to that cache instead of saving directly to Supabase; surface globals in `listChangedPages()` as a pseudo-entry.

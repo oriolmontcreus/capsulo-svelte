@@ -149,6 +149,16 @@ function normalizeValuesForCache(
 	return deserializePageEditorValues(jsonSafeSerialized);
 }
 
+/** Whether the remote document was committed after the one a cached draft is based on. */
+export function isRemoteTimestampNewer(remoteUpdatedAt: string | null, cacheUpdatedAt: string | null): boolean {
+	if (!remoteUpdatedAt) return false;
+	if (!cacheUpdatedAt) return true;
+	const remoteMs = Date.parse(remoteUpdatedAt);
+	const cacheMs = Date.parse(cacheUpdatedAt);
+	if (Number.isNaN(remoteMs) || Number.isNaN(cacheMs)) return remoteUpdatedAt !== cacheUpdatedAt;
+	return remoteMs > cacheMs;
+}
+
 export async function loadPageEditorDocumentFromCache(
 	pageId: string
 ): Promise<PageEditorCachedDocument | null> {

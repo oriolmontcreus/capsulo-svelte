@@ -9,7 +9,7 @@ import type {
 	SchemaValues
 } from "../form-builder/core/types";
 import { createEmptyRepeaterItem } from "../form-builder/fields/RepeaterField/modules/repeater-values";
-import { notifyGlobalsDraftReplaced, saveGlobalsDraft } from "../globals/globals-draft";
+import { GLOBALS_DOCUMENT_ID } from "../globals/globals-persistence";
 import { valuesEqual } from "../PageEditor/changes/diff-model";
 import { setDraftFieldValue } from "../PageEditor/changes/draft-values";
 import { updatePageDraft } from "../PageEditor/changes/draft-write";
@@ -258,8 +258,8 @@ function resolveChange(
 export type UpdateResult = { edit: EditRecord | null; errors: string[] };
 
 /**
- * Validates every change, then writes the valid ones in one draft write: a page's
- * IndexedDB draft (reviewed and committed in Changes) or the unsaved global variables.
+ * Validates every change, then writes the valid ones in one draft write to the page's (or
+ * the global variables') IndexedDB draft, reviewed and committed in Changes.
  * Invalid changes are reported back so the model can fix and retry them.
  */
 export async function applyContentUpdate(target: string, changes: RequestedChange[]): Promise<UpdateResult> {
@@ -364,14 +364,9 @@ function setValues(values: PageEditorValuesByInstance, writes: FieldWrite[]): Pa
 
 /** Returns an error message, or null when the draft was written. */
 async function writeFields(target: string, writes: FieldWrite[]): Promise<string | null> {
-	if (target === GLOBALS_TARGET) {
-		const globals = await readGlobalsValues();
-		const next = setValues({ [GLOBALS_TARGET]: globals }, writes)[GLOBALS_TARGET] as SchemaValues;
-		if (!(await saveGlobalsDraft(next))) return "Could not save the global variables draft in this browser.";
-		notifyGlobalsDraftReplaced();
-		return null;
-	}
-	const result = await updatePageDraft(target, (values) => setValues(values, writes));
+	// The globals draft is a page with a single "globals" instance, which is GLOBALS_TARGET.
+	const pageId = target === GLOBALS_TARGET ? GLOBALS_DOCUMENT_ID : target;
+	const result = await updatePageDraft(pageId, (values) => setValues(values, writes));
 	return result.ok ? null : (result.errorMessage ?? "Could not update the page draft.");
 }
 

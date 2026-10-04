@@ -1,23 +1,20 @@
 import { capsuloFetch } from "../../api/capsulo-client";
 import { cleanCommitMessage } from "../../ai/commit-message";
 import { AgentError, requestAiStream } from "../../ai/stream-client";
-import { getCapsuleByKey } from "../../capsules/core/registry";
 import { DEFAULT_LOCALE } from "../../config/i18n-config";
 import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
 import { pageDisplayName } from "./changed-pages";
 import { describeChanges, type CapsuleInfo } from "./commit-message-context";
 import { computePageChangeSet } from "./diff-model";
-import { capsuleKeyFromInstanceId, resolveInstanceDefaults } from "./schema-defaults";
+import { resolveInstanceDefaults, resolveInstanceSchema } from "./schema-defaults";
 import { t } from "../../admin-i18n/i18n.svelte";
 
 /** How many earlier messages the model sees to pick up the author's style. */
 const STYLE_EXAMPLES = 5;
 
 function resolveCapsule(instanceId: string): CapsuleInfo | undefined {
-	const key = capsuleKeyFromInstanceId(instanceId);
-	const capsule = getCapsuleByKey(key);
-	if (!capsule) return undefined;
-	return { title: capsule.meta?.displayName ?? capsule.schema.name ?? key, fields: capsule.schema.fields };
+	const resolved = resolveInstanceSchema(instanceId);
+	return resolved && { title: resolved.title, fields: resolved.schema.fields };
 }
 
 /** The given pages' pending changes as text, read from the local drafts like the Changes list. */

@@ -1,6 +1,8 @@
 import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
 import { computePageChangeSet, countFieldChanges, type PageChangeSet } from "./diff-model";
 import { resolveInstanceDefaults } from "./schema-defaults";
+import { GLOBALS_DOCUMENT_ID } from "../../globals/globals-persistence";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 export type ChangedPageSummary = {
 	pageId: string;
@@ -13,6 +15,7 @@ export type ChangedPageSummary = {
  * matching the formatting used by the Page Editor index.
  */
 export function pageDisplayName(pageId: string): string {
+	if (pageId === GLOBALS_DOCUMENT_ID) return t("globals.title");
 	const lastSegment = pageId.split("/").pop() ?? pageId;
 	return lastSegment
 		.split("-")
@@ -45,7 +48,12 @@ export async function listChangedPages(): Promise<ChangedPageSummary[]> {
 		});
 	}
 
-	return summaries.sort((a, b) => a.name.localeCompare(b.name));
+	// The global variables first, then pages by name.
+	return summaries.sort(
+		(a, b) =>
+			Number(b.pageId === GLOBALS_DOCUMENT_ID) - Number(a.pageId === GLOBALS_DOCUMENT_ID) ||
+			a.name.localeCompare(b.name)
+	);
 }
 
 /**

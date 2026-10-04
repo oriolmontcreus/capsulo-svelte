@@ -52,8 +52,7 @@ Capsulo validates content against its schema. A field passes when:
 Where it runs:
 
 - **In the editor**: a field shows its error as soon as it's edited. Each capsule's header counts its issues; click the count to show them all.
-- **On the Changes page**: the Commit button stays disabled while any page being committed has an issue. Each issue links straight to the field, in the right capsule, repeater item and language.
-- **Global variables**: Save refuses invalid values and lists what to fix.
+- **On the Changes page**: the Commit button stays disabled while any page (or the global variables) being committed has an issue. Each issue links straight to the field, in the right capsule, repeater item and language.
 - **The AI agent**: its edits follow the same rules, and it can't make a capsule invalid.
 - **The API**: the Worker runs the same validation and rejects invalid commits with `422`, so a modified client can't get around it.
 

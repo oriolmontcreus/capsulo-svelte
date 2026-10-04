@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import { session, ensureSession } from "../../stores/session";
 import type { PageEditorValuesByInstance } from "../persistence";
 import {
+	isRemoteTimestampNewer,
 	loadPageEditorDocumentFromCache,
 	savePageEditorDocumentToCache,
 } from "../page-editor-cache";
@@ -16,19 +17,6 @@ import { resolveInstanceDefaults } from "../changes/schema-defaults";
 import type { PageEditorSaveControls } from "./types";
 
 const CACHE_PERSIST_DEBOUNCE_MS = 250;
-
-function isRemoteTimestampNewer(
-	remoteUpdatedAt: string | null,
-	cacheUpdatedAt: string | null,
-): boolean {
-	if (!remoteUpdatedAt) return false;
-	if (!cacheUpdatedAt) return true;
-	const remoteMs = Date.parse(remoteUpdatedAt);
-	const cacheMs = Date.parse(cacheUpdatedAt);
-	if (Number.isNaN(remoteMs) || Number.isNaN(cacheMs))
-		return remoteUpdatedAt !== cacheUpdatedAt;
-	return remoteMs > cacheMs;
-}
 
 type DocumentContext = {
 	getPageId: () => string;

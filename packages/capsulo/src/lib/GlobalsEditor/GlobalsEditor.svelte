@@ -12,7 +12,8 @@
 	import { buildVariableItems } from "../globals/variable-autocomplete/build-variable-items";
 	import { formatVariablePreviewFromValues } from "../globals/variable-autocomplete/format-variable-preview";
 	import { formatLocaleLabel } from "../utils/locale-label";
-	import { GLOBALS_DRAFT_REPLACED_EVENT } from "../globals/globals-draft";
+	import { GLOBALS_DOCUMENT_ID } from "../globals/globals-persistence";
+	import { DRAFT_REPLACED_EVENT, type DraftReplacedDetail } from "../PageEditor/changes/draft-write";
 
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
 	import { createGlobalsEditorDocument } from "./globals-editor-document.svelte";
@@ -20,21 +21,11 @@
 
 	let locale = $state(DEFAULT_LOCALE);
 	let values = $state<SchemaValues>({});
-	let isSaving = $state(false);
-	let saveDisabled = $state(true);
 
 	const document = createGlobalsEditorDocument({
 		getValues: () => values,
 		setValues: (nextValues) => {
 			values = nextValues;
-		},
-		getSaveDisabled: () => saveDisabled,
-		setSaveDisabled: (disabled) => {
-			saveDisabled = disabled;
-		},
-		getIsSaving: () => isSaving,
-		setIsSaving: (nextIsSaving) => {
-			isSaving = nextIsSaving;
 		},
 	});
 
@@ -60,9 +51,12 @@
 		}
 
 		document.initialize();
-		const onDraftReplaced = () => void document.reloadDraft();
-		window.addEventListener(GLOBALS_DRAFT_REPLACED_EVENT, onDraftReplaced);
-		return () => window.removeEventListener(GLOBALS_DRAFT_REPLACED_EVENT, onDraftReplaced);
+		const onDraftReplaced = (event: Event) => {
+			const { pageId } = (event as CustomEvent<DraftReplacedDetail>).detail;
+			if (pageId === GLOBALS_DOCUMENT_ID) void document.reloadDraft();
+		};
+		window.addEventListener(DRAFT_REPLACED_EVENT, onDraftReplaced);
+		return () => window.removeEventListener(DRAFT_REPLACED_EVENT, onDraftReplaced);
 	});
 </script>
 
@@ -80,9 +74,6 @@
 					</div>
 
 					<div class="flex shrink-0 items-center gap-2">
-						{#if document.hasUnsavedChanges && !isSaving}
-							<span class="text-muted-foreground text-xs">{t("globals.unsaved")}</span>
-						{/if}
 						<Select.Root type="single" bind:value={locale}>
 							<Select.Trigger
 								size="sm"
@@ -101,11 +92,10 @@
 
 						<Button
 							size="sm"
+							href="/admin/changes"
 							class="border-card h-7 rounded-full border px-3 text-white"
-							onclick={() => document.saveGlobalsDocument()}
-							disabled={saveDisabled}
 						>
-							{isSaving ? t("globals.saving") : t("globals.save")}
+							{t("pageEditor.reviewChanges")}
 						</Button>
 					</div>
 				</div>
@@ -115,9 +105,8 @@
 				hasCheckedAuth={document.hasCheckedAuth}
 				isAuthenticated={document.isAuthenticated}
 				loadError={document.loadError}
-				saveError={document.saveError}
 				isLoading={document.isLoading}
-				validationIssues={document.validationIssues}
+				remoteChangedWhileDirty={document.remoteChangedWhileDirty}
 			/>
 
 			{#if !document.isLoading}

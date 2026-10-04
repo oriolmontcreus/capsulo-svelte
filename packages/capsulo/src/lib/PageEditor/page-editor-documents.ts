@@ -5,6 +5,14 @@ import {
 	type PageEditorValuesByInstance
 } from "./persistence";
 import { t } from "../admin-i18n/i18n.svelte";
+import { GLOBALS_INSTANCE_ID } from "../capsules/core/validate-content";
+import type { SchemaValues } from "../form-builder/core/types";
+import { loadGlobalsDocumentFromDb } from "../globals/globals-documents";
+import {
+	deserializeGlobalsValues,
+	GLOBALS_DOCUMENT_ID,
+	serializeGlobalsValues
+} from "../globals/globals-persistence";
 
 export type LoadPageEditorDocumentResult = {
 	valuesByInstance: PageEditorValuesByInstance;
@@ -25,9 +33,28 @@ function pagePath(pageId: string): string {
 	return `/pages/${pageId.split("/").map(encodeURIComponent).join("/")}`;
 }
 
+/** The global variables as a one-instance page, the shape their draft has in the page cache. */
+export function wrapGlobalsValues(values: SchemaValues): PageEditorValuesByInstance {
+	return { [GLOBALS_INSTANCE_ID]: values };
+}
+
+/** A stored page or globals document (as History returns it) in the editor's shape. */
+export function deserializeDocumentContent(pageId: string, content: unknown): PageEditorValuesByInstance {
+	return pageId === GLOBALS_DOCUMENT_ID
+		? wrapGlobalsValues(deserializeGlobalsValues(content))
+		: deserializePageEditorValues(content);
+}
+
+async function loadGlobalsAsPageDocument(): Promise<LoadPageEditorDocumentResult> {
+	const result = await loadGlobalsDocumentFromDb();
+	return { ...result, valuesByInstance: wrapGlobalsValues(result.values) };
+}
+
+/** The committed document for a page, or for the global variables under `GLOBALS_DOCUMENT_ID`. */
 export async function loadPageEditorDocumentFromDb(
 	pageId: string
 ): Promise<LoadPageEditorDocumentResult> {
+	if (pageId === GLOBALS_DOCUMENT_ID) return loadGlobalsAsPageDocument();
 	const { data, error } = await capsuloFetch<PageResponse>(pagePath(pageId));
 
 	if (error !== null) {
@@ -79,13 +106,16 @@ export type CommitPageEditorDocumentsResult = {
 };
 
 /**
- * Commits several pages under one message in a single atomic write: the commit, the
- * current documents and one history revision per page either all land or none do.
+ * Commits several pages (and the global variables, when given under `GLOBALS_DOCUMENT_ID`)
+ * under one message in a single atomic write: the commit, the current documents and one
+ * history revision each either all land or none do.
  */
 export async function commitPageEditorDocuments(
 	message: string,
-	pages: { pageId: string; valuesByInstance: PageEditorValuesByInstance }[]
+	documents: { pageId: string; valuesByInstance: PageEditorValuesByInstance }[]
 ): Promise<CommitPageEditorDocumentsResult> {
+	const globals = documents.find((document) => document.pageId === GLOBALS_DOCUMENT_ID);
+	const pages = documents.filter((document) => document !== globals);
 	const { data, error } = await capsuloFetch<{ commitId: string; updatedAt: string; rebuildRequested: boolean }>(
 		"/commits",
 		{
@@ -95,7 +125,8 @@ export async function commitPageEditorDocuments(
 				pages: pages.map((page) => ({
 					pageId: page.pageId,
 					content: serializePageEditorValues(page.valuesByInstance)
-				}))
+				})),
+				globals: globals ? serializeGlobalsValues(globals.valuesByInstance[GLOBALS_INSTANCE_ID] ?? {}) : undefined
 			})
 		}
 	);

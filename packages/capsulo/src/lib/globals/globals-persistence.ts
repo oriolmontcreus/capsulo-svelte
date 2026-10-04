@@ -2,6 +2,12 @@ import type { SchemaValues } from "../form-builder/core/types";
 
 const GLOBALS_CONTENT_FORMAT_VERSION = 1;
 
+/**
+ * Where the global variables sit among the pages: their draft in the page cache, their
+ * entry in Changes and History. The "@" keeps it from ever matching a page route.
+ */
+export const GLOBALS_DOCUMENT_ID = "@globals";
+
 export type GlobalsPersistedContentV1 = {
 	formatVersion: 1;
 	values: SchemaValues;

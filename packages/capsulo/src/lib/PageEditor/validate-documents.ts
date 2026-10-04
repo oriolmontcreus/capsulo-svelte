@@ -1,11 +1,14 @@
 import capsuleManifest from "virtual:capsule-manifest";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
 import { listPageInstances } from "../capsules/core/page-instances";
 import { getCapsuleByKey } from "../capsules/core/registry";
 import {
 	GLOBALS_INSTANCE_ID,
+	validateGlobalsContent,
 	validatePageContent,
 	type ContentIssue
 } from "../capsules/core/validate-content";
+import { GLOBALS_DOCUMENT_ID } from "../globals/globals-persistence";
 import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
 import { normalizeRepeaterItems, repeaterItemValues } from "../form-builder/core/translation-runtime";
 import type { FieldDefinition, SchemaValues } from "../form-builder/core/types";
@@ -23,8 +26,8 @@ export type IssueListEntry = {
 	key: string;
 	pageId: string;
 	pageName: string;
-	/** "Hero" or "Hero 2" when a page has several. */
-	capsuleTitle: string;
+	/** "Hero" or "Hero 2" when a page has several; null for the global variables (no capsule). */
+	capsuleTitle: string | null;
 	/** Field labels from the capsule down, e.g. ["Speakers", "Speaker 2", "Website"]. */
 	location: string[];
 	/** Set when the problem is in a translation (not the default locale). */
@@ -33,8 +36,16 @@ export type IssueListEntry = {
 	href: string;
 };
 
-/** Validates a page's draft against the capsules it renders (per the capsule manifest). */
+/**
+ * Validates a page's draft against the capsules it renders (per the capsule manifest), or the
+ * global variables' draft against their schema.
+ */
 export function validatePageValues(pageId: string, valuesByInstance: PageEditorValuesByInstance): PageIssue[] {
+	if (pageId === GLOBALS_DOCUMENT_ID) {
+		return validateGlobalsContent(globalsSchema, valuesByInstance[GLOBALS_INSTANCE_ID], VALIDATION_OPTIONS).map(
+			(issue) => ({ ...issue, pageId })
+		);
+	}
 	const instances = listPageInstances(capsuleManifest[pageId] ?? []);
 	return validatePageContent(
 		instances,
@@ -83,7 +94,8 @@ function instanceNumber(instanceId: string): number {
 
 export function toIssueListEntries(issues: PageIssue[], valuesByPage: Record<string, PageEditorValuesByInstance>): IssueListEntry[] {
 	return issues.map((issue, index) => {
-		const capsule = getCapsuleByKey(issue.capsuleKey);
+		const isGlobals = issue.instanceId === GLOBALS_INSTANCE_ID;
+		const schema = isGlobals ? globalsSchema : getCapsuleByKey(issue.capsuleKey)?.schema;
 		const count = listPageInstances(capsuleManifest[issue.pageId] ?? []).filter(
 			(instance) => instance.capsuleKey === issue.capsuleKey
 		).length;
@@ -92,9 +104,9 @@ export function toIssueListEntries(issues: PageIssue[], valuesByPage: Record<str
 			key: `${issue.pageId}:${issue.instanceId}:${issue.path.join(".")}@${issue.locale}:${index}`,
 			pageId: issue.pageId,
 			pageName: pageDisplayName(issue.pageId),
-			capsuleTitle: count > 1 ? `${title} ${instanceNumber(issue.instanceId)}` : title,
-			location: capsule
-				? describeIssuePath(capsule.schema.fields, valuesByPage[issue.pageId]?.[issue.instanceId] ?? {}, issue.path)
+			capsuleTitle: isGlobals ? null : count > 1 ? `${title} ${instanceNumber(issue.instanceId)}` : title,
+			location: schema
+				? describeIssuePath(schema.fields, valuesByPage[issue.pageId]?.[issue.instanceId] ?? {}, issue.path)
 				: [issue.label],
 			locale: issue.locale === DEFAULT_LOCALE ? null : issue.locale,
 			message: issue.message,

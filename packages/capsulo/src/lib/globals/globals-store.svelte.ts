@@ -1,26 +1,33 @@
 import { DEFAULT_LOCALE } from "../config/i18n-config";
 import type { SchemaValues } from "../form-builder/core/types";
+import { onChangesUpdated } from "../PageEditor/page-editor-cache";
+import { t } from "../admin-i18n/i18n.svelte";
 
-import { loadGlobalsDocumentFromDb } from "./globals-documents";
+import { readCachedGlobalsDraft, syncGlobalsDraft } from "./globals-draft";
 import { withGlobalsDefaults } from "./resolve-globals";
 
+/**
+ * The global variables as currently drafted (what the next commit would publish), which is
+ * what the Page Editor previews and offers as `{{variables}}`.
+ */
 export const globalsStore = $state({
 	values: {} as SchemaValues,
 	loaded: false,
-	hasExistingDocument: false,
 });
 
 let inflightLoad: Promise<SchemaValues> | null = null;
 
-export function setGlobalsValues(
-	values: SchemaValues,
-	options?: { hasExistingDocument?: boolean }
-): void {
-	globalsStore.values = values;
+function setGlobalsValues(values: SchemaValues): void {
+	globalsStore.values = withGlobalsDefaults(values, DEFAULT_LOCALE);
 	globalsStore.loaded = true;
-	if (options?.hasExistingDocument !== undefined) {
-		globalsStore.hasExistingDocument = options.hasExistingDocument;
-	}
+}
+
+/** Follows every later draft write (this editor, another tab, the AI agent). */
+function followDraftChanges(): void {
+	onChangesUpdated(async () => {
+		const values = await readCachedGlobalsDraft();
+		if (values) setGlobalsValues(values);
+	});
 }
 
 export async function ensureGlobalsLoaded(): Promise<SchemaValues> {
@@ -28,12 +35,12 @@ export async function ensureGlobalsLoaded(): Promise<SchemaValues> {
 	if (inflightLoad) return inflightLoad;
 
 	inflightLoad = (async () => {
-		const result = await loadGlobalsDocumentFromDb();
-		if (result.errorMessage) throw new Error(result.errorMessage);
+		const result = await syncGlobalsDraft();
+		if (!result.values) throw new Error(result.errorMessage ?? t("globals.loadFailedGeneric"));
 
-		const values = withGlobalsDefaults(result.hasExistingDocument ? result.values : null, DEFAULT_LOCALE);
-		setGlobalsValues(values, { hasExistingDocument: result.hasExistingDocument });
-		return values;
+		setGlobalsValues(result.values);
+		followDraftChanges();
+		return globalsStore.values;
 	})();
 
 	try {

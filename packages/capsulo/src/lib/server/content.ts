@@ -4,6 +4,7 @@ import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 import type { UiLocale } from "../admin-i18n/core";
 import { parseAvatarConfig, type AvatarConfig } from "../avatar/avatar-config";
 import { HttpError, isRecord, nowIso, requireString } from "./http";
+import { GLOBALS_DOCUMENT_ID } from "../globals/globals-persistence";
 import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
 import { assertValidGlobals, assertValidPages } from "./validate-content";
 
@@ -40,21 +41,27 @@ export async function getPage(pageId: string): Promise<StoredDocument | null> {
 }
 
 /**
- * Writes every page of a commit in one atomic D1 batch: the commit row, the current
- * documents (upsert) and one immutable history snapshot per page.
+ * Writes a commit in one atomic D1 batch: the commit row, then for every page and for the
+ * global variables (when sent) the current document (upsert) and an immutable history
+ * snapshot.
  */
-export async function commitPages(
+export async function commitContent(
 	userId: string,
 	rawMessage: unknown,
 	rawPages: unknown,
+	rawGlobals: unknown,
 	uiLocale: UiLocale
 ): Promise<{ commitId: string; updatedAt: string }> {
 	const message = requireString(rawMessage, "message", 10_000).trim();
-	if (!Array.isArray(rawPages) || rawPages.length === 0) throw new HttpError(400, '"pages" must be a non-empty array.');
-	if (rawPages.length > MAX_PAGES_PER_COMMIT) throw new HttpError(400, "Too many pages in one commit.");
+	const hasGlobals = rawGlobals !== undefined && rawGlobals !== null;
+	const pageEntries = rawPages ?? [];
+	if (!Array.isArray(pageEntries)) throw new HttpError(400, '"pages" must be an array.');
+	if (pageEntries.length === 0 && !hasGlobals) throw new HttpError(400, "Nothing to commit.");
+	if (pageEntries.length > MAX_PAGES_PER_COMMIT) throw new HttpError(400, "Too many pages in one commit.");
+	const globals = hasGlobals ? serializeDocument(rawGlobals, "globals") : null;
 
 	const seen = new Set<string>();
-	const pages = rawPages.map((entry, index) => {
+	const pages = pageEntries.map((entry, index) => {
 		if (!isRecord(entry)) throw new HttpError(400, `pages[${index}] must be an object.`);
 		const pageId = requireString(entry.pageId, `pages[${index}].pageId`, 300);
 		if (seen.has(pageId)) throw new HttpError(400, `Page "${pageId}" appears twice.`);
@@ -66,6 +73,7 @@ export async function commitPages(
 		pages.map((page) => ({ pageId: page.pageId, content: page.rawContent })),
 		uiLocale
 	);
+	if (hasGlobals) assertValidGlobals(rawGlobals, uiLocale);
 
 	const commitId = crypto.randomUUID();
 	const updatedAt = nowIso();
@@ -111,6 +119,23 @@ export async function commitPages(
 		);
 	}
 
+	if (globals !== null) {
+		statements.push(
+			env.DB.prepare(
+				`INSERT INTO globals (id, content, created_by, updated_by, updated_at) VALUES (?, ?, ?, ?, ?)
+				 ON CONFLICT (id) DO UPDATE SET
+				   content = excluded.content,
+				   content_format_version = ${CONTENT_FORMAT_VERSION},
+				   updated_by = excluded.updated_by,
+				   updated_at = excluded.updated_at`
+			).bind(GLOBALS_ID, globals, userId, userId, updatedAt),
+			env.DB.prepare(
+				`INSERT INTO globals_history (content, commit_id, created_by, created_at, content_format_version)
+				 VALUES (?, ?, ?, ?, ?)`
+			).bind(globals, commitId, userId, updatedAt, CONTENT_FORMAT_VERSION)
+		);
+	}
+
 	await env.DB.batch(statements);
 	return { commitId, updatedAt };
 }
@@ -150,8 +175,10 @@ export async function listCommits(
 	const authorIds = JSON.stringify([...new Set(commits.map((commit) => commit.created_by).filter(Boolean))]);
 	const [revisions, authors] = await env.DB.batch([
 		env.DB.prepare(
-			"SELECT id, page_id, created_at, commit_id FROM pages_history WHERE commit_id IN (SELECT value FROM json_each(?))"
-		).bind(commitIds),
+			`SELECT id, page_id, created_at, commit_id FROM pages_history WHERE commit_id IN (SELECT value FROM json_each(?1))
+			 UNION ALL
+			 SELECT id, ?2 AS page_id, created_at, commit_id FROM globals_history WHERE commit_id IN (SELECT value FROM json_each(?1))`
+		).bind(commitIds, GLOBALS_DOCUMENT_ID),
 		env.DB.prepare("SELECT id, name, avatar_url, avatar FROM users WHERE id IN (SELECT value FROM json_each(?))").bind(
 			authorIds
 		)
@@ -167,16 +194,23 @@ export async function listCommits(
 	};
 }
 
-/** The revision and the one before it for the same page: both sides of a history diff. */
+/**
+ * The revision and the one before it for the same page (or for the global variables, under
+ * `GLOBALS_DOCUMENT_ID`): both sides of a history diff.
+ */
 export async function getRevisionWithParent(
 	pageId: string,
 	revisionId: number
 ): Promise<{ id: number; content: unknown }[]> {
-	const { results } = await env.DB.prepare(
-		"SELECT id, content FROM pages_history WHERE page_id = ? AND id <= ? ORDER BY id DESC LIMIT 2"
-	)
-		.bind(pageId, revisionId)
-		.all<{ id: number; content: string }>();
+	const query =
+		pageId === GLOBALS_DOCUMENT_ID
+			? env.DB.prepare("SELECT id, content FROM globals_history WHERE id <= ? ORDER BY id DESC LIMIT 2").bind(
+					revisionId
+				)
+			: env.DB.prepare(
+					"SELECT id, content FROM pages_history WHERE page_id = ? AND id <= ? ORDER BY id DESC LIMIT 2"
+				).bind(pageId, revisionId);
+	const { results } = await query.all<{ id: number; content: string }>();
 	return results.map((row) => ({ id: row.id, content: JSON.parse(row.content) }));
 }
 
@@ -185,26 +219,6 @@ export async function getGlobals(): Promise<StoredDocument | null> {
 		.bind(GLOBALS_ID)
 		.first<{ content: string; updated_at: string }>();
 	return row ? { content: JSON.parse(row.content), updatedAt: row.updated_at } : null;
-}
-
-export async function saveGlobals(
-	userId: string,
-	content: unknown,
-	uiLocale: UiLocale
-): Promise<{ updatedAt: string }> {
-	const serialized = serializeDocument(content, "content");
-	assertValidGlobals(content, uiLocale);
-	const updatedAt = nowIso();
-	await env.DB.prepare(
-		`INSERT INTO globals (id, content, created_by, updated_by, updated_at) VALUES (?, ?, ?, ?, ?)
-		 ON CONFLICT (id) DO UPDATE SET
-		   content = excluded.content,
-		   updated_by = excluded.updated_by,
-		   updated_at = excluded.updated_at`
-	)
-		.bind(GLOBALS_ID, serialized, userId, userId, updatedAt)
-		.run();
-	return { updatedAt };
 }
 
 /**

@@ -198,14 +198,10 @@ export const fr: Messages = {
 	"globals.title": "Variables globales",
 	"globals.descriptionBefore": "Paramètres communs à tout le site, utilisés dans les champs des capsules via les jetons",
 	"globals.descriptionAfter": ".",
-	"globals.unsaved": "Modifications non enregistrées",
-	"globals.saving": "Enregistrement...",
-	"globals.save": "Enregistrer",
-	"globals.signInToEdit": "Connectez-vous pour charger et enregistrer les variables globales.",
+	"globals.signInToEdit": "Connectez-vous pour modifier les variables globales.",
 	"globals.loadFailed": "Impossible de charger les variables globales : {error}",
 	"globals.loadFailedGeneric": "Impossible de charger les variables globales",
-	"globals.fixBeforeSaving": { one: "Corrigez {count} champ avant d'enregistrer :", other: "Corrigez {count} champs avant d'enregistrer :" },
-	"globals.saveFailed": "Impossible d'enregistrer les variables globales : {error}",
+	"globals.remoteChangedBefore": "Les variables globales ont été validées ailleurs pendant que vous aviez des modifications non enregistrées ici. Vos modifications ont été conservées ; vérifiez-les sur la",
 	"globals.loading": "Chargement des variables globales...",
 
 	// Variable autocomplete

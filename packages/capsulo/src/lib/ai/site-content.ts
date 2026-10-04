@@ -8,8 +8,8 @@ import type { FieldDefinition, SchemaDefinition, SchemaValues, SelectFieldDefini
 import { normalizeRepeaterItems } from "../form-builder/core/translation-runtime";
 import { getAllOptions, resolveSelectData } from "../form-builder/fields/SelectField/modules/resolve-options";
 import { createSchemaInitialValues } from "../form-builder/renderer/schema-renderer-i18n";
-import { ensureGlobalsLoaded } from "../globals/globals-store.svelte";
-import { loadGlobalsDraft } from "../globals/globals-draft";
+import { GLOBALS_INSTANCE_ID } from "../capsules/core/validate-content";
+import { GLOBALS_DOCUMENT_ID } from "../globals/globals-persistence";
 import { pageDisplayName } from "../PageEditor/changes/changed-pages";
 import { readPageDraft } from "../PageEditor/changes/draft-write";
 import { capsuleKeyFromInstanceId } from "../PageEditor/changes/schema-defaults";
@@ -17,8 +17,11 @@ import { buildCapsuleInstanceData } from "../PageEditor/ContentSidebar/capsule-i
 import { groupManifestEntries } from "../PageEditor/ContentSidebar/group-entries";
 import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
 
-/** Pseudo target id for the global variables in tool calls and edit records. */
-export const GLOBALS_TARGET = "globals";
+/**
+ * Pseudo target id for the global variables in tool calls and edit records. Also their
+ * instance id, as in their draft (`{ globals: values }`).
+ */
+export const GLOBALS_TARGET = GLOBALS_INSTANCE_ID;
 
 export type SiteInstance = { instanceId: string; capsule: RegisteredCapsule | undefined };
 export type SitePage = { pageId: string; name: string; instances: SiteInstance[] };
@@ -89,11 +92,11 @@ export async function readPageValues(
 	return { values, errorMessage: null };
 }
 
-/** Unsaved global variables if there are any, else the saved ones. */
+/** The global variables' draft (their committed values when nothing is drafted). */
 export async function readGlobalsValues(): Promise<SchemaValues> {
-	const draft = await loadGlobalsDraft();
-	const values = draft?.values ?? (await ensureGlobalsLoaded());
-	return withDefaults(globalsSchema, values);
+	const { valuesByInstance, errorMessage } = await readPageDraft(GLOBALS_DOCUMENT_ID);
+	if (errorMessage) throw new Error(errorMessage);
+	return withDefaults(globalsSchema, valuesByInstance[GLOBALS_INSTANCE_ID]);
 }
 
 /**

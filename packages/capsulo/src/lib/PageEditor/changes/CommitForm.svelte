@@ -189,7 +189,7 @@
 							class="hover:bg-destructive/10 block rounded px-1.5 py-1 text-xs leading-snug"
 						>
 							<span class="text-muted-foreground block truncate">
-								{issue.pageName} › {issue.capsuleTitle} › {issue.location.join(" › ")}
+								{[issue.pageName, issue.capsuleTitle, ...issue.location].filter(Boolean).join(" › ")}
 								{#if issue.locale}
 									<span class="bg-muted rounded px-1 text-[10px] uppercase">{issue.locale}</span>
 								{/if}

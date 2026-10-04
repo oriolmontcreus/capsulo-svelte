@@ -123,7 +123,7 @@ export const PUBLISHED_UPLOADS_QUERY = `SELECT key, content_type FROM uploads u 
 
 /**
  * Deletes uploads that are past the grace period and referenced by neither published
- * content nor any page revision (so recovering an old revision keeps its files).
+ * content nor any page or globals revision (so recovering an old revision keeps its files).
  */
 async function deleteUnusedUploads(): Promise<void> {
 	const cutoff = new Date(Date.now() - UNUSED_UPLOAD_GRACE_MS).toISOString();
@@ -132,6 +132,7 @@ async function deleteUnusedUploads(): Promise<void> {
 		 WHERE u.created_at < ?
 		   AND NOT ${REFERENCED_BY_CONTENT}
 		   AND NOT EXISTS (SELECT 1 FROM pages_history WHERE instr(pages_history.content, u.key) > 0)
+		   AND NOT EXISTS (SELECT 1 FROM globals_history WHERE instr(globals_history.content, u.key) > 0)
 		 ORDER BY u.created_at
 		 LIMIT ?`
 	)

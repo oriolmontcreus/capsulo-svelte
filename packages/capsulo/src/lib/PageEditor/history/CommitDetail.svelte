@@ -152,7 +152,8 @@
 			{t("history.changedPages", { count: commit.revisions.length })}
 		</h3>
 		<ul class="flex flex-wrap gap-1.5">
-			{#each commit.revisions as revision (revision.revisionId)}
+			<!-- Page and globals revision ids come from different tables and can repeat. -->
+			{#each commit.revisions as revision (`${revision.pageId}:${revision.revisionId}`)}
 				{@const active = revision.pageId === selectedRevision?.pageId}
 				<li>
 					<button

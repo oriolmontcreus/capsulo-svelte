@@ -198,14 +198,10 @@ export const es: Messages = {
 	"globals.title": "Variables globales",
 	"globals.descriptionBefore": "Ajustes de todo el sitio que se usan en los campos de las cápsulas mediante los tokens",
 	"globals.descriptionAfter": ".",
-	"globals.unsaved": "Cambios sin guardar",
-	"globals.saving": "Guardando...",
-	"globals.save": "Guardar",
-	"globals.signInToEdit": "Inicia sesión para cargar y guardar las variables globales.",
+	"globals.signInToEdit": "Inicia sesión para editar las variables globales.",
 	"globals.loadFailed": "No se han podido cargar las variables globales: {error}",
 	"globals.loadFailedGeneric": "No se han podido cargar las variables globales",
-	"globals.fixBeforeSaving": { one: "Corrige {count} campo antes de guardar:", other: "Corrige {count} campos antes de guardar:" },
-	"globals.saveFailed": "No se han podido guardar las variables globales: {error}",
+	"globals.remoteChangedBefore": "Alguien confirmó las variables globales en otro lugar mientras tenías cambios sin guardar aquí. Tus cambios se han conservado; revísalos en la",
 	"globals.loading": "Cargando las variables globales...",
 
 	// Variable autocomplete

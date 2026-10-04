@@ -212,14 +212,10 @@ export const en = {
 	"globals.title": "Global Variables",
 	"globals.descriptionBefore": "Site-wide settings used in capsule fields via",
 	"globals.descriptionAfter": " tokens.",
-	"globals.unsaved": "Unsaved changes",
-	"globals.saving": "Saving...",
-	"globals.save": "Save",
-	"globals.signInToEdit": "Sign in to load and save global variables.",
+	"globals.signInToEdit": "Sign in to edit global variables.",
 	"globals.loadFailed": "Failed to load global variables: {error}",
 	"globals.loadFailedGeneric": "Failed to load global variables",
-	"globals.fixBeforeSaving": { one: "Fix {count} field before saving:", other: "Fix {count} fields before saving:" },
-	"globals.saveFailed": "Failed to save global variables: {error}",
+	"globals.remoteChangedBefore": "Global variables were committed somewhere else while you had unsaved edits here. Your edits were kept - review them on the",
 	"globals.loading": "Loading global variables...",
 
 	// Variable autocomplete

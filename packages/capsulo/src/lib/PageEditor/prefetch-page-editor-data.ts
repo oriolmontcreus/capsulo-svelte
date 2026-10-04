@@ -3,25 +3,10 @@ import {
 	loadPageEditorDocumentMetadataFromDb
 } from "./page-editor-documents";
 import {
+	isRemoteTimestampNewer,
 	loadPageEditorDocumentFromCache,
 	savePageEditorDocumentToCache
 } from "./page-editor-cache";
-
-function isRemoteTimestampNewer(
-	remoteUpdatedAt: string | null,
-	cacheUpdatedAt: string | null
-): boolean {
-	if (!remoteUpdatedAt) return false;
-	if (!cacheUpdatedAt) return true;
-
-	const remoteMs = Date.parse(remoteUpdatedAt);
-	const cacheMs = Date.parse(cacheUpdatedAt);
-	if (Number.isNaN(remoteMs) || Number.isNaN(cacheMs)) {
-		return remoteUpdatedAt !== cacheUpdatedAt;
-	}
-
-	return remoteMs > cacheMs;
-}
 
 export function initPageEditorIndexPrefetch(): void {
 	const prefetchedPageIds = new Set<string>();

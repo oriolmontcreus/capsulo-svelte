@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
-	import { getCapsuleByKey } from "../../capsules/core/registry";
 	import type { FieldDefinition } from "../../form-builder/core/types";
 	import type { FieldChange, InstanceChange } from "./diff-model";
 	import FieldDiff from "./FieldDiff.svelte";
-	import { capsuleKeyFromInstanceId } from "./schema-defaults";
+	import { capsuleKeyFromInstanceId, resolveInstanceSchema } from "./schema-defaults";
 	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
@@ -15,14 +14,11 @@
 		fieldAction?: Snippet<[FieldChange]>;
 	} = $props();
 
-	const capsuleKey = $derived(capsuleKeyFromInstanceId(instance.instanceId));
-	const capsule = $derived(getCapsuleByKey(capsuleKey));
-	const title = $derived(
-		capsule?.meta?.displayName ?? capsule?.schema.name ?? capsuleKey,
-	);
+	const resolved = $derived(resolveInstanceSchema(instance.instanceId));
+	const title = $derived(resolved?.title ?? capsuleKeyFromInstanceId(instance.instanceId));
 
 	function findField(fieldName: string): FieldDefinition | undefined {
-		return capsule?.schema.fields.find((field) => field.name === fieldName);
+		return resolved?.schema.fields.find((field) => field.name === fieldName);
 	}
 </script>
 

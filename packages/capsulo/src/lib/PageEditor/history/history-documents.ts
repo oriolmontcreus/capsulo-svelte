@@ -1,8 +1,6 @@
 import { capsuloFetch } from "../../api/capsulo-client";
-import {
-	deserializePageEditorValues,
-	type PageEditorValuesByInstance
-} from "../persistence";
+import { deserializeDocumentContent } from "../page-editor-documents";
+import type { PageEditorValuesByInstance } from "../persistence";
 import {
 	buildCommitEntries,
 	nextCommitCursor,
@@ -106,8 +104,8 @@ export async function loadRevisionWithParent(
 	const parent = data.revisions.find((row) => row.id !== revisionId) ?? null;
 
 	return {
-		revisionValues: deserializePageEditorValues(revision.content),
-		parentValues: parent ? deserializePageEditorValues(parent.content) : {},
+		revisionValues: deserializeDocumentContent(pageId, revision.content),
+		parentValues: parent ? deserializeDocumentContent(pageId, parent.content) : {},
 		isFirstRevision: parent === null,
 		errorMessage: null
 	};

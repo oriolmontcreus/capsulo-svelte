@@ -1,25 +1,21 @@
 <script lang="ts">
-	import type { ContentIssue } from "../capsules/core/validate-content";
-	import { DEFAULT_LOCALE } from "../config/i18n-config";
 	import { t } from "../admin-i18n/i18n.svelte";
 
 	type Props = {
 		hasCheckedAuth: boolean;
 		isAuthenticated: boolean;
 		loadError: string | null;
-		saveError: string | null;
 		isLoading: boolean;
-		/** Problems that blocked the last save. */
-		validationIssues?: ContentIssue[];
+		/** Globals were committed elsewhere while this browser had edits (which were kept). */
+		remoteChangedWhileDirty?: boolean;
 	};
 
 	let {
 		hasCheckedAuth,
 		isAuthenticated,
 		loadError,
-		saveError,
 		isLoading,
-		validationIssues = [],
+		remoteChangedWhileDirty = false,
 	}: Props = $props();
 </script>
 
@@ -36,27 +32,10 @@
 	</div>
 {/if}
 
-{#if validationIssues.length > 0}
-	<div class="border-destructive/30 bg-destructive/5 space-y-1 rounded-md border p-3 text-xs" role="alert">
-		<p class="text-destructive font-medium">
-			{t("globals.fixBeforeSaving", { count: validationIssues.length })}
-		</p>
-		<ul class="list-disc space-y-0.5 pl-4">
-			{#each validationIssues as issue (`${issue.path.join(".")}@${issue.locale}`)}
-				<li>
-					{issue.message}
-					{#if issue.locale !== DEFAULT_LOCALE}
-						<span class="bg-muted rounded px-1 text-[10px] uppercase">{issue.locale}</span>
-					{/if}
-				</li>
-			{/each}
-		</ul>
-	</div>
-{/if}
-
-{#if saveError}
-	<div class="text-destructive rounded-md border p-3 text-xs">
-		{t("globals.saveFailed", { error: saveError })}
+{#if remoteChangedWhileDirty}
+	<div class="text-muted-foreground rounded-md border border-dashed p-3 text-xs">
+		{t("globals.remoteChangedBefore")}
+		<a href="/admin/changes" class="underline">{t("sidebar.remoteChangedLink")}</a>{t("sidebar.remoteChangedAfter")}
 	</div>
 {/if}
 
