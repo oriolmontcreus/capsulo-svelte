@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import { Button } from "../../components/ui/button";
 	import { ScrollArea } from "../../components/ui/scroll-area";
-	import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
+	import { loadAllPageEditorCacheDocuments, onChangesUpdated } from "../page-editor-cache";
 	import {
 		toIssueListEntries,
 		validatePageValues,
@@ -36,7 +36,7 @@
 		}, {}),
 	);
 
-	/** Bumped after a revert so the diff re-reads the draft it just changed. */
+	/** Bumped whenever a draft is written so the diff re-reads it. */
 	let draftRevision = $state(0);
 
 	const changeSetPromise = $derived.by<Promise<PageChangeSet | null>>(() => {
@@ -59,29 +59,32 @@
 			change.oldValue,
 		);
 
-		if (!result.ok) {
-			revertError = result.errorMessage ?? t("changes.revertFailed");
-			return;
-		}
-
-		draftRevision += 1;
-		await refresh();
+		if (!result.ok) revertError = result.errorMessage ?? t("changes.revertFailed");
+		// On success the draft write fires the changes event, which refreshes this page.
 	}
 
-	async function validateChangedPages(): Promise<void> {
-		const changedIds = new Set(changedPages.map((page) => page.pageId));
+	async function validateChangedPages(pages: ChangedPageSummary[]): Promise<IssueListEntry[]> {
+		const changedIds = new Set(pages.map((page) => page.pageId));
 		const documents = (await loadAllPageEditorCacheDocuments()).filter((document) =>
 			changedIds.has(document.pageId),
 		);
-		issues = toIssueListEntries(
+		return toIssueListEntries(
 			documents.flatMap((document) => validatePageValues(document.pageId, document.valuesByInstance)),
 			Object.fromEntries(documents.map((document) => [document.pageId, document.valuesByInstance])),
 		);
 	}
 
+	let latestRefreshRunId = 0;
+
 	async function refresh(): Promise<void> {
-		changedPages = await listChangedPages();
-		await validateChangedPages();
+		// Writes can land back to back (a commit saves every page): only the newest read counts.
+		const runId = ++latestRefreshRunId;
+		const pages = await listChangedPages();
+		const nextIssues = await validateChangedPages(pages);
+		if (runId !== latestRefreshRunId) return;
+
+		changedPages = pages;
+		issues = nextIssues;
 		if (!selectedPageId || !changedPages.some((page) => page.pageId === selectedPageId)) {
 			selectedPageId = changedPages[0]?.pageId ?? null;
 		}
@@ -113,6 +116,11 @@
 
 	onMount(() => {
 		void refresh();
+		// Drafts also change from outside this page: the AI agent, or another admin tab.
+		return onChangesUpdated(() => {
+			draftRevision += 1;
+			void refresh();
+		});
 	});
 </script>
 

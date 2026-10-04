@@ -9,7 +9,7 @@
   import type { ClassValue } from "clsx";
   import { cn } from "../utils";
   import { listChangedPages } from "../PageEditor/changes/changed-pages";
-  import { CHANGES_UPDATED_EVENT } from "../PageEditor/changes/draft-write";
+  import { onChangesUpdated } from "../PageEditor/page-editor-cache";
   import { ensureSession } from "../stores/session";
   import { AI_ENABLED } from "../ai/config";
   import { aiSidebar, toggleAiSidebar } from "../ai/ai-sidebar-state.svelte";
@@ -73,8 +73,13 @@
     pathname = window.location.pathname;
   }
 
+  let latestCountRunId = 0;
+
   async function syncChangedCount() {
-    changedCount = (await listChangedPages()).length;
+    // Writes can land back to back (a commit saves every page): only the newest read counts.
+    const runId = ++latestCountRunId;
+    const count = (await listChangedPages()).length;
+    if (runId === latestCountRunId) changedCount = count;
   }
 
   function isActive(item: NavItem): boolean {
@@ -96,12 +101,11 @@
       syncPathname();
       void syncChangedCount();
     };
-    const onChangesUpdated = () => void syncChangedCount();
     document.addEventListener("astro:page-load", onPageLoad);
-    window.addEventListener(CHANGES_UPDATED_EVENT, onChangesUpdated);
+    const stopChangesListener = onChangesUpdated(() => void syncChangedCount());
     return () => {
       document.removeEventListener("astro:page-load", onPageLoad);
-      window.removeEventListener(CHANGES_UPDATED_EVENT, onChangesUpdated);
+      stopChangesListener();
     };
   });
 </script>

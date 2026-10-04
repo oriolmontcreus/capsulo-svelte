@@ -8,12 +8,6 @@ import { setDraftFieldValue, type DraftFieldTarget } from "./draft-values";
 import { t } from "../../admin-i18n/i18n.svelte";
 
 /**
- * Dispatched after any draft write so the AdminNav dirty-count badge and an open
- * Changes page can refresh without polling IndexedDB.
- */
-export const CHANGES_UPDATED_EVENT = "capsulo:changes-updated";
-
-/**
  * Dispatched (with `{ pageId }`) when something other than the Page Editor rewrote a
  * page's draft (the AI agent, or undoing one of its edits), so an open editor reloads it.
  */
@@ -32,11 +26,6 @@ type DraftSnapshot = {
 	updatedAt: string | null;
 	errorMessage: string | null;
 };
-
-function dispatchChangesUpdated(): void {
-	if (typeof window === "undefined") return;
-	window.dispatchEvent(new CustomEvent(CHANGES_UPDATED_EVENT));
-}
 
 /**
  * Returns the page's local draft, seeding it from the committed remote content
@@ -95,7 +84,6 @@ async function writeDraft(
 		};
 	}
 
-	dispatchChangesUpdated();
 	return { ok: true, errorMessage: null };
 }
 

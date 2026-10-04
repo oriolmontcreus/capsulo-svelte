@@ -11,6 +11,41 @@ const PAGE_EDITOR_DB_NAME = "page-editor-cache";
 const PAGE_EDITOR_DB_VERSION = 2;
 const PAGE_EDITOR_STORE_NAME = "documents";
 
+/**
+ * Dispatched after every draft write (autosave, commit, Recover, AI edits...) so the
+ * AdminNav dirty-count badge and an open Changes page can refresh without polling.
+ */
+export const CHANGES_UPDATED_EVENT = "capsulo:changes-updated";
+
+/** Carries the same signal to the admin open in other tabs, which share the cache. */
+const CHANGES_CHANNEL_NAME = "capsulo:changes";
+
+let changesChannel: BroadcastChannel | null = null;
+
+function getChangesChannel(): BroadcastChannel | null {
+	if (typeof BroadcastChannel === "undefined") return null;
+	changesChannel ??= new BroadcastChannel(CHANGES_CHANNEL_NAME);
+	return changesChannel;
+}
+
+function notifyChangesUpdated(): void {
+	if (typeof window === "undefined") return;
+	window.dispatchEvent(new CustomEvent(CHANGES_UPDATED_EVENT));
+	getChangesChannel()?.postMessage(null);
+}
+
+/** Calls `callback` whenever any tab writes a draft. Returns the unsubscribe. */
+export function onChangesUpdated(callback: () => void): () => void {
+	if (typeof window === "undefined") return () => {};
+	const channel = getChangesChannel();
+	window.addEventListener(CHANGES_UPDATED_EVENT, callback);
+	channel?.addEventListener("message", callback);
+	return () => {
+		window.removeEventListener(CHANGES_UPDATED_EVENT, callback);
+		channel?.removeEventListener("message", callback);
+	};
+}
+
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function canUseIndexedDb(): boolean {
@@ -182,5 +217,7 @@ export async function savePageEditorDocumentToCache(input: {
 		await writePageEditorCache(document);
 	} catch {
 		// Best effort cache writes should never break editing.
+		return;
 	}
+	notifyChangesUpdated();
 }
