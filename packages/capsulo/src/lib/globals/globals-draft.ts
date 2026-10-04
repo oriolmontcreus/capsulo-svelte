@@ -5,6 +5,7 @@ import { resolveInstanceDefaults } from "../PageEditor/changes/schema-defaults";
 import {
 	isRemoteTimestampNewer,
 	loadPageEditorDocumentFromCache,
+	peekPageEditorDocument,
 	savePageEditorDocumentToCache
 } from "../PageEditor/page-editor-cache";
 import { loadPageEditorDocumentFromDb } from "../PageEditor/page-editor-documents";
@@ -32,6 +33,12 @@ function globalsValues(valuesByInstance: PageEditorValuesByInstance): SchemaValu
 /** The draft as cached in this browser, or null when it was never loaded here. */
 export async function readCachedGlobalsDraft(): Promise<SchemaValues | null> {
 	const cached = await loadPageEditorDocumentFromCache(GLOBALS_DOCUMENT_ID);
+	return cached ? globalsValues(cached.valuesByInstance) : null;
+}
+
+/** The draft as this session last read or wrote it, without waiting on IndexedDB. */
+export function peekCachedGlobalsDraft(): SchemaValues | null {
+	const cached = peekPageEditorDocument(GLOBALS_DOCUMENT_ID);
 	return cached ? globalsValues(cached.valuesByInstance) : null;
 }
 

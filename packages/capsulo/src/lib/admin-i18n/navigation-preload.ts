@@ -4,8 +4,9 @@
  * - the next page's island code is loaded before the client router swaps the page in (and warmed
  *   when a link is hovered or focused). With its modules loaded, an island hydrates in the same
  *   task as the swap, so the first frame is already translated;
- * - while the editor's language differs from the build's, islands stay invisible until they have
- *   hydrated (`html[data-ui-pending]`, see AdminLanguageGuard.astro).
+ * - on a first load while the editor's language differs from the build's, and on every client-side
+ *   navigation, islands stay invisible until they have hydrated (`html[data-ui-pending]`, see
+ *   AdminLanguageGuard.astro).
  */
 import type {
 	TransitionBeforePreparationEvent,
@@ -54,8 +55,9 @@ function preloadIslands(page: Document): Promise<unknown> {
 	return Promise.all(loads);
 }
 
-function warmPage(anchor: HTMLAnchorElement): void {
-	const url = new URL(anchor.href, location.href);
+/** Loads an admin page's island code ahead of a visit; a no-op for the current or an already warmed page. */
+export function warmPage(href: string): void {
+	const url = new URL(href, location.href);
 	url.hash = "";
 	if (!isAdminUrl(url) || url.pathname === location.pathname || warmedPages.has(url.href)) return;
 	warmedPages.add(url.href);
@@ -71,7 +73,7 @@ function onLinkIntent(event: Event): void {
 	const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
 	if (!(anchor instanceof HTMLAnchorElement)) return;
 	clearTimeout(intentTimer);
-	intentTimer = setTimeout(() => warmPage(anchor), INTENT_DELAY_MS);
+	intentTimer = setTimeout(() => warmPage(anchor.href), INTENT_DELAY_MS);
 }
 
 let revealTimer: ReturnType<typeof setTimeout> | undefined;
@@ -96,7 +98,12 @@ document.addEventListener("astro:before-swap", (event) => {
 	const swap = event as TransitionBeforeSwapEvent;
 	// The previous page's fallback must not reveal this one; page-load schedules a new one.
 	clearTimeout(revealTimer);
-	if (isAdminUrl(swap.to) && getUiLocale() !== BUILD_UI_LOCALE) {
+	if (!isAdminUrl(swap.to)) return;
+	// Islands hydrate a frame or so after the swap. Until then they hold their prerendered
+	// markup: the build language and, on pages that render cached data, a "Loading..." state
+	// the hydrated island skips. Hiding them for that frame keeps either from being painted.
+	// The login page is left out: its media-gated islands may never hydrate.
+	if (getUiLocale() !== BUILD_UI_LOCALE || swap.to.pathname !== "/admin/login") {
 		swap.newDocument.documentElement.setAttribute(PENDING_ATTRIBUTE, "");
 	}
 });

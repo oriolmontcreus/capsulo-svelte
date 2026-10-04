@@ -2,13 +2,18 @@
 	import { onMount } from "svelte";
 	import { Button } from "../../components/ui/button";
 	import { ScrollArea } from "../../components/ui/scroll-area";
-	import { loadAllPageEditorCacheDocuments, onChangesUpdated } from "../page-editor-cache";
+	import {
+		loadAllPageEditorCacheDocuments,
+		onChangesUpdated,
+		peekAllPageEditorDocuments,
+	} from "../page-editor-cache";
+	import type { PageEditorCachedDocument } from "../persistence";
 	import {
 		toIssueListEntries,
 		validatePageValues,
 		type IssueListEntry,
 	} from "../validate-documents";
-	import { listChangedPages, getPageChangeSet, type ChangedPageSummary } from "./changed-pages";
+	import { getPageChangeSet, summarizeChangedPages, type ChangedPageSummary } from "./changed-pages";
 	import { commitChanges, type CommitFailure } from "./commit";
 	import { applyFieldValueToDraft } from "./draft-write";
 	import type { FieldChange, PageChangeSet } from "./diff-model";
@@ -16,10 +21,37 @@
 	import CommitForm from "./CommitForm.svelte";
 	import PageDiff from "./PageDiff.svelte";
 	import { t } from "../../admin-i18n/i18n.svelte";
+	import { rememberScroll } from "../../admin/scroll-memory";
 
-	let changedPages = $state<ChangedPageSummary[]>([]);
-	let selectedPageId = $state<string | null>(null);
-	let isLoading = $state(true);
+	/** Validation problems in `pages`, read from their drafts in `documents`. */
+	function findIssues(
+		pages: ChangedPageSummary[],
+		documents: PageEditorCachedDocument[],
+	): IssueListEntry[] {
+		const changedIds = new Set(pages.map((page) => page.pageId));
+		const changedDocuments = documents.filter((document) => changedIds.has(document.pageId));
+		return toIssueListEntries(
+			changedDocuments.flatMap((document) => validatePageValues(document.pageId, document.valuesByInstance)),
+			Object.fromEntries(changedDocuments.map((document) => [document.pageId, document.valuesByInstance])),
+		);
+	}
+
+	// Drafts this session already read render at once; refresh() then re-reads IndexedDB,
+	// which other tabs may have written to.
+	const cachedDocuments = peekAllPageEditorDocuments();
+	const cachedPages = cachedDocuments ? summarizeChangedPages(cachedDocuments) : [];
+
+	/** The page named in the URL (?page=), so a reload or coming back keeps the selection. */
+	const requestedPageId = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("page");
+
+	/** The requested page while it still has changes, otherwise the first one. */
+	function pickSelection(pages: ChangedPageSummary[], preferred: string | null): string | null {
+		return pages.some((page) => page.pageId === preferred) ? preferred : (pages[0]?.pageId ?? null);
+	}
+
+	let changedPages = $state<ChangedPageSummary[]>(cachedPages);
+	let selectedPageId = $state<string | null>(pickSelection(cachedPages, requestedPageId));
+	let isLoading = $state(cachedDocuments === null);
 
 	let message = $state("");
 	let isCommitting = $state(false);
@@ -28,7 +60,7 @@
 	let publishNotice = $state<string | null>(null);
 	let revertError = $state<string | null>(null);
 	/** Validation problems in the pages about to be committed; any one blocks the commit. */
-	let issues = $state<IssueListEntry[]>([]);
+	let issues = $state<IssueListEntry[]>(cachedDocuments ? findIssues(cachedPages, cachedDocuments) : []);
 	const issueCounts = $derived(
 		issues.reduce<Record<string, number>>((counts, issue) => {
 			counts[issue.pageId] = (counts[issue.pageId] ?? 0) + 1;
@@ -36,12 +68,13 @@
 		}, {}),
 	);
 
-	/** Bumped whenever a draft is written so the diff re-reads it. */
+	/** Bumped after every refresh so the diff re-reads the drafts. */
 	let draftRevision = $state(0);
 
-	const changeSetPromise = $derived.by<Promise<PageChangeSet | null>>(() => {
+	// A plain value when the drafts are already in memory, so `{#await}` shows it straight away.
+	const selectedChangeSet = $derived.by<PageChangeSet | null | Promise<PageChangeSet | null>>(() => {
 		draftRevision;
-		return selectedPageId ? getPageChangeSet(selectedPageId) : Promise.resolve(null);
+		return selectedPageId ? getPageChangeSet(selectedPageId) : null;
 	});
 
 	/** Discards one pending field edit by writing the committed value back. */
@@ -63,31 +96,20 @@
 		// On success the draft write fires the changes event, which refreshes this page.
 	}
 
-	async function validateChangedPages(pages: ChangedPageSummary[]): Promise<IssueListEntry[]> {
-		const changedIds = new Set(pages.map((page) => page.pageId));
-		const documents = (await loadAllPageEditorCacheDocuments()).filter((document) =>
-			changedIds.has(document.pageId),
-		);
-		return toIssueListEntries(
-			documents.flatMap((document) => validatePageValues(document.pageId, document.valuesByInstance)),
-			Object.fromEntries(documents.map((document) => [document.pageId, document.valuesByInstance])),
-		);
-	}
-
 	let latestRefreshRunId = 0;
 
 	async function refresh(): Promise<void> {
 		// Writes can land back to back (a commit saves every page): only the newest read counts.
 		const runId = ++latestRefreshRunId;
-		const pages = await listChangedPages();
-		const nextIssues = await validateChangedPages(pages);
+		const documents = await loadAllPageEditorCacheDocuments();
 		if (runId !== latestRefreshRunId) return;
 
+		const pages = summarizeChangedPages(documents);
 		changedPages = pages;
-		issues = nextIssues;
-		if (!selectedPageId || !changedPages.some((page) => page.pageId === selectedPageId)) {
-			selectedPageId = changedPages[0]?.pageId ?? null;
-		}
+		issues = findIssues(pages, documents);
+		draftRevision += 1;
+		// Until the first read, the URL's page may simply not be in the in-memory drafts yet.
+		selectedPageId = pickSelection(pages, isLoading ? (requestedPageId ?? selectedPageId) : selectedPageId);
 		isLoading = false;
 	}
 
@@ -114,13 +136,18 @@
 		isCommitting = false;
 	}
 
+	$effect(() => {
+		const url = new URL(window.location.href);
+		if (selectedPageId) url.searchParams.set("page", selectedPageId);
+		else url.searchParams.delete("page");
+		// replaceState rather than pushState: it never competes with the client router for popstate.
+		if (url.href !== window.location.href) window.history.replaceState(window.history.state, "", url);
+	});
+
 	onMount(() => {
 		void refresh();
 		// Drafts also change from outside this page: the AI agent, or another admin tab.
-		return onChangesUpdated(() => {
-			draftRevision += 1;
-			void refresh();
-		});
+		return onChangesUpdated(() => void refresh());
 	});
 </script>
 
@@ -129,7 +156,7 @@
 		<div class="border-border flex h-11 shrink-0 items-center border-b px-4">
 			<h1 class="text-sm font-medium">{t("changes.title")}</h1>
 		</div>
-		<div class="min-h-0 flex-1 overflow-y-auto">
+		<div class="min-h-0 flex-1 overflow-y-auto" {@attach rememberScroll("changes:list")}>
 			<ChangesSidebar pages={changedPages} {issueCounts} bind:selectedPageId />
 		</div>
 		<CommitForm
@@ -146,7 +173,7 @@
 	</aside>
 
 	<section class="min-w-0 flex-1">
-		<ScrollArea class="h-full w-full">
+		<ScrollArea class="h-full w-full" scrollKey={`changes:${selectedPageId ?? ""}`}>
 			<div class="mx-auto max-w-3xl p-6">
 				{#if isLoading}
 					<p class="text-muted-foreground text-sm">{t("changes.loading")}</p>
@@ -163,7 +190,7 @@
 							<p class="text-destructive mb-4 text-xs">{revertError}</p>
 						{/if}
 					</div>
-					{#await changeSetPromise then changeSet}
+					{#await selectedChangeSet then changeSet}
 						<PageDiff {changeSet} fieldAction={revertAction} />
 					{/await}
 				{/if}

@@ -84,6 +84,10 @@ export function clampPreviewDimension(value: number): number {
   );
 }
 
+export function isPreviewDeviceId(value: unknown): value is PreviewDeviceId {
+  return typeof value === "string" && PREVIEW_DEVICE_BY_ID.has(value as PreviewDeviceId);
+}
+
 export function getPreviewDeviceLabel(id: PreviewDeviceId): string {
   if (id === "responsive") return t("preview.responsive");
   return PREVIEW_DEVICE_BY_ID.get(id)?.label ?? t("preview.responsive");

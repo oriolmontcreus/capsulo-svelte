@@ -2,6 +2,7 @@
 	import { ScrollArea as ScrollAreaPrimitive } from "bits-ui";
 	import { cn, type WithoutChildrenOrChild } from "../../../utils.js";
 	import type { Snippet } from "svelte";
+	import { rememberScroll } from "../../../admin/scroll-memory.js";
 
 	let {
 		ref = $bindable(null),
@@ -9,14 +10,24 @@
 		orientation = "vertical",
 		scrollbarXClasses = "",
 		scrollbarYClasses = "",
+		scrollKey,
 		children,
 		...restProps
 	}: WithoutChildrenOrChild<ScrollAreaPrimitive.RootProps> & {
 		orientation?: "vertical" | "horizontal" | "both";
 		scrollbarXClasses?: string;
 		scrollbarYClasses?: string;
+		/** Remembers the scroll position under this key and restores it on return. */
+		scrollKey?: string;
 		children: Snippet;
 	} = $props();
+
+	let viewport = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		if (!viewport || !scrollKey) return;
+		return rememberScroll(scrollKey)(viewport) ?? undefined;
+	});
 </script>
 
 <ScrollAreaPrimitive.Root
@@ -24,7 +35,7 @@
 	class={cn("relative overflow-hidden", className)}
 	{...restProps}
 >
-	<ScrollAreaPrimitive.Viewport class="h-full w-full rounded-[inherit]">
+	<ScrollAreaPrimitive.Viewport bind:ref={viewport} class="h-full w-full rounded-[inherit]">
 		{@render children?.()}
 	</ScrollAreaPrimitive.Viewport>
 	{#if orientation === "vertical" || orientation === "both"}

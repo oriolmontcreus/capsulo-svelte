@@ -15,6 +15,7 @@
   import { aiSidebar, toggleAiSidebar } from "../ai/ai-sidebar-state.svelte";
   import { t, type MessageKey } from "../admin-i18n/i18n.svelte";
   import UserMenu from "./UserMenu.svelte";
+  import { sectionHref } from "./section-locations.svelte";
   import { ADMIN_PORTAL_HOST } from "./portal-host";
   import { BitsConfig } from "bits-ui";
 
@@ -22,7 +23,6 @@
 
   type NavItem = {
     id: AdminRoute;
-    href: string;
     labelKey: MessageKey;
     icon: typeof FileTextIcon;
     matchPrefix: string;
@@ -33,28 +33,24 @@
   const navItems: NavItem[] = [
     {
       id: "page-editor",
-      href: "/admin/page-editor",
       labelKey: "nav.pageEditor",
       icon: FileTextIcon,
       matchPrefix: "/admin/page-editor",
     },
     {
       id: "globals",
-      href: "/admin/globals",
       labelKey: "nav.globals",
       icon: GlobeIcon,
       matchPrefix: "/admin/globals",
     },
     {
       id: "changes",
-      href: "/admin/changes",
       labelKey: "nav.changes",
       icon: GitCompareArrowsIcon,
       matchPrefix: "/admin/changes",
     },
     {
       id: "history",
-      href: "/admin/history",
       labelKey: "nav.history",
       icon: HistoryIcon,
       matchPrefix: "/admin/history",
@@ -126,7 +122,7 @@
             {#snippet child({ props })}
               {@const { class: triggerClass, ...triggerProps } = props}
               <a
-                href={item.href}
+                href={sectionHref(item.id, active)}
                 {...triggerProps}
                 aria-current={active ? "page" : undefined}
                 class={cn(

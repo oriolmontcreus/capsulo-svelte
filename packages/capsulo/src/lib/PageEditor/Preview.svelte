@@ -34,6 +34,7 @@
   import Maximize2 from "@lucide/svelte/icons/maximize-2";
   import Minimize2 from "@lucide/svelte/icons/minimize-2";
   import { t } from "../admin-i18n/i18n.svelte";
+  import { rememberScroll } from "../admin/scroll-memory";
 
   type Props = {
     pageId: string;
@@ -501,6 +502,7 @@
   >
     <div
       bind:this={iframeWrapperEl}
+      {@attach rememberScroll(`preview:${pageId}`)}
       class="bg-background border-border flex shrink-0 flex-col overflow-auto rounded-md border shadow-sm transition-[width,height] duration-200"
       style:width="{previewWidthPx}px"
       style:height="{previewHeightPx}px"

@@ -14,7 +14,7 @@
 	import type { PageEditorValuesByInstance } from "../persistence";
 	import { Button } from "../../components/ui/button";
 	import { formatAbsoluteTimestamp } from "../../utils/format-timestamp";
-	import { loadRevisionWithParent } from "./history-documents";
+	import { loadRevisionWithParent, peekRevisionWithParent, type LoadRevisionResult } from "./history-documents";
 	import type { CommitEntry, CommitRevision } from "./history-model";
 	import UserAvatar from "../../components/UserAvatar.svelte";
 	import { t } from "../../admin-i18n/i18n.svelte";
@@ -42,12 +42,7 @@
 		errorMessage: string | null;
 	};
 
-	async function loadRevisionView(
-		revision: CommitRevision | null
-	): Promise<RevisionView | null> {
-		if (!revision) return null;
-
-		const result = await loadRevisionWithParent(revision.pageId, revision.revisionId);
+	function toRevisionView(revision: CommitRevision, result: LoadRevisionResult): RevisionView {
 		if (result.errorMessage) {
 			return {
 				changeSet: null,
@@ -72,7 +67,23 @@
 		};
 	}
 
-	const revisionViewPromise = $derived(loadRevisionView(selectedRevision));
+	/**
+	 * A revision seen before (or warmed in the background) is a plain value, which `{#await}`
+	 * renders straight away instead of flashing its loading state.
+	 */
+	function loadRevisionView(
+		revision: CommitRevision | null
+	): RevisionView | null | Promise<RevisionView> {
+		if (!revision) return null;
+
+		const cached = peekRevisionWithParent(revision.pageId, revision.revisionId);
+		if (cached) return toRevisionView(revision, cached);
+		return loadRevisionWithParent(revision.pageId, revision.revisionId).then((result) =>
+			toRevisionView(revision, result)
+		);
+	}
+
+	const revisionView = $derived(loadRevisionView(selectedRevision));
 
 	let status = $state<{ tone: "ok" | "error"; text: string } | null>(null);
 	let isRestoring = $state(false);
@@ -188,7 +199,7 @@
 		{/if}
 	</div>
 
-	{#await revisionViewPromise}
+	{#await revisionView}
 		<p class="text-muted-foreground py-8 text-sm">{t("history.loadingChanges")}</p>
 	{:then view}
 		{#if !view}

@@ -18,8 +18,11 @@
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
 	import { createGlobalsEditorDocument } from "./globals-editor-document.svelte";
 	import { t } from "../admin-i18n/i18n.svelte";
+	import { readEditingLocale, saveEditingLocale } from "../PageEditor/editor-preferences";
 
-	let locale = $state(DEFAULT_LOCALE);
+	// Shared with the Page Editor: the language being edited carries over between them.
+	let locale = $state(readEditingLocale());
+	$effect(() => saveEditingLocale(locale));
 	let values = $state<SchemaValues>({});
 
 	const document = createGlobalsEditorDocument({

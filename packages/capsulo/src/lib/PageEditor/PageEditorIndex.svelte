@@ -15,7 +15,6 @@
   } from "../components/ui/card";
   import FolderIcon from "@lucide/svelte/icons/folder";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
-  import { onMount } from "svelte";
   import { t } from "../admin-i18n/i18n.svelte";
 
   interface PageCard {
@@ -27,7 +26,13 @@
 
   let { pageCards }: { pageCards: PageCard[] } = $props();
 
-  let currentPath = $state<string[]>([]);
+  function readPathFromUrl(): string[] {
+    if (typeof window === "undefined") return [];
+    const pathParam = new URLSearchParams(window.location.search).get("path");
+    return pathParam ? pathParam.split("/").filter(Boolean) : [];
+  }
+
+  let currentPath = $state<string[]>(readPathFromUrl());
 
   const prefix = $derived(
     currentPath.length > 0 ? currentPath.join("/") + "/" : "",
@@ -105,16 +110,20 @@
     return "/" + segments.join("/");
   }
 
-  onMount(() => {
-    if (typeof window === "undefined") return;
+  // The open folder lives in the query string (?path=blog/posts), so a reload or returning
+  // to the Page Editor from another section reopens it.
+  function writePathToUrl(): void {
+    const url = new URL(window.location.href);
+    if (currentPath.length > 0) url.searchParams.set("path", currentPath.join("/"));
+    else url.searchParams.delete("path");
+    if (url.href === window.location.href) return;
+    // replaceState rather than pushState: it never competes with the client router for popstate.
+    window.history.replaceState(window.history.state, "", url);
+  }
 
-    const params = new URLSearchParams(window.location.search);
-    const pathParam = params.get("path");
-
-    if (pathParam) {
-      currentPath = pathParam.split("/").filter(Boolean);
-      history.replaceState({}, "", window.location.pathname);
-    }
+  $effect(() => {
+    currentPath;
+    writePathToUrl();
   });
 </script>
 

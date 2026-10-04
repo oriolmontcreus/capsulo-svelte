@@ -46,6 +46,39 @@ export function onChangesUpdated(callback: () => void): () => void {
 	};
 }
 
+/**
+ * A copy of every row this session has read or written. IndexedDB is async, so without it a
+ * revisited editor renders empty for a frame and then remounts its fields with the draft.
+ * IndexedDB stays the source of truth: callers peek here, then reconcile with a real read.
+ */
+const memoryRows = new Map<string, PageEditorCachedDocument>();
+/** Set once every row was read, so the mirror can stand in for `loadAll...` too. */
+let memoryHasAllRows = false;
+
+function rememberRow(document: PageEditorCachedDocument): void {
+	memoryRows.set(document.pageId, structuredClone(document));
+}
+
+function withBaseline(document: PageEditorCachedDocument): PageEditorCachedDocument {
+	// Defensive backfill for rows written before the baseline field existed.
+	if (document.baselineValuesByInstance === undefined) {
+		document.baselineValuesByInstance = document.valuesByInstance;
+	}
+	return document;
+}
+
+/** The row as of the last read or write in this session, or null when none happened yet. */
+export function peekPageEditorDocument(pageId: string): PageEditorCachedDocument | null {
+	const row = memoryRows.get(pageId);
+	return row ? structuredClone(row) : null;
+}
+
+/** Every row, when they have all been read this session; null otherwise. */
+export function peekAllPageEditorDocuments(): PageEditorCachedDocument[] | null {
+	if (!memoryHasAllRows) return null;
+	return Array.from(memoryRows.values(), (row) => structuredClone(row));
+}
+
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function canUseIndexedDb(): boolean {
@@ -164,10 +197,11 @@ export async function loadPageEditorDocumentFromCache(
 ): Promise<PageEditorCachedDocument | null> {
 	try {
 		const document = await readPageEditorCache(pageId);
-		if (document && document.baselineValuesByInstance === undefined) {
-			// Defensive backfill for rows written before the baseline field existed.
-			document.baselineValuesByInstance = document.valuesByInstance;
+		if (!document) {
+			memoryRows.delete(pageId);
+			return null;
 		}
+		rememberRow(withBaseline(document));
 		return document;
 	} catch {
 		return null;
@@ -176,12 +210,10 @@ export async function loadPageEditorDocumentFromCache(
 
 export async function loadAllPageEditorCacheDocuments(): Promise<PageEditorCachedDocument[]> {
 	try {
-		const documents = await readAllPageEditorCache();
-		for (const document of documents) {
-			if (document.baselineValuesByInstance === undefined) {
-				document.baselineValuesByInstance = document.valuesByInstance;
-			}
-		}
+		const documents = (await readAllPageEditorCache()).map(withBaseline);
+		memoryRows.clear();
+		for (const document of documents) rememberRow(document);
+		memoryHasAllRows = true;
 		return documents;
 	} catch {
 		return [];
@@ -225,6 +257,7 @@ export async function savePageEditorDocumentToCache(input: {
 
 	try {
 		await writePageEditorCache(document);
+		rememberRow(document);
 	} catch {
 		// Best effort cache writes should never break editing.
 		return;

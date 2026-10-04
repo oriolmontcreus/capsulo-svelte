@@ -35,7 +35,7 @@
 	}: ContentSidebarProps = $props();
 
 	const groupedEntries = $derived(groupManifestEntries(entries));
-	const collapsedCapsules = createCollapsedCapsulesState();
+	const collapsedCapsules = createCollapsedCapsulesState(() => pageId);
 	const capsuleKeys = $derived(groupedEntries.map((group) => group.capsuleKey));
 
 	const document = createContentSidebarDocument({
@@ -84,7 +84,7 @@
 	/>
 
 	<div class="min-h-0 flex-1">
-		<ScrollArea class="h-full w-full">
+		<ScrollArea class="h-full w-full" scrollKey={`sidebar:${pageId}`}>
 			<div class="space-y-4 p-4">
 				<ContentSidebarAlerts
 					hasCheckedAuth={document.hasCheckedAuth}

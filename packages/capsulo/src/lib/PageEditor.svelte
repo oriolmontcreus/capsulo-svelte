@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as Tooltip from "./components/ui/tooltip";
-  import { DEFAULT_LOCALE } from "./config/i18n-config";
   import type { PageEditorValuesByInstance } from "./PageEditor/persistence";
   import {
     ensureGlobalsLoaded,
@@ -31,6 +30,12 @@
   } from "./PageEditor/preview-devices";
   import { Button } from "./components/ui/button";
   import { t } from "./admin-i18n/i18n.svelte";
+  import {
+    readEditingLocale,
+    readEditorLayout,
+    saveEditingLocale,
+    saveEditorLayout,
+  } from "./PageEditor/editor-preferences";
   type Props = {
     pageId?: string;
     entries?: import("./capsules/core/types").CapsuleManifestEntry[];
@@ -42,20 +47,27 @@
   let focusTarget = $state<FieldFocusTarget | null>(null);
   let showAllErrors = $state(false);
 
-  let previewDevice = $state<PreviewDeviceId>(DEFAULT_PREVIEW_DEVICE);
+  // The layout and language the editor last used in this tab (the preview's size follows
+  // from the device: a preset's, or the viewport's when responsive).
+  const savedLayout = readEditorLayout();
+
+  let previewDevice = $state<PreviewDeviceId>(savedLayout?.previewDevice ?? DEFAULT_PREVIEW_DEVICE);
   let previewWidthPx = $state(390);
   let previewHeightPx = $state(844);
-  let locale = $state<string>(DEFAULT_LOCALE);
+  let locale = $state<string>(readEditingLocale());
   let valuesByInstance = $state<PageEditorValuesByInstance>({});
 
   const sidebarMinWidth = 280;
   const sidebarMaxWidth = 520;
-  let sidebarWidth = $state<number>(320);
+  let sidebarWidth = $state<number>(clamp(savedLayout?.sidebarWidth ?? 320, sidebarMinWidth, sidebarMaxWidth));
   let isResizingSidebar = $state(false);
 
   function clamp(n: number, min: number, max: number) {
     return Math.max(min, Math.min(max, n));
   }
+
+  $effect(() => saveEditingLocale(locale));
+  $effect(() => saveEditorLayout({ previewDevice, sidebarWidth }));
 
   function sidebarPointerDown(e: PointerEvent) {
     if (e.button !== 0) return;

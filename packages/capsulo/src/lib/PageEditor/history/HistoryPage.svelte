@@ -4,26 +4,44 @@
 	import { session, ensureSession } from "../../stores/session";
 	import { Button } from "../../components/ui/button";
 	import { ScrollArea } from "../../components/ui/scroll-area";
-	import { loadCommitPage } from "./history-documents";
+	import {
+		loadMoreCommits,
+		peekCommitList,
+		revalidateCommitList,
+		type CommitList as CommitListData
+	} from "./history-documents";
 	import type { CommitEntry } from "./history-model";
 	import CommitDetail from "./CommitDetail.svelte";
 	import CommitList from "./CommitList.svelte";
 	import { t } from "../../admin-i18n/i18n.svelte";
 
-	let commits = $state<CommitEntry[]>([]);
-	let cursor = $state<string | null>(null);
-	let hasMore = $state(false);
-	let isLoading = $state(true);
+	// The list from the last visit (or the background warm-up) renders at once; the
+	// first page is revalidated in the background and new commits slide in on top.
+	const cachedList = peekCommitList();
+	let shownList: CommitListData | null = cachedList;
+
+	let commits = $state<CommitEntry[]>(cachedList?.commits ?? []);
+	let hasMore = $state(cachedList?.hasMore ?? false);
+	let isLoading = $state(cachedList === null);
 	let isLoadingMore = $state(false);
 	let errorMessage = $state<string | null>(null);
-	let isAuthenticated = $state(false);
-	let hasCheckedAuth = $state(false);
+	let isAuthenticated = $state(cachedList !== null);
+	let hasCheckedAuth = $state(cachedList !== null);
 
-	let selectedCommitId = $state<string | null>(null);
-	let selectedPageId = $state<string | null>(null);
+	// Read from the URL up front, so a returning visit renders the selected commit at once.
+	const initialParams = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+	let selectedCommitId = $state<string | null>(initialParams?.get("commit") ?? null);
+	let selectedPageId = $state<string | null>(initialParams?.get("page") ?? null);
 
 	const selectedCommit = $derived(
 		commits.find((commit) => commit.commitId === selectedCommitId) ?? null
+	);
+
+	/** The page whose diff is shown: the one in the URL, else the commit's first (as CommitDetail does). */
+	const shownPageId = $derived(
+		selectedCommit?.revisions.find((revision) => revision.pageId === selectedPageId)?.pageId ??
+			selectedCommit?.revisions[0]?.pageId ??
+			""
 	);
 
 	/**
@@ -79,36 +97,46 @@
 		hasCheckedAuth = true;
 	}
 
+	function showList(list: CommitListData | null): void {
+		if (!list || list === shownList) return;
+		shownList = list;
+		commits = list.commits;
+		hasMore = list.hasMore;
+	}
+
+	/** Falls back to the newest commit only when the URL did not name one. */
+	function selectNewestIfNone(): void {
+		if (selectedCommitId) return;
+		selectedCommitId = commits[0]?.commitId ?? null;
+		writeSelectionToUrl();
+	}
+
 	async function loadFirstPage(): Promise<void> {
 		isLoading = true;
 		errorMessage = null;
 
-		const result = await loadCommitPage(null);
+		const result = await revalidateCommitList();
 		errorMessage = result.errorMessage;
-		commits = result.commits;
-		cursor = result.nextCursor;
-		hasMore = result.hasMore;
-
-		// Fall back to the newest commit only when the URL did not name one.
-		if (!selectedCommitId) {
-			selectedCommitId = commits[0]?.commitId ?? null;
-			writeSelectionToUrl();
-		}
+		showList(result.list);
+		selectNewestIfNone();
 		isLoading = false;
+	}
+
+	/** Brings a list already on screen up to date; a failure keeps showing it. */
+	async function revalidateInBackground(): Promise<void> {
+		const result = await revalidateCommitList();
+		if (result.errorMessage) return;
+		showList(result.list);
+		selectNewestIfNone();
 	}
 
 	async function loadMore(): Promise<void> {
 		if (isLoadingMore || !hasMore) return;
 		isLoadingMore = true;
 
-		const result = await loadCommitPage(cursor);
-		if (result.errorMessage) {
-			errorMessage = result.errorMessage;
-		} else {
-			commits = [...commits, ...result.commits];
-			cursor = result.nextCursor;
-			hasMore = result.hasMore;
-		}
+		const result = await loadMoreCommits();
+		if (result.errorMessage) errorMessage = result.errorMessage;
+		else showList(result.list);
 		isLoadingMore = false;
 	}
 
@@ -119,6 +147,11 @@
 
 	onMount(() => {
 		readSelectionFromUrl();
+		if (cachedList) {
+			selectNewestIfNone();
+			void revalidateInBackground();
+			return;
+		}
 		void (async () => {
 			await checkAuth();
 			if (isAuthenticated) {
@@ -142,7 +175,7 @@
 			<h1 class="text-sm font-medium">{t("history.title")}</h1>
 		</div>
 		<div class="min-h-0 flex-1">
-			<ScrollArea class="h-full w-full">
+			<ScrollArea class="h-full w-full" scrollKey="history:list">
 				{#if isLoading}
 					<p class="text-muted-foreground p-4 text-sm">{t("history.loading")}</p>
 				{:else if hasCheckedAuth && !isAuthenticated}
@@ -170,7 +203,7 @@
 	</aside>
 
 	<section class="min-w-0 flex-1 {selectedCommit ? 'block' : 'hidden md:block'}">
-		<ScrollArea class="h-full w-full">
+		<ScrollArea class="h-full w-full" scrollKey={`history:${selectedCommitId ?? ""}:${shownPageId}`}>
 			{#if selectedCommit}
 				<div class="border-border flex h-11 items-center border-b px-4 md:hidden">
 					<Button variant="ghost" size="sm" onclick={clearCommit}>{t("history.back")}</Button>

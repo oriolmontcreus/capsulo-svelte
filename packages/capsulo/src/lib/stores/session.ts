@@ -2,6 +2,7 @@ import { get, writable } from "svelte/store";
 import { capsuloFetch, jsonBody } from "../api/capsulo-client";
 import { getUiLocale, isUiLocale, setUiLocale, type UiLocale } from "../admin-i18n/i18n.svelte";
 import type { AvatarConfig } from "../avatar/avatar-config";
+import { clearAdminCache } from "../admin/admin-cache";
 
 /** The signed-in editor, as returned by `/api/capsulo/auth/me`. */
 export type SessionUser = {
@@ -86,6 +87,7 @@ export async function signIn(login: string, password: string): Promise<SignInRes
 	});
 	if (result.error !== null) return { user: null, error: result.error };
 
+	clearAdminCache();
 	session.set({ user: result.data.user });
 	applyAccountUiLocale(result.data.user);
 	return { user: result.data.user, error: null };
@@ -93,5 +95,6 @@ export async function signIn(login: string, password: string): Promise<SignInRes
 
 export async function signOut(): Promise<void> {
 	await capsuloFetch("/auth/logout", { method: "POST" });
+	clearAdminCache();
 	session.set(null);
 }

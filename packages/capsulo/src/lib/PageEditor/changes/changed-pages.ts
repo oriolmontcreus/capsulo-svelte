@@ -1,4 +1,5 @@
-import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
+import { loadAllPageEditorCacheDocuments, peekAllPageEditorDocuments } from "../page-editor-cache";
+import type { PageEditorCachedDocument, PageEditorValuesByInstance } from "../persistence";
 import { computePageChangeSet, countFieldChanges, type PageChangeSet } from "./diff-model";
 import { resolveInstanceDefaults } from "./schema-defaults";
 import { GLOBALS_DOCUMENT_ID } from "../../globals/globals-persistence";
@@ -23,12 +24,17 @@ export function pageDisplayName(pageId: string): string {
 		.join(" ");
 }
 
-/**
- * Lists every page whose local draft differs from its committed baseline.
- * Purely local: reads the IndexedDB cache, no network calls.
- */
-export async function listChangedPages(): Promise<ChangedPageSummary[]> {
-	const documents = await loadAllPageEditorCacheDocuments();
+/** Whether two versions of a page differ in any field, ignoring values that only fill in defaults. */
+export function hasFieldChanges(
+	pageId: string,
+	before: PageEditorValuesByInstance,
+	after: PageEditorValuesByInstance
+): boolean {
+	return countFieldChanges(computePageChangeSet(pageId, before, after, resolveInstanceDefaults)) > 0;
+}
+
+/** Every page in `documents` whose draft differs from its committed baseline. */
+export function summarizeChangedPages(documents: PageEditorCachedDocument[]): ChangedPageSummary[] {
 	const summaries: ChangedPageSummary[] = [];
 
 	for (const document of documents) {
@@ -57,17 +63,32 @@ export async function listChangedPages(): Promise<ChangedPageSummary[]> {
 }
 
 /**
- * Computes the full change set for a single page from the local cache.
- * Returns null if the page has no cache entry.
+ * Lists every page whose local draft differs from its committed baseline.
+ * Purely local: reads the IndexedDB cache, no network calls.
  */
-export async function getPageChangeSet(pageId: string): Promise<PageChangeSet | null> {
-	const documents = await loadAllPageEditorCacheDocuments();
-	const document = documents.find((entry) => entry.pageId === pageId);
+export async function listChangedPages(): Promise<ChangedPageSummary[]> {
+	return summarizeChangedPages(await loadAllPageEditorCacheDocuments());
+}
+
+function changeSetOf(document: PageEditorCachedDocument | undefined): PageChangeSet | null {
 	if (!document) return null;
 	return computePageChangeSet(
-		pageId,
+		document.pageId,
 		document.baselineValuesByInstance,
 		document.valuesByInstance,
 		resolveInstanceDefaults
+	);
+}
+
+/**
+ * Computes the full change set for a single page from the local cache.
+ * Returns null if the page has no cache entry. Resolves synchronously (a plain value)
+ * when this session already holds every cached row.
+ */
+export function getPageChangeSet(pageId: string): PageChangeSet | null | Promise<PageChangeSet | null> {
+	const inMemory = peekAllPageEditorDocuments();
+	if (inMemory) return changeSetOf(inMemory.find((entry) => entry.pageId === pageId));
+	return loadAllPageEditorCacheDocuments().then((documents) =>
+		changeSetOf(documents.find((entry) => entry.pageId === pageId))
 	);
 }
