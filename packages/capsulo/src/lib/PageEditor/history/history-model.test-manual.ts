@@ -20,7 +20,7 @@ import {
 
 const AUTHOR = "11111111-1111-1111-1111-111111111111";
 const profiles: ProfileRow[] = [
-	{ id: AUTHOR, name: "Ada", avatar_url: "https://example.test/ada.png" }
+	{ id: AUTHOR, name: "Ada", avatar_url: "https://example.test/ada.png", avatar: { seed: "ada", background: "ffd5dc" } }
 ];
 
 // 1. A commit touching three pages is a single entry listing all three.
@@ -44,6 +44,7 @@ const profiles: ProfileRow[] = [
 	);
 	assert.equal(entries[0].authorName, "Ada");
 	assert.equal(entries[0].authorAvatarUrl, "https://example.test/ada.png");
+	assert.deepEqual(entries[0].authorAvatar, { seed: "ada", background: "ffd5dc" });
 	assert.equal(entries[0].subject, "fix hero copy");
 }
 
@@ -64,6 +65,7 @@ const profiles: ProfileRow[] = [
 	assert.equal(entries[0].authorAvatarUrl, null);
 	assert.equal(entries[1].authorName, null, "an unknown author id must not throw");
 	assert.equal(entries[1].authorAvatarUrl, null, "an unknown author has no avatar");
+	assert.equal(entries[1].authorAvatar, null);
 }
 
 // 3. A commit whose page writes all failed leaves an empty row - skip it.

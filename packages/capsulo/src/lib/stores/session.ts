@@ -1,6 +1,7 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { capsuloFetch, jsonBody } from "../api/capsulo-client";
 import { getUiLocale, isUiLocale, setUiLocale, type UiLocale } from "../admin-i18n/i18n.svelte";
+import type { AvatarConfig } from "../avatar/avatar-config";
 
 /** The signed-in editor, as returned by `/api/capsulo/auth/me`. */
 export type SessionUser = {
@@ -9,6 +10,8 @@ export type SessionUser = {
 	email: string | null;
 	name: string | null;
 	avatarUrl: string | null;
+	/** Generated avatar the editor picked; null is the default one, seeded by `id`. */
+	avatar: AvatarConfig | null;
 	/** Admin UI language the editor picked; null follows the project default. */
 	uiLocale: UiLocale | null;
 };
@@ -32,6 +35,15 @@ export async function syncSession(): Promise<void> {
 	if (data?.user) applyAccountUiLocale(data.user);
 }
 
+let pendingSync: Promise<void> | null = null;
+
+/** Loads the session unless it already is; concurrent callers share one request. */
+export function ensureSession(): Promise<void> {
+	if (get(session)) return Promise.resolve();
+	pendingSync ??= syncSession().finally(() => (pendingSync = null));
+	return pendingSync;
+}
+
 /** Switches the admin language now and saves it on the signed-in editor's account. */
 export async function changeUiLocale(locale: UiLocale): Promise<void> {
 	setUiLocale(locale);
@@ -40,6 +52,17 @@ export async function changeUiLocale(locale: UiLocale): Promise<void> {
 		body: jsonBody({ uiLocale: locale })
 	});
 	if (data?.user) session.set({ user: data.user });
+}
+
+/** Saves the signed-in editor's avatar (null: back to the default one). Returns the error, if any. */
+export async function changeAvatar(avatar: AvatarConfig | null): Promise<string | null> {
+	const result = await capsuloFetch<{ user: SessionUser }>("/auth/me", {
+		method: "PATCH",
+		body: jsonBody({ avatar })
+	});
+	if (result.error !== null) return result.error;
+	session.set({ user: result.data.user });
+	return null;
 }
 
 export type SignInResult = { user: SessionUser; error: null } | { user: null; error: string };

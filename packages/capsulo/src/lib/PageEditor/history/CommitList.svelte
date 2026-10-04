@@ -6,7 +6,7 @@
 		formatRelativeTimestamp
 	} from "../../utils/format-timestamp";
 	import { groupCommitsByDay, type CommitEntry } from "./history-model";
-	import AuthorAvatar from "./AuthorAvatar.svelte";
+	import UserAvatar from "../../components/UserAvatar.svelte";
 	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
@@ -62,7 +62,12 @@
 							>
 								<span class="line-clamp-2 w-full text-sm">{commit.subject}</span>
 								<span class="flex w-full items-center gap-1.5 text-[11px]">
-									<AuthorAvatar name={commit.authorName} avatarUrl={commit.authorAvatarUrl} />
+									<UserAvatar
+										name={commit.authorName}
+										seed={commit.authorId}
+										avatar={commit.authorAvatar}
+										avatarUrl={commit.authorAvatarUrl}
+									/>
 									<span class="truncate">{commit.authorName ?? t("history.unknownAuthor")}</span>
 									<span aria-hidden="true">·</span>
 									<time

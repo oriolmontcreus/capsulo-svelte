@@ -13,7 +13,7 @@ import { clearGlobalsDraft, loadGlobalsDraft, saveGlobalsDraft } from "../global
 import { computePageChangeSet, countFieldChanges } from "../PageEditor/changes/diff-model";
 import { validateGlobalsContent, type ContentIssue } from "../capsules/core/validate-content";
 import { VALIDATION_OPTIONS } from "../PageEditor/validate-documents";
-import { session, syncSession } from "../stores/session";
+import { session, ensureSession } from "../stores/session";
 import { t } from "../admin-i18n/i18n.svelte";
 
 const DRAFT_PERSIST_DEBOUNCE_MS = 250;
@@ -64,7 +64,7 @@ export function createGlobalsEditorDocument(context: DocumentContext) {
 
 		let userId = get(session)?.user?.id ?? null;
 		if (!userId) {
-			await syncSession();
+			await ensureSession();
 			userId = get(session)?.user?.id ?? null;
 		}
 

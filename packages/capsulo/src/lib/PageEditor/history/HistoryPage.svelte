@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
-	import { session, syncSession } from "../../stores/session";
+	import { session, ensureSession } from "../../stores/session";
 	import { Button } from "../../components/ui/button";
 	import { ScrollArea } from "../../components/ui/scroll-area";
 	import { loadCommitPage } from "./history-documents";
@@ -72,7 +72,7 @@
 	async function checkAuth(): Promise<void> {
 		let userId = get(session)?.user?.id ?? null;
 		if (!userId) {
-			await syncSession();
+			await ensureSession();
 			userId = get(session)?.user?.id ?? null;
 		}
 		isAuthenticated = Boolean(userId);

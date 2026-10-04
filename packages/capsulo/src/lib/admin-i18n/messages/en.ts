@@ -29,6 +29,26 @@ export const en = {
 	"nav.language": "Language",
 	"nav.toggleTheme": "Toggle theme",
 
+	// User menu (bottom of the admin navigation)
+	"userMenu.label": "Your account",
+	"userMenu.avatar": "Avatar",
+	"userMenu.language": "Language",
+	"userMenu.darkMode": "Dark mode",
+	"userMenu.lightMode": "Light mode",
+
+	// Avatar editor
+	"avatarDialog.title": "Your avatar",
+	"avatarDialog.description": "Shuffle until you find one you like, then pick a color.",
+	"avatarDialog.shuffle": "Shuffle",
+	"avatarDialog.back": "Previous",
+	"avatarDialog.color": "Background color",
+	"avatarDialog.colorOption": "Color {index}",
+	"avatarDialog.useDefault": "Use default",
+	"avatarDialog.cancel": "Cancel",
+	"avatarDialog.save": "Save",
+	"avatarDialog.saving": "Saving...",
+	"avatarDialog.saveFailed": "Your avatar couldn't be saved. {error}",
+
 	// Login
 	"login.title": "Sign in",
 	"login.description": "Use the login and password your developer gave you.",

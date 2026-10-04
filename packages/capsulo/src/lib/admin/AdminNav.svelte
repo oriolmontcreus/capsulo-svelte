@@ -3,20 +3,18 @@
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import GitCompareArrowsIcon from "@lucide/svelte/icons/git-compare-arrows";
   import HistoryIcon from "@lucide/svelte/icons/history";
-  import LogOutIcon from "@lucide/svelte/icons/log-out";
   import SparklesIcon from "@lucide/svelte/icons/sparkles";
   import { onMount } from "svelte";
   import * as Tooltip from "../components/ui/tooltip";
-  import LightSwitch from "../components/LightSwitch.svelte";
   import type { ClassValue } from "clsx";
   import { cn } from "../utils";
   import { listChangedPages } from "../PageEditor/changes/changed-pages";
   import { CHANGES_UPDATED_EVENT } from "../PageEditor/changes/draft-write";
-  import { signOut } from "../stores/session";
+  import { ensureSession } from "../stores/session";
   import { AI_ENABLED } from "../ai/config";
   import { aiSidebar, toggleAiSidebar } from "../ai/ai-sidebar-state.svelte";
   import { t, type MessageKey } from "../admin-i18n/i18n.svelte";
-  import LanguageSwitcher from "./LanguageSwitcher.svelte";
+  import UserMenu from "./UserMenu.svelte";
   import { ADMIN_PORTAL_HOST } from "./portal-host";
   import { BitsConfig } from "bits-ui";
 
@@ -89,13 +87,9 @@
     return activeRoute === item.id;
   }
 
-  async function handleSignOut() {
-    await signOut();
-    window.location.replace("/admin/login");
-  }
-
   onMount(() => {
     hydrated = true;
+    void ensureSession();
     syncPathname();
     void syncChangedCount();
     const onPageLoad = () => {
@@ -187,32 +181,7 @@
           <Tooltip.Content side="right">{t("nav.aiAgentShortcut", { shortcut: aiShortcutLabel })}</Tooltip.Content>
         </Tooltip.Root>
       {/if}
-      <LanguageSwitcher
-        variant="ghost"
-        side="right"
-        class="text-muted-foreground hover:text-foreground size-8"
-      />
-      <LightSwitch variant="ghost" class="size-8" />
-      <Tooltip.Root>
-        <Tooltip.Trigger>
-          {#snippet child({ props })}
-            {@const { class: triggerClass, ...triggerProps } = props}
-            <button
-              type="button"
-              {...triggerProps}
-              onclick={handleSignOut}
-              class={cn(
-                triggerClass as ClassValue,
-                "text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:outline-none",
-              )}
-            >
-              <LogOutIcon class="size-3.5" aria-hidden="true" />
-              <span class="sr-only">{t("nav.signOut")}</span>
-            </button>
-          {/snippet}
-        </Tooltip.Trigger>
-        <Tooltip.Content side="right">{t("nav.signOut")}</Tooltip.Content>
-      </Tooltip.Root>
+      <UserMenu />
     </div>
   </aside>
 </Tooltip.Provider>

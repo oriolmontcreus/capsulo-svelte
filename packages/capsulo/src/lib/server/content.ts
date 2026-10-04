@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 
 import type { UiLocale } from "../admin-i18n/core";
+import { parseAvatarConfig, type AvatarConfig } from "../avatar/avatar-config";
 import { HttpError, isRecord, nowIso, requireString } from "./http";
 import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
 import { assertValidGlobals, assertValidPages } from "./validate-content";
@@ -116,7 +117,7 @@ export async function commitPages(
 
 export type CommitListRow = { id: string; message: string; created_by: string | null; created_at: string };
 export type RevisionListRow = { id: number; page_id: string; created_at: string; commit_id: string | null };
-export type AuthorRow = { id: string; name: string | null; avatar_url: string | null };
+export type AuthorRow = { id: string; name: string | null; avatar_url: string | null; avatar: AvatarConfig | null };
 
 /**
  * One keyset page of commits (newest first) plus the revisions and authors they
@@ -151,7 +152,7 @@ export async function listCommits(
 		env.DB.prepare(
 			"SELECT id, page_id, created_at, commit_id FROM pages_history WHERE commit_id IN (SELECT value FROM json_each(?))"
 		).bind(commitIds),
-		env.DB.prepare("SELECT id, name, avatar_url FROM users WHERE id IN (SELECT value FROM json_each(?))").bind(
+		env.DB.prepare("SELECT id, name, avatar_url, avatar FROM users WHERE id IN (SELECT value FROM json_each(?))").bind(
 			authorIds
 		)
 	]);
@@ -159,7 +160,10 @@ export async function listCommits(
 	return {
 		commits,
 		revisions: revisions.results as RevisionListRow[],
-		authors: authors.results as AuthorRow[]
+		authors: (authors.results as (Omit<AuthorRow, "avatar"> & { avatar: string | null })[]).map((author) => ({
+			...author,
+			avatar: parseAvatarConfig(author.avatar)
+		}))
 	};
 }
 

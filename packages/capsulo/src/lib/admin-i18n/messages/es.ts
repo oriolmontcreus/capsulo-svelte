@@ -15,6 +15,26 @@ export const es: Messages = {
 	"nav.language": "Idioma",
 	"nav.toggleTheme": "Cambiar tema",
 
+	// Menú de usuario (parte inferior de la navegación)
+	"userMenu.label": "Tu cuenta",
+	"userMenu.avatar": "Avatar",
+	"userMenu.language": "Idioma",
+	"userMenu.darkMode": "Modo oscuro",
+	"userMenu.lightMode": "Modo claro",
+
+	// Editor de avatar
+	"avatarDialog.title": "Tu avatar",
+	"avatarDialog.description": "Pulsa Aleatorio hasta encontrar uno que te guste y elige un color.",
+	"avatarDialog.shuffle": "Aleatorio",
+	"avatarDialog.back": "Anterior",
+	"avatarDialog.color": "Color de fondo",
+	"avatarDialog.colorOption": "Color {index}",
+	"avatarDialog.useDefault": "Usar el predeterminado",
+	"avatarDialog.cancel": "Cancelar",
+	"avatarDialog.save": "Guardar",
+	"avatarDialog.saving": "Guardando...",
+	"avatarDialog.saveFailed": "No se ha podido guardar tu avatar. {error}",
+
 	// Login
 	"login.title": "Iniciar sesión",
 	"login.description": "Usa el usuario y la contraseña que te dio tu desarrollador.",

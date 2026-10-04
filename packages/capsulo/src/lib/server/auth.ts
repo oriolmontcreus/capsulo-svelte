@@ -11,6 +11,7 @@ import {
 } from "../../password.js";
 
 import { UI_LOCALE_COOKIE, isUiLocale, type UiLocale } from "../admin-i18n/core";
+import { parseAvatarConfig, type AvatarConfig } from "../avatar/avatar-config";
 import { HttpError, assertSameOrigin, nowIso } from "./http";
 
 const SESSION_COOKIE = "capsulo_session";
@@ -28,6 +29,8 @@ export type SessionUser = {
 	email: string | null;
 	name: string | null;
 	avatarUrl: string | null;
+	/** Generated avatar the editor picked; null is the default one, seeded by `id`. */
+	avatar: AvatarConfig | null;
 	/** Admin UI language the editor picked; null follows the project default. */
 	uiLocale: UiLocale | null;
 };
@@ -38,6 +41,7 @@ type UserRow = {
 	email: string | null;
 	name: string | null;
 	avatar_url: string | null;
+	avatar: string | null;
 	ui_locale: string | null;
 	salt: string;
 	verifier: string;
@@ -47,7 +51,7 @@ type UserRow = {
 	disabled_at: string | null;
 };
 
-type SessionUserRow = Pick<UserRow, "id" | "login" | "email" | "name" | "avatar_url" | "ui_locale">;
+type SessionUserRow = Pick<UserRow, "id" | "login" | "email" | "name" | "avatar_url" | "avatar" | "ui_locale">;
 
 function toSessionUser(row: SessionUserRow): SessionUser {
 	return {
@@ -56,6 +60,7 @@ function toSessionUser(row: SessionUserRow): SessionUser {
 		email: row.email,
 		name: row.name,
 		avatarUrl: row.avatar_url,
+		avatar: parseAvatarConfig(row.avatar),
 		uiLocale: isUiLocale(row.ui_locale) ? row.ui_locale : null
 	};
 }
@@ -162,6 +167,13 @@ export async function setUserUiLocale(context: APIContext, userId: string, local
 	else context.cookies.delete(UI_LOCALE_COOKIE, { path: "/" });
 }
 
+/** Saves the editor's generated avatar (null: back to the default one). */
+export async function setUserAvatar(userId: string, avatar: AvatarConfig | null): Promise<void> {
+	await env.DB.prepare("UPDATE users SET avatar = ?, updated_at = ? WHERE id = ?")
+		.bind(avatar ? JSON.stringify(avatar) : null, nowIso(), userId)
+		.run();
+}
+
 export async function endSession(context: APIContext): Promise<void> {
 	const token = context.cookies.get(SESSION_COOKIE)?.value;
 	if (token) {
@@ -175,7 +187,7 @@ async function userFromSessionCookie(context: APIContext): Promise<SessionUser |
 	const token = context.cookies.get(SESSION_COOKIE)?.value;
 	if (!token) return null;
 	const row = await env.DB.prepare(
-		`SELECT u.id, u.login, u.email, u.name, u.avatar_url, u.ui_locale
+		`SELECT u.id, u.login, u.email, u.name, u.avatar_url, u.avatar, u.ui_locale
 		 FROM sessions s JOIN users u ON u.id = s.user_id
 		 WHERE s.token_hash = ? AND s.expires_at > ? AND u.disabled_at IS NULL`
 	)

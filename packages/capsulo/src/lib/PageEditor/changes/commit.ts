@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { session, syncSession } from "../../stores/session";
+import { session, ensureSession } from "../../stores/session";
 import {
 	loadAllPageEditorCacheDocuments,
 	savePageEditorDocumentToCache
@@ -27,7 +27,7 @@ export type CommitResult = {
 async function resolveUserId(): Promise<string | null> {
 	let userId = get(session)?.user?.id ?? null;
 	if (!userId) {
-		await syncSession();
+		await ensureSession();
 		userId = get(session)?.user?.id ?? null;
 	}
 	return userId;

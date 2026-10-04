@@ -1,3 +1,4 @@
+import type { AvatarConfig } from "../../avatar/avatar-config";
 import { dayKey, formatDayGroup } from "../../utils/format-timestamp";
 
 /** Shape of a `commits` row as selected by history-documents.ts. */
@@ -20,6 +21,7 @@ export type ProfileRow = {
 	id: string;
 	name: string | null;
 	avatar_url: string | null;
+	avatar: AvatarConfig | null;
 };
 
 export type CommitRevision = {
@@ -38,6 +40,7 @@ export type CommitEntry = {
 	authorId: string | null;
 	authorName: string | null;
 	authorAvatarUrl: string | null;
+	authorAvatar: AvatarConfig | null;
 	revisions: CommitRevision[];
 };
 
@@ -105,6 +108,7 @@ export function buildCommitEntries(
 			authorId: commit.created_by,
 			authorName: authorName?.trim() ? authorName.trim() : null,
 			authorAvatarUrl: profile?.avatar_url ?? null,
+			authorAvatar: profile?.avatar ?? null,
 			revisions: commitRevisions
 		});
 	}

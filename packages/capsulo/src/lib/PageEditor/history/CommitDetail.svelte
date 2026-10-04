@@ -16,7 +16,7 @@
 	import { formatAbsoluteTimestamp } from "../../utils/format-timestamp";
 	import { loadRevisionWithParent } from "./history-documents";
 	import type { CommitEntry, CommitRevision } from "./history-model";
-	import AuthorAvatar from "./AuthorAvatar.svelte";
+	import UserAvatar from "../../components/UserAvatar.svelte";
 	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
@@ -134,7 +134,13 @@
 			<p class="text-muted-foreground text-sm whitespace-pre-wrap">{commit.body}</p>
 		{/if}
 		<p class="text-muted-foreground flex items-center gap-1.5 text-xs">
-			<AuthorAvatar name={commit.authorName} avatarUrl={commit.authorAvatarUrl} size="md" />
+			<UserAvatar
+				name={commit.authorName}
+				seed={commit.authorId}
+				avatar={commit.authorAvatar}
+				avatarUrl={commit.authorAvatarUrl}
+				size="md"
+			/>
 			<span>{commit.authorName ?? t("history.unknownAuthor")}</span>
 			<span aria-hidden="true">·</span>
 			<time datetime={commit.createdAt}>{formatAbsoluteTimestamp(commit.createdAt)}</time>

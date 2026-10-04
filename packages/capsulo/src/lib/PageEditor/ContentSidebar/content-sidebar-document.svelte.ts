@@ -1,5 +1,5 @@
 import { get } from "svelte/store";
-import { session, syncSession } from "../../stores/session";
+import { session, ensureSession } from "../../stores/session";
 import type { PageEditorValuesByInstance } from "../persistence";
 import {
 	loadPageEditorDocumentFromCache,
@@ -94,7 +94,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 
 			let userId = get(session)?.user?.id ?? null;
 			if (!userId) {
-				await syncSession();
+				await ensureSession();
 				userId = get(session)?.user?.id ?? null;
 			}
 
@@ -177,7 +177,7 @@ export function createContentSidebarDocument(context: DocumentContext) {
 		isBlockingLoad = true;
 		let userId = get(session)?.user?.id ?? null;
 		if (!userId) {
-			await syncSession();
+			await ensureSession();
 			userId = get(session)?.user?.id ?? null;
 		}
 
