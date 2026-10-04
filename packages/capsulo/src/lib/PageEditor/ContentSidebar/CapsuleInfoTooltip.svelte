@@ -1,9 +1,9 @@
 <script lang="ts">
-	import * as Tooltip from "$lib/components/ui/tooltip";
+	import * as Tooltip from "../../components/ui/tooltip";
 	import KeyIcon from "@lucide/svelte/icons/key";
 	import LayersIcon from "@lucide/svelte/icons/layers";
 	import MoreHorizontalIcon from "@lucide/svelte/icons/more-horizontal";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	type Props = {
 		capsuleKey: string;

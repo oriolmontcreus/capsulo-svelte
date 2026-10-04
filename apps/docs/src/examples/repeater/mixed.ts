@@ -1,8 +1,4 @@
-import { ColorPicker } from '$lib/form-builder/fields/ColorPickerField/color-picker-field.builder';
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
-import { Select } from '$lib/form-builder/fields/SelectField/select-field.builder';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
-import { Toggle } from '$lib/form-builder/fields/ToggleField/toggle-field.builder';
+import { ColorPicker, Repeater, Select, Text, Toggle } from 'capsulo/schema';
 
 export default Repeater('buttons', [
   Text('label').label('Label'),

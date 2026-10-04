@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
-import { getUiLocale, isUiLocale, setUiLocale, type UiLocale } from "$lib/admin-i18n/i18n.svelte";
+import { capsuloFetch, jsonBody } from "../api/capsulo-client";
+import { getUiLocale, isUiLocale, setUiLocale, type UiLocale } from "../admin-i18n/i18n.svelte";
 
 /** The signed-in editor, as returned by `/api/capsulo/auth/me`. */
 export type SessionUser = {
@@ -55,7 +55,7 @@ export async function signIn(login: string, password: string): Promise<SignInRes
 	});
 	if (challenge.error !== null) return { user: null, error: challenge.error };
 
-	const { stretchPassword } = await import("capsulo/password");
+	const { stretchPassword } = await import("../../password.js");
 	const key = await stretchPassword(password, challenge.data.salt, challenge.data.iterations);
 	const result = await capsuloFetch<{ user: SessionUser }>("/auth/login", {
 		method: "POST",

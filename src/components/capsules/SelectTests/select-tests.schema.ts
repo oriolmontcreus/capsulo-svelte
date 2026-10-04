@@ -1,7 +1,4 @@
-import { createSchema } from "$lib/form-builder/core/create-schema";
-import type { FieldDefinition } from "$lib/form-builder/core/types";
-import { Select } from "$lib/form-builder/fields/SelectField/select-field.builder";
-import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
+import { createSchema, type FieldDefinition, Select, Text } from "capsulo/schema";
 
 export const selectTestsSchema = createSchema<FieldDefinition>({
   name: "Select Tests",

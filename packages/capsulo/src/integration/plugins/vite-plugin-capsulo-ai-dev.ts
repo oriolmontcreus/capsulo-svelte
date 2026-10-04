@@ -5,10 +5,9 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import type { Plugin } from "vite";
 
-import { buildCommitMessageModelInput, parseCommitMessageRequest } from "./ai/commit-message";
-import { AI_ENABLED, AI_MODEL } from "./ai/config";
-import { AiRequestError, buildModelInput, parseAiRequestBody, toAiRequestError } from "./ai/protocol";
-import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "./ai/stream";
+import { buildCommitMessageModelInput, parseCommitMessageRequest } from "../../lib/ai/commit-message";
+import { AiRequestError, buildModelInput, parseAiRequestBody, toAiRequestError } from "../../lib/ai/protocol";
+import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "../../lib/ai/stream";
 
 type ModelInputBuilder = (body: unknown) => (options?: { stream?: boolean }) => Record<string, unknown>;
 
@@ -58,11 +57,11 @@ function loginRequired(message: string, detail?: unknown): AiRequestError {
 /**
  * Workers AI has no local simulator: its binding always calls Cloudflare, and with it
  * `astro dev` refuses to start unless you are logged in to Wrangler. So the dev server
- * keeps remote bindings off (astro.config.mjs) and this plugin answers the AI route
+ * keeps remote bindings off (see the integration) and this plugin answers the AI route
  * itself, calling the Workers AI REST API with your Wrangler login. It only runs when
  * someone uses the sidebar: `pnpm dev` works exactly the same without a login.
  */
-export function capsuloAiDevPlugin(): Plugin {
+export function capsuloAiDevPlugin(ai: { enabled: boolean; model: string }): Plugin {
 	let root = process.cwd();
 	let credentials: Promise<Credentials> | null = null;
 
@@ -145,7 +144,7 @@ export function capsuloAiDevPlugin(): Plugin {
 			throw error;
 		}
 
-		const response = await fetch(`${CLOUDFLARE_API}/accounts/${current.accountId}/ai/run/${AI_MODEL}`, {
+		const response = await fetch(`${CLOUDFLARE_API}/accounts/${current.accountId}/ai/run/${ai.model}`, {
 			method: "POST",
 			headers: { Authorization: `Bearer ${current.token}`, "Content-Type": "application/json" },
 			body: JSON.stringify(input)
@@ -213,7 +212,7 @@ export function capsuloAiDevPlugin(): Plugin {
 				if (req.method !== "POST" || !route) return next();
 				try {
 					if (!(await isSignedIn(req))) return send(res, 401, { error: "Not signed in." });
-					if (!AI_ENABLED) {
+					if (!ai.enabled) {
 						throw new AiRequestError(404, "not-configured", "The AI agent is turned off in capsulo.config.ts.");
 					}
 					let body: unknown;

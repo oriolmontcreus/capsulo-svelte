@@ -114,7 +114,8 @@ export async function replaceWranglerValue(root, key, currentValue, nextValue) {
 
 /**
  * Committed deploy state, read by `capsulo pull` in CI.
- * @typedef {{ siteUrl?: string, accountId?: string }} ProjectState
+ * `ejected` is set by `capsulo eject`: the Capsulo version copied into src/capsulo/.
+ * @typedef {{ siteUrl?: string, accountId?: string, ejected?: { version: string, at: string } }} ProjectState
  */
 
 /** @param {string} root */

@@ -2,7 +2,7 @@
  * Assert-based self-check for the AI commit message helpers. No test framework.
  * Covers how pending changes are described to the model and how its reply is cleaned.
  *
- * Run with:  npx tsx src/lib/PageEditor/changes/commit-message-ai.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/PageEditor/changes/commit-message-ai.test-manual.ts
  */
 import assert from "node:assert/strict";
 import { buildCommitMessageModelInput, cleanCommitMessage, parseCommitMessageRequest } from "../../ai/commit-message";

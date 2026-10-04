@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
-	import type { RegisteredCapsule } from "$lib/capsules/core/types";
-	import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-	import type { SchemaValues } from "$lib/form-builder/core/types";
-	import type { FieldFocusRequest } from "$lib/form-builder/renderer/schema-renderer-context";
+	import { DEFAULT_LOCALE, LOCALES } from "../../config/i18n-config";
+	import SchemaRenderer from "../../form-builder/renderer/SchemaRenderer.svelte";
+	import type { RegisteredCapsule } from "../../capsules/core/types";
+	import type { PageEditorValuesByInstance } from "../persistence";
+	import type { SchemaValues } from "../../form-builder/core/types";
+	import type { FieldFocusRequest } from "../../form-builder/renderer/schema-renderer-context";
 	import type { FieldFocusTarget } from "./types";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	type Props = {
 		panelId: string;

@@ -9,13 +9,14 @@ import svelte from '@astrojs/svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { transformerNotationWordHighlight } from '@shikijs/transformers';
 
-import { astroClientDepsFixPlugin } from '../../src/lib/vite-plugin-astro-client-deps-fix.ts';
+import { astroClientDepsFixPlugin } from '../../packages/capsulo/src/integration/plugins/vite-plugin-astro-client-deps-fix.ts';
+import { packageSourcePlugin } from '../../packages/capsulo/src/integration/plugins/vite-plugin-package-source.ts';
 import { previewMocksPlugin } from './src/previews/vite-plugin-preview-mocks.ts';
 import { previewScopePlugin } from './src/previews/vite-plugin-preview-scope.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// The Capsulo app (repo root), whose form builder the live previews render.
-const appRoot = path.resolve(__dirname, '../..');
+// Capsulo's framework source, whose form builder the live previews render.
+const frameworkSrc = path.resolve(__dirname, '../../packages/capsulo/src');
 
 // https://astro.build/config
 export default defineConfig({
@@ -44,12 +45,11 @@ export default defineConfig({
 
   vite: {
     // The app's fix for Astro's late-discovered client router deps (504s and a reload in dev).
-    plugins: [astroClientDepsFixPlugin(), tailwindcss(), previewScopePlugin(), previewMocksPlugin(appRoot)],
+    plugins: [astroClientDepsFixPlugin(frameworkSrc), packageSourcePlugin(frameworkSrc), tailwindcss(), previewScopePlugin(), previewMocksPlugin(frameworkSrc)],
     resolve: {
       alias: {
-        // Live previews import the real admin components from the main app.
-        $lib: path.join(appRoot, 'src/lib'),
-        $: path.join(appRoot, 'src'),
+        // Live previews import the real admin components from the capsulo package.
+        $lib: path.join(frameworkSrc, 'lib'),
         '@': path.resolve(__dirname, 'src'),
       },
       // The app's components and the docs must share one Svelte runtime.

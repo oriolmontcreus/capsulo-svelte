@@ -1,8 +1,8 @@
-import { capsuloFetch } from "$lib/api/capsulo-client";
+import { capsuloFetch } from "../../api/capsulo-client";
 import {
 	deserializePageEditorValues,
 	type PageEditorValuesByInstance
-} from "$lib/PageEditor/persistence";
+} from "../persistence";
 import {
 	buildCommitEntries,
 	nextCommitCursor,
@@ -11,7 +11,7 @@ import {
 	type ProfileRow,
 	type RevisionRow
 } from "./history-model";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 const COMMIT_PAGE_SIZE = 25;
 

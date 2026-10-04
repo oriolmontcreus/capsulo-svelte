@@ -1,4 +1,4 @@
-import type { PageEditorCachedDocument } from "$lib/PageEditor/persistence";
+import type { PageEditorCachedDocument } from "../persistence";
 import { computePageChangeSet, countFieldChanges, type InstanceDefaultsResolver } from "./diff-model";
 
 /**

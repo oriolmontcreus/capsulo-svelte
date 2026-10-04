@@ -1,17 +1,17 @@
 import capsuleManifest from "virtual:capsule-manifest";
-import { globalsSchema } from "$/config/globals/globals.schema";
-import { listPageInstances } from "$lib/capsules/core/page-instances";
-import { getCapsuleSchemaByKey } from "$lib/capsules/core/schema-registry";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
+import { listPageInstances } from "../capsules/core/page-instances";
+import { getCapsuleSchemaByKey } from "../capsules/core/schema-registry";
 import {
 	formatContentIssue,
 	validateGlobalsContent,
 	validatePageContent,
 	type ContentIssue
-} from "$lib/capsules/core/validate-content";
-import { t, withUiLocale, type UiLocale } from "$lib/admin-i18n/core";
-import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-import { deserializeGlobalsValues } from "$lib/globals/globals-persistence";
-import { deserializePageEditorValues } from "$lib/PageEditor/persistence";
+} from "../capsules/core/validate-content";
+import { t, withUiLocale, type UiLocale } from "../admin-i18n/core";
+import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
+import { deserializeGlobalsValues } from "../globals/globals-persistence";
+import { deserializePageEditorValues } from "../PageEditor/persistence";
 import { HttpError } from "./http";
 
 const OPTIONS = { defaultLocale: DEFAULT_LOCALE, locales: LOCALES };

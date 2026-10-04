@@ -1,4 +1,4 @@
-import type { SchemaDefinition } from "$lib/form-builder/core/types";
+import type { SchemaDefinition } from "../../form-builder/core/types";
 
 export interface CapsuleMeta {
 	displayName?: string;

@@ -1,10 +1,4 @@
-import { createSchema } from "$lib/form-builder/core/create-schema";
-import type { FieldDefinition } from "$lib/form-builder/core/types";
-import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
-import { Textarea } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
-import { RichEditor } from "$lib/form-builder/fields/RichEditorField/rich-editor-field.builder";
-import { Toggle } from "$lib/form-builder/fields/ToggleField/toggle-field.builder";
-import { Select } from "$lib/form-builder/fields/SelectField/select-field.builder";
+import { createSchema, type FieldDefinition, Text, Textarea, RichEditor, Toggle, Select } from "capsulo/schema";
 
 export const testCapsuleSchema = createSchema<FieldDefinition>({
   name: "Test Capsule",

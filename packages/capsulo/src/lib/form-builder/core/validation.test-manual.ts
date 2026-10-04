@@ -1,7 +1,7 @@
 /**
  * Assert-based self-check for conditions and the content validator. No test framework.
  *
- * Run with:  npx tsx src/lib/form-builder/core/validation.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/form-builder/core/validation.test-manual.ts
  */
 import assert from "node:assert/strict";
 import { createSchema } from "./create-schema";

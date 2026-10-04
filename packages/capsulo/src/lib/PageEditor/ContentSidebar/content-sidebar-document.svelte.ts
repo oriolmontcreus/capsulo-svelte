@@ -1,18 +1,18 @@
 import { get } from "svelte/store";
-import { session, syncSession } from "$lib/stores/session";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { session, syncSession } from "../../stores/session";
+import type { PageEditorValuesByInstance } from "../persistence";
 import {
 	loadPageEditorDocumentFromCache,
 	savePageEditorDocumentToCache,
-} from "$lib/PageEditor/page-editor-cache";
+} from "../page-editor-cache";
 import {
 	loadPageEditorDocumentFromDb,
 	loadPageEditorDocumentMetadataFromDb,
 	savePageEditorDocumentToDb,
-} from "$lib/PageEditor/page-editor-documents";
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
-import { resolveInstanceDefaults } from "$lib/PageEditor/changes/schema-defaults";
+} from "../page-editor-documents";
+import type { SchemaValues } from "../../form-builder/core/types";
+import { computePageChangeSet, countFieldChanges } from "../changes/diff-model";
+import { resolveInstanceDefaults } from "../changes/schema-defaults";
 import type { PageEditorSaveControls } from "./types";
 
 const CACHE_PERSIST_DEBOUNCE_MS = 250;

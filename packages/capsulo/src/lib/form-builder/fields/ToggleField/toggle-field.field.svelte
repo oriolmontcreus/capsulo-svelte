@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Field, FieldDescription, FieldError, FieldLabel } from "$lib/components/ui/field";
-	import { Switch } from "$lib/components/ui/switch";
+	import { Field, FieldDescription, FieldError, FieldLabel } from "../../../components/ui/field";
+	import { Switch } from "../../../components/ui/switch";
 	import type { ToggleFieldDefinition } from "./toggle-field.types";
 
 	interface Props {

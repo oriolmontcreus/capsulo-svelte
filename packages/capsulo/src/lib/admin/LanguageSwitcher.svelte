@@ -1,9 +1,9 @@
 <script lang="ts">
   import LanguagesIcon from "@lucide/svelte/icons/languages";
   import type { ClassValue } from "clsx";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import * as Tooltip from "$lib/components/ui/tooltip";
-  import { Button, type ButtonVariant } from "$lib/components/ui/button";
+  import * as DropdownMenu from "../components/ui/dropdown-menu";
+  import * as Tooltip from "../components/ui/tooltip";
+  import { Button, type ButtonVariant } from "../components/ui/button";
   import {
     UI_LOCALES,
     UI_LOCALE_NAMES,
@@ -11,9 +11,9 @@
     isUiLocale,
     setUiLocale,
     t,
-  } from "$lib/admin-i18n/i18n.svelte";
-  import { changeUiLocale } from "$lib/stores/session";
-  import { cn } from "$lib/utils";
+  } from "../admin-i18n/i18n.svelte";
+  import { changeUiLocale } from "../stores/session";
+  import { cn } from "../utils";
 
   let {
     variant = "outline",

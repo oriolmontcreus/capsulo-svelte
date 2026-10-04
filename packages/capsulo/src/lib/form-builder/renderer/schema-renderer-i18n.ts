@@ -1,10 +1,10 @@
-import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
+import { DEFAULT_LOCALE, LOCALES } from "../../config/i18n-config";
 import {
   createInitialFieldValue,
   normalizeRepeaterItems,
   resolveFieldValue,
   setFieldValue,
-} from "$lib/form-builder/core/translation-runtime";
+} from "../core/translation-runtime";
 import { normalizeSelectValue } from "../fields/SelectField/modules/select-value";
 import type {
   FieldDefinition,

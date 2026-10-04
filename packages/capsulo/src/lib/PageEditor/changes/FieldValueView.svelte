@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { FieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
-	import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
-	import { isPasswordField, MASKED_VALUE } from "$lib/form-builder/fields/TextField/text-field.utils";
+	import type { FieldDefinition, SelectFieldDefinition } from "../../form-builder/core/types";
+	import { DEFAULT_LOCALE } from "../../config/i18n-config";
+	import { normalizeRepeaterItems } from "../../form-builder/core/translation-runtime";
+	import { fileNameFromPath, mediaUrl } from "../../form-builder/fields/FileUploadField/storage";
+	import { isPasswordField, MASKED_VALUE } from "../../form-builder/fields/TextField/text-field.utils";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
 	import { repeaterItemTitle } from "./repeater-diff";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let { field, value }: { field: FieldDefinition; value: unknown } = $props();
 

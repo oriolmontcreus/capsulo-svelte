@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { getCapsuleByKey } from "$lib/capsules/core/registry";
-  import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-  import type { SchemaValues } from "$lib/form-builder/core/types";
-  import { validatePageContent } from "$lib/capsules/core/validate-content";
-  import { VALIDATION_OPTIONS } from "$lib/PageEditor/validate-documents";
+  import { getCapsuleByKey } from "../../capsules/core/registry";
+  import type { PageEditorValuesByInstance } from "../persistence";
+  import type { SchemaValues } from "../../form-builder/core/types";
+  import { validatePageContent } from "../../capsules/core/validate-content";
+  import { VALIDATION_OPTIONS } from "../validate-documents";
   import {
     buildCapsuleInstanceData,
     getCapsuleDisplayTitle,

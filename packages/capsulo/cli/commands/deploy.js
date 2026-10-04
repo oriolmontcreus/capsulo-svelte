@@ -20,7 +20,7 @@ import {
 } from "../lib/project.js";
 import { ensureR2Bucket } from "../lib/r2.js";
 import { parseJsonOutput, runWrangler, whoami } from "../lib/wrangler.js";
-import { generatePassword } from "../password.js";
+import { generatePassword } from "../../src/password.js";
 import { pullContent } from "./pull.js";
 import { insertUser, printCredentials, validateLogin } from "./users.js";
 

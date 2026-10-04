@@ -1,4 +1,4 @@
-import { getUiLocale } from "$lib/admin-i18n/i18n.svelte";
+import { getUiLocale } from "../admin-i18n/i18n.svelte";
 
 const nativeLanguageNamesCache: Record<string, Intl.DisplayNames | null | undefined> = {};
 

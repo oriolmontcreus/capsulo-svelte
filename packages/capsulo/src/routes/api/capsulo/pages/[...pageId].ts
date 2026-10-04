@@ -1,6 +1,6 @@
-import { requireUser } from "$lib/server/auth";
-import { getPage } from "$lib/server/content";
-import { HttpError, handle, json } from "$lib/server/http";
+import { requireUser } from "../../../../lib/server/auth";
+import { getPage } from "../../../../lib/server/content";
+import { HttpError, handle, json } from "../../../../lib/server/http";
 
 export const prerender = false;
 

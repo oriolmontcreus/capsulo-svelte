@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel } from "../../core/validation-helpers";
 import type { RepeaterFieldDefinition } from "./repeater-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 function itemNoun(field: RepeaterFieldDefinition, count: number): string {
 	if (count === 1) return field.itemName?.toLowerCase() ?? t("repeater.defaultItemNameLower");

@@ -1,17 +1,17 @@
 <script lang="ts">
 	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import SparklesIcon from "@lucide/svelte/icons/sparkles";
-	import AiNotice from "$lib/ai/components/AiNotice.svelte";
-	import { AI_ENABLED } from "$lib/ai/config";
-	import { AgentError } from "$lib/ai/stream-client";
-	import { Button } from "$lib/components/ui/button";
-	import * as Popover from "$lib/components/ui/popover";
-	import { Textarea } from "$lib/components/ui/textarea";
+	import AiNotice from "../../ai/components/AiNotice.svelte";
+	import { AI_ENABLED } from "../../ai/config";
+	import { AgentError } from "../../ai/stream-client";
+	import { Button } from "../../components/ui/button";
+	import * as Popover from "../../components/ui/popover";
+	import { Textarea } from "../../components/ui/textarea";
 	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
-	import type { IssueListEntry } from "$lib/PageEditor/validate-documents";
+	import type { IssueListEntry } from "../validate-documents";
 	import type { CommitFailure } from "./commit";
 	import { generateCommitMessage } from "./commit-message-ai";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		message = $bindable(""),

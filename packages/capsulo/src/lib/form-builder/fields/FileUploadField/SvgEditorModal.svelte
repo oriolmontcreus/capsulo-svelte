@@ -6,8 +6,8 @@
     DialogTitle,
     DialogDescription,
     DialogFooter,
-  } from "$lib/components/ui/dialog";
-  import { Button } from "$lib/components/ui/button";
+  } from "../../../components/ui/dialog";
+  import { Button } from "../../../components/ui/button";
   import { Select as SelectPrimitive } from "bits-ui";
   import {
     Root as SelectRoot,
@@ -15,15 +15,15 @@
     Content as SelectContent,
     Item as SelectItem,
     Portal as SelectPortal,
-  } from "$lib/components/ui/select";
+  } from "../../../components/ui/select";
   import CodeIcon from "@lucide/svelte/icons/code";
   import Loader2Icon from "@lucide/svelte/icons/loader-2";
   import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
-  import { cn } from "$lib/utils";
+  import { cn } from "../../../utils";
   import CodeEditor from "./CodeEditor.svelte";
   import { formatSvg, validateSvg } from "./svg-utils";
   import { detectSvgBrightness } from "./image-brightness";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../../admin-i18n/i18n.svelte";
 
   interface Props {
     open: boolean;

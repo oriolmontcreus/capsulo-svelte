@@ -1,4 +1,4 @@
-import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+import { Textarea } from 'capsulo/schema';
 
 export default Textarea('summary')
   .label('Summary')

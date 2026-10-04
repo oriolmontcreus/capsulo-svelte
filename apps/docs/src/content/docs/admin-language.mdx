@@ -52,8 +52,8 @@ Validation messages combine both: the sentence is in the editor's language and t
 
 ## Adding a language
 
-The CMS's messages live in `src/lib/admin-i18n/messages`. `en.ts` is the source of truth, and the other dictionaries are typed against it, so a missing message fails the type check. To add a language:
+The CMS's messages live in the Capsulo repo, in `packages/capsulo/src/lib/admin-i18n/messages` (in a project ejected with `npx capsulo eject`, `src/capsulo/lib/admin-i18n/messages`). `en.ts` is the source of truth, and the other dictionaries are typed against it, so a missing message fails the type check. To add a language:
 
 1. Copy `en.ts` to a new file (for example `de.ts`), type it as `Messages` and translate the values. Keep the `{placeholders}`; messages with `one`/`other` forms pick one by `count`.
-2. Register it in `src/lib/admin-i18n/core.ts` (`UI_LOCALES`, `UI_LOCALE_NAMES` and the dictionaries) and add the code to `CapsuloAdminLocale` in `src/lib/config/define-config.ts`.
+2. Register it in `packages/capsulo/src/lib/admin-i18n/core.ts` (`UI_LOCALES`, `UI_LOCALE_NAMES` and the dictionaries) and add the code to `CapsuloAdminLocale` in `packages/capsulo/src/lib/config/define-config.ts`.
 3. Contributing it to Capsulo? Also add it to `ADMIN_LOCALES` in `packages/create-capsulo`, so new projects can pick it.

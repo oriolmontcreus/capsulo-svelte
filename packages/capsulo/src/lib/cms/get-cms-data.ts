@@ -1,11 +1,11 @@
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+import { DEFAULT_LOCALE } from "../config/i18n-config";
 import {
 	getSchemaDefaultValues,
 	resolveSchemaValues
-} from "$lib/form-builder/core/translation-runtime";
-import type { SchemaDefinition, SchemaValues } from "$lib/form-builder/core/types";
-import { buildGlobalVariableValues } from "$lib/globals/resolve-globals";
-import { substituteSchemaVariables } from "$lib/globals/substitute-variables";
+} from "../form-builder/core/translation-runtime";
+import type { SchemaDefinition, SchemaValues } from "../form-builder/core/types";
+import { buildGlobalVariableValues } from "../globals/resolve-globals";
+import { substituteSchemaVariables } from "../globals/substitute-variables";
 
 import { cmsStore } from "./cms-store.svelte";
 import { getPublishedValues, getPublishedVariables } from "./published";

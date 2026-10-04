@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
+	import { Button } from "../../components/ui/button";
+	import { ScrollArea } from "../../components/ui/scroll-area";
+	import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
 	import {
 		toIssueListEntries,
 		validatePageValues,
 		type IssueListEntry,
-	} from "$lib/PageEditor/validate-documents";
+	} from "../validate-documents";
 	import { listChangedPages, getPageChangeSet, type ChangedPageSummary } from "./changed-pages";
 	import { commitChanges, type CommitFailure } from "./commit";
 	import { applyFieldValueToDraft } from "./draft-write";
@@ -15,7 +15,7 @@
 	import ChangesSidebar from "./ChangesSidebar.svelte";
 	import CommitForm from "./CommitForm.svelte";
 	import PageDiff from "./PageDiff.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let changedPages = $state<ChangedPageSummary[]>([]);
 	let selectedPageId = $state<string | null>(null);

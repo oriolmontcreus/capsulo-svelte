@@ -1,0 +1,19 @@
+---
+/**
+ * Put once in the site layout's <body>. Embeds the published content of the page, so islands
+ * hydrate with the text the build rendered, and runs the live preview used by the page editor.
+ */
+import CmsPump from "../lib/cms/CmsPump.svelte";
+import { PUBLISHED_ELEMENT_ID, getPublishedValues, getPublishedVariables } from "../lib/cms/published";
+
+// Seeded by Capsulo's middleware for the page being rendered.
+const values = getPublishedValues();
+const variables = getPublishedVariables();
+const publishedJson =
+	Object.keys(values).length > 0 || Object.keys(variables).length > 0
+		? JSON.stringify({ values, variables }).replaceAll("<", "\u003c")
+		: null;
+---
+
+{publishedJson && <script is:inline type="application/json" id={PUBLISHED_ELEMENT_ID} set:html={publishedJson} />}
+<CmsPump client:load />

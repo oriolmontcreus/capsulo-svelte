@@ -22,7 +22,7 @@
   import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
   import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
   import { untrack } from "svelte";
-  import { cn } from "$lib/utils";
+  import { cn } from "../../../utils";
 
   interface Props {
     value: string;

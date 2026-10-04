@@ -2,8 +2,8 @@ import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { log } from "@clack/prompts";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
-import { processSchemaBatch } from "../../scripts/lib/schema-types/generate-dts";
-import { terminalGray, terminalOrange } from "./utils/terminal";
+import { processSchemaBatch } from "./schema-types/generate-dts";
+import { terminalGray, terminalOrange } from "../../lib/utils/terminal";
 
 const SCHEMA_SUFFIX = ".schema.ts";
 const CAPSULES_RELATIVE_ROOT = path.join("src", "components", "capsules");
@@ -37,28 +37,25 @@ async function discoverSchemaFiles(projectRoot: string): Promise<string[]> {
 	}
 }
 
-function isCapsuleSchemaPath(filePath: string): boolean {
-	const normalized = normalizeSlashes(filePath);
-	return normalized.includes("/src/components/capsules/") && normalized.endsWith(SCHEMA_SUFFIX);
+function isCapsuleSchemaPath(projectRoot: string, filePath: string): boolean {
+	const capsulesRoot = `${normalizeSlashes(path.join(projectRoot, CAPSULES_RELATIVE_ROOT))}/`;
+	return normalizeSlashes(filePath).startsWith(capsulesRoot) && filePath.endsWith(SCHEMA_SUFFIX);
 }
 
-function toCapsulesRelativePath(filePath: string): string {
-	const normalized = normalizeSlashes(path.relative(process.cwd(), filePath));
-	const marker = "src/";
-	const markerIndex = normalized.indexOf(marker);
-	return markerIndex >= 0 ? normalized.slice(markerIndex) : normalized;
+function toProjectRelativePath(projectRoot: string, filePath: string): string {
+	return normalizeSlashes(path.relative(projectRoot, filePath));
 }
 
-function printConciseMessages(summary: Awaited<ReturnType<typeof processSchemaBatch>>): void {
+function printConciseMessages(projectRoot: string, summary: Awaited<ReturnType<typeof processSchemaBatch>>): void {
 	for (const result of summary.results) {
-		const shortPath = toCapsulesRelativePath(result.filePath);
+		const shortPath = toProjectRelativePath(projectRoot, result.filePath);
 		if (result.status === "error") {
 			log.error(`Schema types failed ${terminalGray(shortPath)}`);
 			continue;
 		}
 
 		if (result.result === "written") {
-			const outputPath = toCapsulesRelativePath(result.outputPath);
+			const outputPath = toProjectRelativePath(projectRoot, result.outputPath);
 			log.message(`${terminalOrange("Regenerated")} ${terminalGray(outputPath)}`);
 		}
 	}
@@ -79,7 +76,7 @@ export function schemaTypesPlugin(): Plugin {
 		}
 
 		const summary = await processSchemaBatch(files);
-		printConciseMessages(summary);
+		printConciseMessages(projectRoot, summary);
 
 		if (summary.written > 0 && server) {
 			server.ws.send({ type: "full-reload" });
@@ -119,13 +116,13 @@ export function schemaTypesPlugin(): Plugin {
 			}
 
 			server.watcher.on("add", (filePath: string) => {
-				if (!isCapsuleSchemaPath(filePath)) return;
+				if (!isCapsuleSchemaPath(projectRoot, filePath)) return;
 				pendingSchemaPaths.add(filePath);
 				scheduleFlush(server);
 			});
 
 			server.watcher.on("change", (filePath: string) => {
-				if (!isCapsuleSchemaPath(filePath)) return;
+				if (!isCapsuleSchemaPath(projectRoot, filePath)) return;
 				pendingSchemaPaths.add(filePath);
 				scheduleFlush(server);
 			});

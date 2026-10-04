@@ -1,21 +1,21 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import { type PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+	import { DEFAULT_LOCALE } from "../../config/i18n-config";
+	import { type PageEditorValuesByInstance } from "../persistence";
 	import { createCollapsedCapsulesState } from "./collapsed-capsules.svelte";
 	import { createContentSidebarDocument } from "./content-sidebar-document.svelte";
 	import {
 		DRAFT_REPLACED_EVENT,
 		type DraftReplacedDetail,
-	} from "$lib/PageEditor/changes/draft-write";
-	import { capsuleKeyFromInstanceId } from "$lib/PageEditor/changes/schema-defaults";
+	} from "../changes/draft-write";
+	import { capsuleKeyFromInstanceId } from "../changes/schema-defaults";
 	import { groupManifestEntries } from "./group-entries";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import { ScrollArea } from "../../components/ui/scroll-area";
 	import ContentSidebarAlerts from "./ContentSidebarAlerts.svelte";
 	import ContentSidebarTopbar from "./ContentSidebarTopbar.svelte";
 	import CapsuleGroupSection from "./CapsuleGroupSection.svelte";
 	import type { ContentSidebarProps, PageEditorSaveControls } from "./types";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	export type { PageEditorSaveControls };
 

@@ -3,20 +3,20 @@
   import { Editor } from "@tiptap/core";
   import StarterKit from "@tiptap/starter-kit";
   import Placeholder from "@tiptap/extension-placeholder";
-  import { createGlobalVariableHighlightExtension } from "$lib/globals/variable-autocomplete/global-variable-highlight-extension";
+  import { createGlobalVariableHighlightExtension } from "../../../globals/variable-autocomplete/global-variable-highlight-extension";
   import VariableAutocompleteLayer, {
     type AutocompleteHandlers,
-  } from "$lib/globals/variable-autocomplete/VariableAutocompleteLayer.svelte";
-  import VariableTooltipLayer from "$lib/globals/variable-autocomplete/VariableTooltipLayer.svelte";
-  import { createReactiveEditor } from "$lib/globals/variable-autocomplete/variable-tiptap/create-reactive-editor";
+  } from "../../../globals/variable-autocomplete/VariableAutocompleteLayer.svelte";
+  import VariableTooltipLayer from "../../../globals/variable-autocomplete/VariableTooltipLayer.svelte";
+  import { createReactiveEditor } from "../../../globals/variable-autocomplete/variable-tiptap/create-reactive-editor";
 
   import {
     Field,
     FieldDescription,
     FieldError,
     FieldLabel,
-  } from "$lib/components/ui/field";
-  import { cn } from "$lib/utils.js";
+  } from "../../../components/ui/field";
+  import { cn } from "../../../utils.js";
   import type { RichEditorFieldDefinition } from "./rich-editor-field.types";
 
   interface Props {

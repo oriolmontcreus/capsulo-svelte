@@ -3,7 +3,7 @@ import {
 	isValidLocale,
 	LOCALES,
 	PREFIX_DEFAULT_LOCALE
-} from "$lib/config/i18n-config";
+} from "../config/i18n-config";
 
 /**
  * Extracts the active locale from a URL pathname.

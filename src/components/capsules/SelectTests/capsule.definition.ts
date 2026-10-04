@@ -1,4 +1,4 @@
-import { defineCapsule } from "$lib/capsules/core/define-capsule";
+import { defineCapsule } from "capsulo/schema";
 import SelectTests from "./SelectTests.svelte";
 import { selectTestsSchema } from "./select-tests.schema";
 

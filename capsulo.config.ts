@@ -1,4 +1,4 @@
-import { defineCapsuloConfig } from "./src/lib/config/define-config";
+import { defineCapsuloConfig } from "capsulo/config";
 
 export default defineCapsuloConfig({
 	i18n: {

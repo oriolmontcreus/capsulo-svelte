@@ -1,3 +1,3 @@
-import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+import { Textarea } from 'capsulo/schema';
 
 export default Textarea('comment').label('Comment').placeholder('Enter your comment');

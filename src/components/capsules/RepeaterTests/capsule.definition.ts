@@ -1,4 +1,4 @@
-import { defineCapsule } from "$lib/capsules/core/define-capsule";
+import { defineCapsule } from "capsulo/schema";
 import RepeaterTests from "./RepeaterTests.svelte";
 import { repeaterTestsSchema } from "./repeater-tests.schema";
 

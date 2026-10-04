@@ -1,6 +1,6 @@
-import { isUiLocale } from "$lib/admin-i18n/core";
-import { getCurrentUser, requireUser, setUserUiLocale } from "$lib/server/auth";
-import { HttpError, handle, isRecord, json, readJson } from "$lib/server/http";
+import { isUiLocale } from "../../../../lib/admin-i18n/core";
+import { getCurrentUser, requireUser, setUserUiLocale } from "../../../../lib/server/auth";
+import { HttpError, handle, isRecord, json, readJson } from "../../../../lib/server/http";
 
 export const prerender = false;
 

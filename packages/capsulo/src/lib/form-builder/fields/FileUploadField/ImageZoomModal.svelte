@@ -7,10 +7,10 @@
     Content as SelectContent,
     Item as SelectItem,
     Portal as SelectPortal,
-  } from "$lib/components/ui/select";
-  import { cn } from "$lib/utils";
+  } from "../../../components/ui/select";
+  import { cn } from "../../../utils";
   import { detectImageBrightness, detectSvgBrightness } from "./image-brightness";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../../admin-i18n/i18n.svelte";
 
   interface Props {
     src: string;

@@ -1,4 +1,4 @@
-import { CAPSULO_API_BASE, capsuloFetch } from "$lib/api/capsulo-client";
+import { CAPSULO_API_BASE, capsuloFetch } from "../../../api/capsulo-client";
 
 /**
  * A failed upload. The message stays in English: public pages import this module (for

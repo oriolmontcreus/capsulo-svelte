@@ -7,9 +7,9 @@
 	import GripVertical from "@lucide/svelte/icons/grip-vertical";
 	import Trash2 from "@lucide/svelte/icons/trash-2";
 	import { slide } from "svelte/transition";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import * as Popover from "$lib/components/ui/popover";
+	import { Button } from "../../../components/ui/button";
+	import * as DropdownMenu from "../../../components/ui/dropdown-menu";
+	import * as Popover from "../../../components/ui/popover";
 	import type { FieldValue } from "../../core/types";
 	import { repeaterItemValues } from "../../core/translation-runtime";
 	import SchemaFieldList from "../../renderer/SchemaFieldList.svelte";
@@ -17,7 +17,7 @@
 	import { getSchemaRendererContext } from "../../renderer/schema-renderer-context";
 	import { getRepeaterItemSummary, repeaterItemLabel } from "./modules/repeater-values";
 	import type { RepeaterFieldDefinition, RepeaterItem } from "./repeater-field.types";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../../admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: RepeaterFieldDefinition;

@@ -1,6 +1,6 @@
 import capsuleManifest from "virtual:capsule-manifest";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import { pageIdToPathname } from "$lib/i18n/routing";
+import { DEFAULT_LOCALE } from "../../../../config/i18n-config";
+import { pageIdToPathname } from "../../../../i18n/routing";
 import type {
 	SelectFieldDefinition,
 	SelectOption,

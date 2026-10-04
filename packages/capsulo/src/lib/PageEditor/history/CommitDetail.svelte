@@ -1,23 +1,23 @@
 <script lang="ts">
-	import { pageDisplayName } from "$lib/PageEditor/changes/changed-pages";
+	import { pageDisplayName } from "../changes/changed-pages";
 	import {
 		computePageChangeSet,
 		type FieldChange,
 		type PageChangeSet
-	} from "$lib/PageEditor/changes/diff-model";
+	} from "../changes/diff-model";
 	import {
 		applyFieldValueToDraft,
 		restoreRevisionToDraft
-	} from "$lib/PageEditor/changes/draft-write";
-	import PageDiff from "$lib/PageEditor/changes/PageDiff.svelte";
-	import { resolveInstanceDefaults } from "$lib/PageEditor/changes/schema-defaults";
-	import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-	import { Button } from "$lib/components/ui/button";
-	import { formatAbsoluteTimestamp } from "$lib/utils/format-timestamp";
+	} from "../changes/draft-write";
+	import PageDiff from "../changes/PageDiff.svelte";
+	import { resolveInstanceDefaults } from "../changes/schema-defaults";
+	import type { PageEditorValuesByInstance } from "../persistence";
+	import { Button } from "../../components/ui/button";
+	import { formatAbsoluteTimestamp } from "../../utils/format-timestamp";
 	import { loadRevisionWithParent } from "./history-documents";
 	import type { CommitEntry, CommitRevision } from "./history-model";
 	import AuthorAvatar from "./AuthorAvatar.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		commit,

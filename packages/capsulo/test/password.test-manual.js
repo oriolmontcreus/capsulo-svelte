@@ -3,7 +3,7 @@
  * Assert-based self-check for the password scheme shared by the CLI, the Worker and
  * the login form. No test framework.
  *
- * Run with:  node packages/cli/src/password.test-manual.js
+ * Run with:  node packages/capsulo/test/password.test-manual.js
  */
 import assert from "node:assert/strict";
 
@@ -14,7 +14,7 @@ import {
 	stretchPassword,
 	timingSafeEqualHex,
 	verifierForKey,
-} from "./password.js";
+} from "../src/password.js";
 
 // Low iteration count keeps the check fast; the scheme is the same at 600k.
 const ITERATIONS = 1_000;

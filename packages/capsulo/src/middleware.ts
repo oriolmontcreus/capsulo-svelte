@@ -1,13 +1,13 @@
 import { defineMiddleware } from "astro:middleware";
 
-import capsuloConfig from "../capsulo.config";
-import { syncSiteLocaleFromPathname } from "$lib/cms/cms-store.svelte";
-import { setServerPublishedContent } from "$lib/cms/published";
-import { getI18nConfig } from "$lib/config/i18n-config";
-import { deserializeGlobalsValues } from "$lib/globals/globals-persistence";
-import { buildGlobalVariableValues } from "$lib/globals/resolve-globals";
-import { getLocaleFromPathname, pathnameToPageId } from "$lib/i18n/routing";
-import { deserializePageEditorValues } from "$lib/PageEditor/persistence";
+import capsuloConfig from "virtual:capsulo/config";
+import { syncSiteLocaleFromPathname } from "./lib/cms/cms-store.svelte";
+import { setServerPublishedContent } from "./lib/cms/published";
+import { getI18nConfig } from "./lib/config/i18n-config";
+import { deserializeGlobalsValues } from "./lib/globals/globals-persistence";
+import { buildGlobalVariableValues } from "./lib/globals/resolve-globals";
+import { getLocaleFromPathname, pathnameToPageId } from "./lib/i18n/routing";
+import { deserializePageEditorValues } from "./lib/PageEditor/persistence";
 
 const i18nConfig = getI18nConfig(capsuloConfig);
 

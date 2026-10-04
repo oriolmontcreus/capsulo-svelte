@@ -1,5 +1,4 @@
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
-import { Toggle } from '$lib/form-builder/fields/ToggleField/toggle-field.builder';
+import { Text, Toggle } from 'capsulo/schema';
 
 export default [
   Toggle('showCta').label('Show call to action'),

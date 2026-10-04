@@ -1,14 +1,14 @@
-import { capsuloFetch } from "$lib/api/capsulo-client";
-import { cleanCommitMessage } from "$lib/ai/commit-message";
-import { AgentError, requestAiStream } from "$lib/ai/stream-client";
-import { getCapsuleByKey } from "$lib/capsules/core/registry";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
+import { capsuloFetch } from "../../api/capsulo-client";
+import { cleanCommitMessage } from "../../ai/commit-message";
+import { AgentError, requestAiStream } from "../../ai/stream-client";
+import { getCapsuleByKey } from "../../capsules/core/registry";
+import { DEFAULT_LOCALE } from "../../config/i18n-config";
+import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
 import { pageDisplayName } from "./changed-pages";
 import { describeChanges, type CapsuleInfo } from "./commit-message-context";
 import { computePageChangeSet } from "./diff-model";
 import { capsuleKeyFromInstanceId, resolveInstanceDefaults } from "./schema-defaults";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 /** How many earlier messages the model sees to pick up the author's style. */
 const STYLE_EXAMPLES = 5;

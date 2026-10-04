@@ -1,7 +1,7 @@
-import { getCapsuleByKey } from "$lib/capsules/core/registry";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
+import { getCapsuleByKey } from "../../capsules/core/registry";
+import { DEFAULT_LOCALE } from "../../config/i18n-config";
+import type { SchemaValues } from "../../form-builder/core/types";
+import { createSchemaInitialValues } from "../../form-builder/renderer/schema-renderer-i18n";
 
 /** Strips the numeric suffix from an instance id ("test-capsule-01" -> "test-capsule"). */
 export function capsuleKeyFromInstanceId(instanceId: string): string {

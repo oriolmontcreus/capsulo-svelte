@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { globalsSchema } from "$/config/globals/globals.schema";
-	import { Button } from "$lib/components/ui/button";
-	import * as Select from "$lib/components/ui/select";
-	import * as Tooltip from "$lib/components/ui/tooltip";
-	import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-	import type { SchemaValues } from "$lib/form-builder/core/types";
-	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
-	import type { FieldFocusRequest } from "$lib/form-builder/renderer/schema-renderer-context";
-	import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
-	import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
-	import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
-	import { formatLocaleLabel } from "$lib/utils/locale-label";
-	import { GLOBALS_DRAFT_REPLACED_EVENT } from "$lib/globals/globals-draft";
+	import { globalsSchema } from "virtual:capsulo/globals-schema";
+	import { Button } from "../components/ui/button";
+	import * as Select from "../components/ui/select";
+	import * as Tooltip from "../components/ui/tooltip";
+	import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
+	import type { SchemaValues } from "../form-builder/core/types";
+	import SchemaRenderer from "../form-builder/renderer/SchemaRenderer.svelte";
+	import type { FieldFocusRequest } from "../form-builder/renderer/schema-renderer-context";
+	import GlobalVariablesProvider from "../globals/variable-autocomplete/GlobalVariablesProvider.svelte";
+	import { buildVariableItems } from "../globals/variable-autocomplete/build-variable-items";
+	import { formatVariablePreviewFromValues } from "../globals/variable-autocomplete/format-variable-preview";
+	import { formatLocaleLabel } from "../utils/locale-label";
+	import { GLOBALS_DRAFT_REPLACED_EVENT } from "../globals/globals-draft";
 
 	import GlobalsEditorAlerts from "./GlobalsEditorAlerts.svelte";
 	import { createGlobalsEditorDocument } from "./globals-editor-document.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../admin-i18n/i18n.svelte";
 
 	let locale = $state(DEFAULT_LOCALE);
 	let values = $state<SchemaValues>({});

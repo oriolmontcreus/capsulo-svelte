@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../admin-i18n/i18n.svelte";
 	type Props = {
 		hasCheckedAuth: boolean;
 		isAuthenticated: boolean;

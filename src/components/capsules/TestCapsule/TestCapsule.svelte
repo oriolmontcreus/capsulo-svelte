@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getCmsData } from "$lib/cms/get-cms-data";
+  import { getCmsData } from "capsulo/runtime";
   import Button from "$lib/components/ui/button/button.svelte";
   import Sparkle from "@lucide/svelte/icons/sparkle";
 

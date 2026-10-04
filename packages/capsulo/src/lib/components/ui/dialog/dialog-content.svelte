@@ -3,11 +3,11 @@
 	import DialogPortal from "./dialog-portal.svelte";
 	import type { Snippet } from "svelte";
 	import Overlay from "./dialog-overlay.svelte";
-	import { cn, type WithoutChildrenOrChild } from "$lib/utils.js";
+	import { cn, type WithoutChildrenOrChild } from "../../../utils.js";
 	import type { ComponentProps } from "svelte";
-	import { Button } from "$lib/components/ui/button/index.js";
+	import { Button } from "../button/index.js";
 	import XIcon from '@lucide/svelte/icons/x';
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../../admin-i18n/i18n.svelte";
 
 	let {
 		ref = $bindable(null),

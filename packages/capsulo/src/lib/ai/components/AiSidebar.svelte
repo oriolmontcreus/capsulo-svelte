@@ -6,10 +6,10 @@
 	import SquareIcon from "@lucide/svelte/icons/square";
 	import XIcon from "@lucide/svelte/icons/x";
 	import { onMount, tick } from "svelte";
-	import { Button } from "$lib/components/ui/button";
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import * as Tooltip from "$lib/components/ui/tooltip";
+	import { Button } from "../../components/ui/button";
+	import * as DropdownMenu from "../../components/ui/dropdown-menu";
+	import { ScrollArea } from "../../components/ui/scroll-area";
+	import * as Tooltip from "../../components/ui/tooltip";
 	import { closeOpenToolCalls, runAgent } from "../agent";
 	import { AgentError } from "../stream-client";
 	import {
@@ -36,8 +36,8 @@
 	} from "../site-content";
 	import AiEditCard from "./AiEditCard.svelte";
 	import AiNotice from "./AiNotice.svelte";
-	import { formatDate, t } from "$lib/admin-i18n/i18n.svelte";
-	import { ADMIN_PORTAL_HOST } from "$lib/admin/portal-host";
+	import { formatDate, t } from "../../admin-i18n/i18n.svelte";
+	import { ADMIN_PORTAL_HOST } from "../../admin/portal-host";
 	import { BitsConfig } from "bits-ui";
 
 	let chat = $state<ChatRecord>(createChat());

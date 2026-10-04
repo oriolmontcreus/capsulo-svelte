@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as Card from "$lib/components/ui/card";
-	import { Badge } from "$lib/components/ui/badge";
-	import SchemaRenderer from "$lib/form-builder/renderer/SchemaRenderer.svelte";
-	import { getAllCapsules } from "$lib/capsules/core/registry";
-	import type { SchemaValues } from "$lib/form-builder/core/types";
-	import { LOCALES, DEFAULT_LOCALE } from "$lib/config/i18n-config";
+	import * as Card from "../../components/ui/card";
+	import { Badge } from "../../components/ui/badge";
+	import SchemaRenderer from "../../form-builder/renderer/SchemaRenderer.svelte";
+	import { getAllCapsules } from "../core/registry";
+	import type { SchemaValues } from "../../form-builder/core/types";
+	import { LOCALES, DEFAULT_LOCALE } from "../../config/i18n-config";
 
 	interface Props {
-		manifest: import("$lib/capsules/core/types").CapsuleManifest;
+		manifest: import("../core/types").CapsuleManifest;
 	}
 
 	let { manifest }: Props = $props();

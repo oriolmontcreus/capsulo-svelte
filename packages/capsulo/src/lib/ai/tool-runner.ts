@@ -1,5 +1,5 @@
-import { LOCALES } from "$lib/config/i18n-config";
-import { globalsSchema } from "$/config/globals/globals.schema";
+import { LOCALES } from "../config/i18n-config";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
 import { applyContentUpdate, type EditRecord, type RequestedChange } from "./edits";
 import type { AiToolCall } from "./protocol";
 import {
@@ -13,7 +13,7 @@ import {
 	type SitePage
 } from "./site-content";
 import { AI_TOOL_NAMES } from "./tools";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../admin-i18n/i18n.svelte";
 
 export type ToolOutcome = {
 	/** JSON sent back to the model. */

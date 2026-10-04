@@ -1,0 +1,33 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "capsulo-site",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"compatibility_date": "2026-04-15",
+	"compatibility_flags": ["nodejs_compat"],
+	// `capsulo deploy` creates these and writes the real ids. Local dev uses local copies.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "capsulo-site-db",
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			// Capsulo's database schema ships with the package, so updates bring their migrations.
+			"migrations_dir": "node_modules/capsulo/src/migrations"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "UPLOADS",
+			"id": "00000000000000000000000000000000"
+		}
+	],
+	// Workers AI for the admin's AI agent. Included in the free plan (10,000 Neurons a day);
+	// nothing to create. `remote` only silences a dev warning: `astro dev` keeps remote
+	// bindings off and calls Workers AI through Capsulo's AI dev proxy.
+	"ai": {
+		"binding": "AI",
+		"remote": true
+	},
+	"observability": {
+		"enabled": true
+	}
+}

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Field, FieldDescription, FieldError, FieldLabel } from "$lib/components/ui/field";
-	import VariableTipTapSurface from "$lib/globals/variable-autocomplete/variable-tiptap/VariableTipTapSurface.svelte";
+	import { Field, FieldDescription, FieldError, FieldLabel } from "../../../components/ui/field";
+	import VariableTipTapSurface from "../../../globals/variable-autocomplete/variable-tiptap/VariableTipTapSurface.svelte";
 	import FieldAdornment from "../shared/FieldAdornment.svelte";
 	import type { TextareaFieldDefinition } from "./textarea-field.types";
 

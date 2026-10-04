@@ -20,6 +20,8 @@
     "@shikijs/transformers": "^4.4.3",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
+    "bits-ui": "^2.18.1",
+    "capsulo": "workspace:*",
     "postcss-selector-parser": "^7.1.6",
     "shiki": "^4.4.3",
     "svelte": "^5.55.5",

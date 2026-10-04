@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { D1PreparedStatement } from "@cloudflare/workers-types/index.ts";
 
-import type { UiLocale } from "$lib/admin-i18n/core";
+import type { UiLocale } from "../admin-i18n/core";
 import { HttpError, isRecord, nowIso, requireString } from "./http";
 import { PUBLISHED_UPLOADS_QUERY } from "./uploads";
 import { assertValidGlobals, assertValidPages } from "./validate-content";

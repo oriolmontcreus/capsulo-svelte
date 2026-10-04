@@ -1,8 +1,8 @@
-import { globalsSchema } from "$/config/globals/globals.schema";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
-import { formatGlobalDisplayValue } from "$lib/globals/types";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
+import { DEFAULT_LOCALE } from "../../config/i18n-config";
+import type { SchemaValues } from "../../form-builder/core/types";
+import { resolveGlobalsValues } from "../resolve-globals";
+import { formatGlobalDisplayValue } from "../types";
 
 import type { VariableItem } from "./types";
 

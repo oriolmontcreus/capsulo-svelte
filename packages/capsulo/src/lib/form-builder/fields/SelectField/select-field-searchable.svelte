@@ -1,12 +1,12 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { on } from "svelte/events";
-  import * as Command from "$lib/components/ui/command";
-  import * as Popover from "$lib/components/ui/popover";
+  import * as Command from "../../../components/ui/command";
+  import * as Popover from "../../../components/ui/popover";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { cn } from "$lib/utils";
+  import { Button } from "../../../components/ui/button";
+  import { Input } from "../../../components/ui/input";
+  import { cn } from "../../../utils";
   import SelectFieldSearchableList from "./SelectFieldSearchableList.svelte";
   import type { SelectFieldDefinition } from "./select-field.types";
   import {
@@ -25,7 +25,7 @@
     normalizeSelectValue,
     toggleSelectValue,
   } from "./modules/select-value";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../../admin-i18n/i18n.svelte";
 
   interface Props {
     field: SelectFieldDefinition;

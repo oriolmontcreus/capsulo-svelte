@@ -4,7 +4,7 @@ import * as p from "@clack/prompts";
 
 import { openDatabase } from "../lib/d1.js";
 import { findProjectRoot, isRealD1Id, readProjectConfig } from "../lib/project.js";
-import { MIN_PASSWORD_LENGTH, createPasswordRecord, generatePassword } from "../password.js";
+import { MIN_PASSWORD_LENGTH, createPasswordRecord, generatePassword } from "../../src/password.js";
 
 export const USERS_HELP = `Manage the people who can sign in to the CMS.
 

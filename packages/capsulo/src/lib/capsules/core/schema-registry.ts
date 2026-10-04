@@ -1,13 +1,11 @@
-import type { SchemaDefinition } from "$lib/form-builder/core/types";
+import capsuleSchemaModules from "virtual:capsulo/capsule-schemas";
+import type { SchemaDefinition } from "../../form-builder/core/types";
 
 /**
  * Capsule schemas by key, loaded without the capsule components. The Worker API validates
  * content with these, so it doesn't bundle every capsule's UI. (The admin uses `registry.ts`.)
  */
-const schemaModules = import.meta.glob<Record<string, unknown>>(
-	"../../../components/capsules/**/*.schema.ts",
-	{ eager: true }
-);
+const schemaModules = capsuleSchemaModules;
 
 function isSchemaDefinition(value: unknown): value is SchemaDefinition {
 	return (

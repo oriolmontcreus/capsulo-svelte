@@ -1,5 +1,5 @@
-import { handle, json } from "$lib/server/http";
-import { readUpload } from "$lib/server/uploads";
+import { handle, json } from "../../../../lib/server/http";
+import { readUpload } from "../../../../lib/server/uploads";
 
 export const prerender = false;
 

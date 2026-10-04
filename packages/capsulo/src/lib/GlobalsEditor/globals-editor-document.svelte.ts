@@ -1,20 +1,20 @@
 import { get } from "svelte/store";
-import { globalsSchema } from "$/config/globals/globals.schema";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
-import type { SchemaValues } from "$lib/form-builder/core/types";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
+import { DEFAULT_LOCALE } from "../config/i18n-config";
+import { createSchemaInitialValues } from "../form-builder/renderer/schema-renderer-i18n";
+import type { SchemaValues } from "../form-builder/core/types";
 import {
 	ensureGlobalsLoaded,
 	globalsStore,
 	setGlobalsValues,
-} from "$lib/globals/globals-store.svelte";
-import { saveGlobalsDocumentToDb } from "$lib/globals/globals-documents";
-import { clearGlobalsDraft, loadGlobalsDraft, saveGlobalsDraft } from "$lib/globals/globals-draft";
-import { computePageChangeSet, countFieldChanges } from "$lib/PageEditor/changes/diff-model";
-import { validateGlobalsContent, type ContentIssue } from "$lib/capsules/core/validate-content";
-import { VALIDATION_OPTIONS } from "$lib/PageEditor/validate-documents";
-import { session, syncSession } from "$lib/stores/session";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+} from "../globals/globals-store.svelte";
+import { saveGlobalsDocumentToDb } from "../globals/globals-documents";
+import { clearGlobalsDraft, loadGlobalsDraft, saveGlobalsDraft } from "../globals/globals-draft";
+import { computePageChangeSet, countFieldChanges } from "../PageEditor/changes/diff-model";
+import { validateGlobalsContent, type ContentIssue } from "../capsules/core/validate-content";
+import { VALIDATION_OPTIONS } from "../PageEditor/validate-documents";
+import { session, syncSession } from "../stores/session";
+import { t } from "../admin-i18n/i18n.svelte";
 
 const DRAFT_PERSIST_DEBOUNCE_MS = 250;
 

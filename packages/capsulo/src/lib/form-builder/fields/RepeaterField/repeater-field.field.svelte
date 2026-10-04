@@ -5,9 +5,9 @@
 	import Plus from "@lucide/svelte/icons/plus";
 	import { tick } from "svelte";
 	import { flip } from "svelte/animate";
-	import { Badge } from "$lib/components/ui/badge";
-	import { Button } from "$lib/components/ui/button";
-	import { Field, FieldDescription, FieldError } from "$lib/components/ui/field";
+	import { Badge } from "../../../components/ui/badge";
+	import { Button } from "../../../components/ui/button";
+	import { Field, FieldDescription, FieldError } from "../../../components/ui/field";
 	import { getSchemaRendererContext } from "../../renderer/schema-renderer-context";
 	import {
 		createEmptyRepeaterItem,
@@ -16,7 +16,7 @@
 	} from "./modules/repeater-values";
 	import type { RepeaterFieldDefinition, RepeaterItem } from "./repeater-field.types";
 	import RepeaterItemCard from "./repeater-item.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../../admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: RepeaterFieldDefinition;

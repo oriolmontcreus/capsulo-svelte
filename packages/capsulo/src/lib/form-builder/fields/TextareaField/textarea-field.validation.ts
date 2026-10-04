@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { checkLength, checkPattern, containsVariableToken, fieldLabel, isBlankString } from "../../core/validation-helpers";
 import type { TextareaFieldDefinition } from "./textarea-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 export const textareaFieldValidator: FieldValidator<TextareaFieldDefinition> = {
 	isEmpty: (_field, value) => isBlankString(value),

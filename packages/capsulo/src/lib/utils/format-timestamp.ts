@@ -7,7 +7,7 @@
  * "Invalid Date"/"NaN".
  */
 
-import { getUiLocale, t, type UiLocale } from "$lib/admin-i18n/core";
+import { getUiLocale, t, type UiLocale } from "../admin-i18n/core";
 
 /** Day bucket for commits whose date is missing or unparseable. */
 const UNKNOWN_DAY_KEY = "unknown";

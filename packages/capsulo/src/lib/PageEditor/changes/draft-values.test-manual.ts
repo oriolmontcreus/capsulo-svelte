@@ -1,7 +1,7 @@
 /**
  * Assert-based self-check for the draft value setter. No test framework.
  *
- * Run with:  npx tsx src/lib/PageEditor/changes/draft-values.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/PageEditor/changes/draft-values.test-manual.ts
  *
  * The round-trip cases are the ones that matter: recovering an old value must
  * make the page dirty, and reverting it back must leave no change behind.
@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { setDraftFieldValue } from "./draft-values";
 import { computePageChangeSet, countFieldChanges } from "./diff-model";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { PageEditorValuesByInstance } from "../persistence";
 
 const baseline: PageEditorValuesByInstance = {
 	"cap-01": { title: { en: "Committed", es: "Comprometido" } }

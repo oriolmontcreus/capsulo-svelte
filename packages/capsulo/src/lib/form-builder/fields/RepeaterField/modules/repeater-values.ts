@@ -4,7 +4,7 @@ import {
 	resolveFieldValue,
 } from "../../../core/translation-runtime";
 import type { RepeaterFieldDefinition, RepeaterItem } from "../../../core/types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../../admin-i18n/core";
 
 function createRepeaterItemId(): string {
 	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {

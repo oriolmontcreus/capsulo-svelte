@@ -1,4 +1,4 @@
-import { defineCapsule } from "$lib/capsules/core/define-capsule";
+import { defineCapsule } from "capsulo/schema";
 import ColorPickerTests from "./ColorPickerTests.svelte";
 import { colorPickerTestsSchema } from "./colorpicker-tests.schema";
 

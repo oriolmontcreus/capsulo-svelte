@@ -1,5 +1,5 @@
-import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
-import type { FieldDefinition, RepeaterFieldDefinition, SelectFieldDefinition } from "$lib/form-builder/core/types";
+import { isPasswordField } from "../../form-builder/fields/TextField/text-field.utils";
+import type { FieldDefinition, RepeaterFieldDefinition, SelectFieldDefinition } from "../../form-builder/core/types";
 import type { PageChangeSet } from "./diff-model";
 import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
 

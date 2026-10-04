@@ -34,7 +34,3 @@ export interface CapsuloConfig {
 	/** AI agent sidebar in the admin. Runs on Workers AI; no API key needed. */
 	ai?: CapsuloAiConfig;
 }
-
-export function defineCapsuloConfig<TConfig extends CapsuloConfig>(config: TConfig): TConfig {
-	return config;
-}

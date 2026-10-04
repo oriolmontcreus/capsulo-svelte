@@ -1,3 +1,3 @@
-import { RichEditor } from '$lib/form-builder/fields/RichEditorField/rich-editor-field.builder';
+import { RichEditor } from 'capsulo/schema';
 
 export default RichEditor('body').label('Body').placeholder('Start writing...');

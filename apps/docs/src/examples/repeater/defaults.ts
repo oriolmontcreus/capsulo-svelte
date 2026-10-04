@@ -1,5 +1,4 @@
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
+import { Repeater, Text } from 'capsulo/schema';
 
 export default Repeater('links', [
   Text('label').label('Label'),

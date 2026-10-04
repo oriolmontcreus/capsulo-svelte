@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../admin-i18n/i18n.svelte";
 </script>
 
 <main class="mx-auto max-w-3xl space-y-4 overflow-y-auto p-6">

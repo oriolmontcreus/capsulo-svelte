@@ -2,7 +2,8 @@
 // @ts-check
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { parseArgs } from "node:util";
@@ -12,25 +13,8 @@ const TEMPLATE_REPO = "oriolmontcreus/capsulo-svelte";
 const TEMPLATE_REF = "main";
 const CLI_VERSION = "^0.1.0";
 
-/** Framework-repo files that don't belong in a client project. */
-const TEMPLATE_ONLY = [
-	".git",
-	".cursor",
-	".fallowrc.json",
-	"packages",
-	"apps",
-	"docs",
-	"DESIGN.md",
-	"capsulo-overview.md",
-	"capsulo-systems-and-architecture.md",
-	"i18n-and-capsulo-config.md",
-	"scripts/capsulo-sync.sh",
-	"scripts/export_bundle.sh",
-	"scripts/restore_bundle.sh",
-	"src/pages/colorpicker-tests.astro",
-	"src/pages/file-upload-tests.astro",
-	"src/pages/select-tests.astro",
-];
+/** The starter project inside the Capsulo repo. */
+const TEMPLATE_DIR = path.join("templates", "starter");
 /** Never copied from a local template checkout. */
 const LOCAL_COPY_SKIP = new Set(["node_modules", "dist", ".wrangler", ".astro", ".dev.vars", ".env"]);
 
@@ -43,18 +27,25 @@ Options:
                           Language of the CMS for your editors (default: prompt). Each editor
                           can still pick their own from the CMS.
   --storage <kv|r2>       Where uploaded files are stored (default: prompt, recommended kv)
+  --eject / --no-eject    Copy Capsulo's admin code into src/capsulo/ to customize it, instead of
+                          using it as a package (default: prompt, recommended no). Ejected projects
+                          no longer get Capsulo updates by updating the package.
   --template <dir>        Use a local Capsulo checkout instead of GitHub (for Capsulo contributors)
   --no-install            Skip installing dependencies
   --no-git                Skip git init`;
 
 /**
+ * Package managers are `.cmd` shims on Windows and only start through a shell, which joins
+ * arguments without quoting. So only they get one (their arguments have no spaces); git and
+ * node run directly, which keeps a commit message in one piece.
  * @param {string} command
  * @param {string[]} args
  * @param {string} cwd
  */
 function run(command, args, cwd) {
+	const needsShell = process.platform === "win32" && ["npm", "pnpm", "yarn", "bun"].includes(command);
 	return new Promise((resolve, reject) => {
-		const child = spawn(command, args, { cwd, stdio: "inherit", shell: process.platform === "win32" });
+		const child = spawn(command, args, { cwd, stdio: "inherit", shell: needsShell });
 		child.on("error", reject);
 		child.on("close", (code) =>
 			code === 0 ? resolve(undefined) : reject(new Error(`${command} ${args.join(" ")} exited with code ${code}.`)),
@@ -100,34 +91,39 @@ function detectPackageManager() {
 }
 
 /**
+ * Copies `templates/starter` from a local Capsulo checkout, or from the repo on GitHub.
  * @param {string} target
  * @param {string | undefined} localTemplate
  */
 async function copyTemplate(target, localTemplate) {
 	await mkdir(target, { recursive: true });
-	if (localTemplate) {
-		const source = path.resolve(localTemplate);
-		await cp(source, target, {
+	/** @param {string} source */
+	const copyStarter = (source) =>
+		cp(source, target, {
 			recursive: true,
-			filter: (file) => {
-				const relative = path.relative(source, file);
-				const [first] = relative.split(path.sep);
-				if (LOCAL_COPY_SKIP.has(first)) return false;
-				return !relative.startsWith(path.join(".capsulo", "published")) && !relative.startsWith(path.join("public", "uploads"));
-			},
+			filter: (file) => !LOCAL_COPY_SKIP.has(path.relative(source, file).split(path.sep)[0]),
 		});
+
+	if (localTemplate) {
+		await copyStarter(path.resolve(localTemplate, TEMPLATE_DIR));
 		return;
 	}
 
 	const url = `https://codeload.github.com/${TEMPLATE_REPO}/tar.gz/${TEMPLATE_REF}`;
 	const response = await fetch(url);
 	if (!response.ok || !response.body) throw new Error(`Downloading the template failed (${response.status}).`);
-	await new Promise((resolve, reject) => {
-		const tar = spawn("tar", ["-xz", "--strip-components=1", "-C", target], { stdio: ["pipe", "inherit", "inherit"] });
-		tar.on("error", reject);
-		tar.on("close", (code) => (code === 0 ? resolve(undefined) : reject(new Error(`tar exited with code ${code}.`))));
-		Readable.fromWeb(/** @type {any} */ (response.body)).pipe(tar.stdin);
-	});
+	const download = await mkdtemp(path.join(os.tmpdir(), "create-capsulo-"));
+	try {
+		await new Promise((resolve, reject) => {
+			const tar = spawn("tar", ["-xz", "--strip-components=1", "-C", download], { stdio: ["pipe", "inherit", "inherit"] });
+			tar.on("error", reject);
+			tar.on("close", (code) => (code === 0 ? resolve(undefined) : reject(new Error(`tar exited with code ${code}.`))));
+			Readable.fromWeb(/** @type {any} */ (response.body)).pipe(tar.stdin);
+		});
+		await copyStarter(path.join(download, TEMPLATE_DIR));
+	} finally {
+		await rm(download, { recursive: true, force: true });
+	}
 }
 
 /** @type {Record<"kv" | "r2", { label: string, hint: string }>} */
@@ -160,26 +156,17 @@ function useR2Storage(wrangler, slug) {
 
 /**
  * @param {string} target
- * @param {{ slug: string, locales: string[], defaultLocale: string, adminLocale: string, cliSpec: string, storage: "kv" | "r2" }} options
+ * @param {{ slug: string, locales: string[], defaultLocale: string, adminLocale: string, cliSpec: string, storage: "kv" | "r2", eject: boolean }} options
  */
-async function personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage }) {
-	await Promise.all(TEMPLATE_ONLY.map((entry) => rm(path.join(target, entry), { recursive: true, force: true })));
-
+async function personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage, eject }) {
 	const packageFile = path.join(target, "package.json");
 	const pkg = JSON.parse(await readFile(packageFile, "utf8"));
 	pkg.name = slug;
 	pkg.version = "0.0.1";
 	pkg.private = true;
-	// The app imports `capsulo/password` (login form + Worker), so it is a runtime dependency.
+	// The admin, the API and the CLI all come from the capsulo package.
 	pkg.dependencies = { ...pkg.dependencies, capsulo: cliSpec };
 	await writeFile(packageFile, `${JSON.stringify(pkg, null, 2)}\n`);
-
-	// The template repo is a workspace (it hosts this CLI); a client project is not.
-	const workspaceFile = path.join(target, "pnpm-workspace.yaml");
-	if (existsSync(workspaceFile)) {
-		const workspace = await readFile(workspaceFile, "utf8");
-		await writeFile(workspaceFile, workspace.replace(/^packages:\n(?:\s+- .*\n)+\n?/m, ""));
-	}
 
 	const wranglerFile = path.join(target, "wrangler.jsonc");
 	const wrangler = (await readFile(wranglerFile, "utf8"))
@@ -191,7 +178,7 @@ async function personalize(target, { slug, locales, defaultLocale, adminLocale, 
 
 	await writeFile(
 		path.join(target, "capsulo.config.ts"),
-		`import { defineCapsuloConfig } from "./src/lib/config/define-config";
+		`import { defineCapsuloConfig } from "capsulo/config";
 
 export default defineCapsuloConfig({
 	i18n: {
@@ -207,7 +194,6 @@ export default defineCapsuloConfig({
 `,
 	);
 
-	await rm(path.join(target, ".capsulo", "project.json"), { force: true });
 	await writeFile(
 		path.join(target, "README.md"),
 		`# ${slug}
@@ -218,6 +204,11 @@ A [Capsulo](https://github.com/${TEMPLATE_REPO}) site with its CMS.
 - \`npx capsulo deploy\`: deploy to Cloudflare (free plan; first run sets everything up)
 - \`npx capsulo users add client@example.com --name "Client"\`: give someone access to the CMS
 - Uploaded files are stored in ${storage === "r2" ? "R2" : "Workers KV (files up to 25 MB). \`npx capsulo storage r2\` moves them to R2 for bigger files"}.
+- ${
+			eject
+				? "Capsulo's admin is ejected into `src/capsulo/`: edit it freely, but Capsulo updates have to be merged by hand."
+				: `Update the admin and CMS with \`${detectPackageManager()} update capsulo\`, then deploy. \`npx capsulo eject\` copies the admin into \`src/capsulo/\` if you ever need to customize it (no more automatic updates after that).`
+		}
 `,
 	);
 }
@@ -232,6 +223,8 @@ async function main() {
 			"admin-locale": { type: "string" },
 			storage: { type: "string" },
 			template: { type: "string" },
+			eject: { type: "boolean" },
+			"no-eject": { type: "boolean" },
 			"no-install": { type: "boolean" },
 			"no-git": { type: "boolean" },
 			help: { type: "boolean", short: "h" },
@@ -323,17 +316,45 @@ async function main() {
 			)
 	);
 
+	if (values.eject && values["no-eject"]) throw new Error("Pass --eject or --no-eject, not both.");
+	const eject = values.eject
+		? true
+		: values["no-eject"]
+			? false
+			: /** @type {boolean} */ (
+					exitIfCancelled(
+						await p.confirm({
+							message:
+								"Eject Capsulo's admin code into src/capsulo/? You could edit it, but you'd lose one-command updates (`npx capsulo eject` can also do this later)",
+							initialValue: false,
+						}),
+					)
+				);
+	if (eject && values["no-install"]) {
+		throw new Error("--eject needs the dependencies installed. Drop --no-install, or run `npx capsulo eject` after installing.");
+	}
+
+	// Contributors: the project uses the checkout's packages/capsulo, whose integration must be built.
+	const localPackage = values.template ? path.resolve(values.template, "packages", "capsulo") : undefined;
+	if (localPackage && !existsSync(path.join(localPackage, "dist", "astro.js"))) {
+		throw new Error(`Build the local capsulo package first: pnpm --dir ${localPackage} build`);
+	}
+
 	const spinner = p.spinner();
 	spinner.start(values.template ? "Copying the template" : "Downloading the template");
 	await copyTemplate(target, values.template);
-	const cliSpec = values.template ? `file:${path.resolve(values.template, "packages", "cli")}` : CLI_VERSION;
-	await personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage });
+	const cliSpec = localPackage ? `file:${localPackage}` : CLI_VERSION;
+	await personalize(target, { slug, locales, defaultLocale, adminLocale, cliSpec, storage, eject });
 	spinner.stop("Project created.");
 
 	const packageManager = detectPackageManager();
 	if (!values["no-install"]) {
 		p.log.step(`Installing dependencies with ${packageManager}...`);
 		await run(packageManager, ["install"], target);
+	}
+	if (eject) {
+		// The installed CLI copies its own framework source, so the copy matches the installed version.
+		await run(process.execPath, [path.join("node_modules", "capsulo", "bin", "capsulo.js"), "eject", "--yes"], target);
 	}
 	if (!values["no-git"]) {
 		await run("git", ["init", "-q"], target);
@@ -349,6 +370,7 @@ async function main() {
 			`cd ${path.relative(process.cwd(), target) || "."}`,
 			`${runScript} dev          # site + CMS at http://localhost:4321/admin`,
 			"npx capsulo deploy     # when you're ready: free Cloudflare hosting",
+			...(eject ? [] : [`${packageManager} update capsulo  # later: the newest admin and CMS`]),
 		].join("\n"),
 		"Next steps",
 	);

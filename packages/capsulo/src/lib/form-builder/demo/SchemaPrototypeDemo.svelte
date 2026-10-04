@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Button } from "$lib/components/ui/button";
+	import { Button } from "../../components/ui/button";
 	import type { SchemaValues } from "../core/types";
 	import { prototypeSchema } from "../schemas/prototype.schema";
 	import SchemaRenderer from "../renderer/SchemaRenderer.svelte";
 	import { schemaToZod } from "../core/schema-to-zod";
-	import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
+	import { DEFAULT_LOCALE, LOCALES } from "../../config/i18n-config";
 	import { resolveSchemaValues } from "../core/translation-runtime";
 
 	let values = $state<SchemaValues>({});

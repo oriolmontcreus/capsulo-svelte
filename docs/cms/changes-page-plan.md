@@ -31,16 +31,16 @@ Key insight: the diff was **schema-aware**, not a raw JSON dump. That is what ma
 
 | Concern | Current mechanism | File |
 | --- | --- | --- |
-| Local autosave | Edits debounced 250ms into **IndexedDB** (`page-editor-cache`, store `documents`, key `pageId`). `updatedAt: null` marks unsaved-local. | `src/lib/PageEditor/page-editor-cache.ts`, `…/ContentSidebar/content-sidebar-document.svelte.ts` |
-| Manual save | "Save" button → `savePageEditorDocument()` → `flushPendingUploads()` → `savePageEditorDocumentToDb()`. | `…/content-sidebar-document.svelte.ts`, `src/lib/PageEditor/page-editor-documents.ts` |
+| Local autosave | Edits debounced 250ms into **IndexedDB** (`page-editor-cache`, store `documents`, key `pageId`). `updatedAt: null` marks unsaved-local. | `packages/capsulo/src/lib/PageEditor/page-editor-cache.ts`, `…/ContentSidebar/content-sidebar-document.svelte.ts` |
+| Manual save | "Save" button → `savePageEditorDocument()` → `flushPendingUploads()` → `savePageEditorDocumentToDb()`. | `…/content-sidebar-document.svelte.ts`, `packages/capsulo/src/lib/PageEditor/page-editor-documents.ts` |
 | DB write | `upsert` into **`pages`** + `insert` snapshot into **`pages-history`**. | `page-editor-documents.ts` |
-| Content shape | `{ formatVersion: 1, instances: [{ id, values }] }`; `values` = `Record<fieldName, Partial<Record<locale, value>>>`. | `src/lib/PageEditor/persistence.ts` |
-| Schema model | `SchemaDefinition { name, key, fields: FieldDefinition[] }`; `FieldType` = text \| textarea \| rich-editor \| toggle \| select \| colorpicker \| file-upload. | `src/lib/form-builder/core/types.ts` |
-| Field components | Read-only-capable Svelte field components rendered by `SchemaRenderer`. | `src/lib/form-builder/renderer/SchemaRenderer.svelte`, `…/fields/**` |
-| Capsules on a page | Build-time manifest `virtual:capsule-manifest` → instance ids like `test-capsule-01`. | `src/lib/PageEditor/ContentSidebar/capsule-instances.ts` |
-| Admin shell / nav | `AdminLayout.astro` + `AdminNav.svelte`; routes: `page-editor`, `globals`. | `src/layouts/AdminLayout.astro`, `src/lib/admin/AdminNav.svelte` |
-| Auth | `session` store (Supabase SSR browser client). | `src/lib/stores/session.ts`, `src/db/supabase.ts` |
-| Globals | Save **directly** to `globals` table; **no IndexedDB draft, no history**. | `src/lib/globals/globals-documents.ts` |
+| Content shape | `{ formatVersion: 1, instances: [{ id, values }] }`; `values` = `Record<fieldName, Partial<Record<locale, value>>>`. | `packages/capsulo/src/lib/PageEditor/persistence.ts` |
+| Schema model | `SchemaDefinition { name, key, fields: FieldDefinition[] }`; `FieldType` = text \| textarea \| rich-editor \| toggle \| select \| colorpicker \| file-upload. | `packages/capsulo/src/lib/form-builder/core/types.ts` |
+| Field components | Read-only-capable Svelte field components rendered by `SchemaRenderer`. | `packages/capsulo/src/lib/form-builder/renderer/SchemaRenderer.svelte`, `…/fields/**` |
+| Capsules on a page | Build-time manifest `virtual:capsule-manifest` → instance ids like `test-capsule-01`. | `packages/capsulo/src/lib/PageEditor/ContentSidebar/capsule-instances.ts` |
+| Admin shell / nav | `AdminLayout.astro` + `AdminNav.svelte`; routes: `page-editor`, `globals`. | `src/layouts/AdminLayout.astro`, `packages/capsulo/src/lib/admin/AdminNav.svelte` |
+| Auth | `session` store (Supabase SSR browser client). | `packages/capsulo/src/lib/stores/session.ts`, `src/db/supabase.ts` |
+| Globals | Save **directly** to `globals` table; **no IndexedDB draft, no history**. | `packages/capsulo/src/lib/globals/globals-documents.ts` |
 
 ### 0.3 Supabase schema today (verified live)
 
@@ -92,11 +92,11 @@ globals         id='globals' (pk) · content jsonb · … (no history table)
 **Objective:** be able to compute, in memory, the difference between a page's *committed* (remote) content and its *local draft*, expressed per instance / field / locale.
 
 1. Add deps: `pnpm add microdiff diff` (+ `@types/diff` if needed; jsdiff v9 ships types).
-2. Create `src/lib/PageEditor/changes/diff-model.ts`:
+2. Create `packages/capsulo/src/lib/PageEditor/changes/diff-model.ts`:
    - Types: `FieldChange { instanceId, fieldName, locale, oldValue, newValue, kind: 'added'|'removed'|'changed' }`, `InstanceChange { instanceId, capsuleKey, isNew, fields: FieldChange[] }`, `PageChangeSet { pageId, instances: InstanceChange[] }`.
    - `computePageChangeSet(oldValues, newValues, schemaByInstance)` — normalizes empty-ish values (port `normalizeForComparison` from legacy `utils.ts`), walks instances → fields → locales, returns only real changes.
    - `pageHasChanges(changeSet)` helper (drives sidebar list, mirrors legacy `hasVisibleContentDiff`).
-3. **Check (required):** `src/lib/PageEditor/changes/diff-model.test-manual.ts` — a tiny assert-based self-check (no framework) covering: unchanged → empty; text change in one locale; new instance; toggle false→true; emptied field (`""`/`null` treated as no-op). Runnable with `node --experimental-strip-types` or `tsx`.
+3. **Check (required):** `packages/capsulo/src/lib/PageEditor/changes/diff-model.test-manual.ts` — a tiny assert-based self-check (no framework) covering: unchanged → empty; text change in one locale; new instance; toggle false→true; emptied field (`""`/`null` treated as no-op). Runnable with `node --experimental-strip-types` or `tsx`.
 
 **Deliverable:** a pure, tested function that turns (old, new) into a `PageChangeSet`. No Supabase, no Svelte.
 
@@ -113,7 +113,7 @@ Today the cache stores only the current draft (`valuesByInstance` + `updatedAt`)
    - On **remote load / sync**, set `baseline = remote content` (this is the committed truth).
    - On **local edit autosave** (the 250ms effect), keep `baseline` untouched; only update `valuesByInstance` + `updatedAt: null`. → draft drifts from baseline = "dirty".
    - After a **successful commit** (Phase 4), set `baseline = committed values`.
-3. Add `src/lib/PageEditor/changes/changed-pages.ts`:
+3. Add `packages/capsulo/src/lib/PageEditor/changes/changed-pages.ts`:
    - `listChangedPages()` — iterate all cache rows, run `computePageChangeSet(baseline, current)`, return pages with real changes (`{ pageId, name, count }`).
    - This replaces the legacy `getChangedPageIds()` + remote-compare loop, but is **purely local** (no per-page network calls — faster than legacy).
 
@@ -127,14 +127,14 @@ Today the cache stores only the current draft (`valuesByInstance` + `updatedAt`)
 
 **Objective:** port legacy `DiffView` to Svelte 5, reusing existing field components.
 
-1. `src/lib/PageEditor/changes/InlineTextDiff.svelte` — given `oldText`/`newText`, render `diffWords()` output with added (green) / removed (red strike) spans. Pure presentational.
-2. `src/lib/PageEditor/changes/FieldDiff.svelte` — for one `FieldChange`:
+1. `packages/capsulo/src/lib/PageEditor/changes/InlineTextDiff.svelte` — given `oldText`/`newText`, render `diffWords()` output with added (green) / removed (red strike) spans. Pure presentational.
+2. `packages/capsulo/src/lib/PageEditor/changes/FieldDiff.svelte` — for one `FieldChange`:
    - text / textarea → `InlineTextDiff` (per locale row, locale badge for non-default).
    - rich-editor → side-by-side read-only render (no inline diff — would destroy markup, same call legacy made).
    - toggle / select / colorpicker / file-upload → side-by-side "Previous / New" using the real read-only field component (`SchemaRenderer` field in a disabled/readonly mode).
    - Hover **Revert** button (Phase 6 wires the handler).
-3. `src/lib/PageEditor/changes/InstanceDiff.svelte` — header (capsule name + "New" badge if instance didn't exist in baseline) + list of `FieldDiff` for changed fields only.
-4. `src/lib/PageEditor/changes/PageDiff.svelte` — maps a `PageChangeSet` to `InstanceDiff`s; empty state "No changes to display".
+3. `packages/capsulo/src/lib/PageEditor/changes/InstanceDiff.svelte` — header (capsule name + "New" badge if instance didn't exist in baseline) + list of `FieldDiff` for changed fields only.
+4. `packages/capsulo/src/lib/PageEditor/changes/PageDiff.svelte` — maps a `PageChangeSet` to `InstanceDiff`s; empty state "No changes to display".
 
 > Reuse check: confirm the field components accept a read-only/disabled prop. If not, the smallest change is a `readonly` prop on the shared field wrapper rather than new bespoke renderers. Prefer extending existing components over duplicating them (ponytail).
 
@@ -146,11 +146,11 @@ Today the cache stores only the current draft (`valuesByInstance` + `updatedAt`)
 
 **Objective:** the actual `/admin/changes` route: sidebar of changed pages, main diff pane, commit box; committing writes to Supabase with the message.
 
-1. Route: `src/pages/admin/changes.astro` (under `AdminLayout`) + add "Changes" item to `AdminNav.svelte` (`AdminRoute` union). Optionally show a badge with the dirty-page count.
-2. `src/lib/PageEditor/changes/ChangesPage.svelte`:
+1. Route: `packages/capsulo/src/routes/admin/changes.astro` (under `AdminLayout`) + add "Changes" item to `AdminNav.svelte` (`AdminRoute` union). Optionally show a badge with the dirty-page count.
+2. `packages/capsulo/src/lib/PageEditor/changes/ChangesPage.svelte`:
    - Left: `ChangesSidebar.svelte` (list from `listChangedPages()`, selection state) + `CommitForm.svelte` (textarea, char counter; AI generation deferred/omitted — legacy had it but it's optional).
    - Right: `PageDiff.svelte` for the selected page.
-3. Commit handler `src/lib/PageEditor/changes/commit.ts`:
+3. Commit handler `packages/capsulo/src/lib/PageEditor/changes/commit.ts`:
    - For each changed page: `flushPendingUploads()` (file fields), then write via the **revised** `savePageEditorDocumentToDb` (Phase 5) passing the `comment`.
    - Guard: skip pages whose change set is empty.
    - On success: update each page's cache `baseline = committed values`, `updatedAt = remote`, clear the commit message, refresh the sidebar (now empty → "No changes").
@@ -222,8 +222,8 @@ Today the cache stores only the current draft (`valuesByInstance` + `updatedAt`)
 ## File map (new / touched)
 
 ```
-NEW  src/pages/admin/changes.astro
-NEW  src/lib/PageEditor/changes/
+NEW  packages/capsulo/src/routes/admin/changes.astro
+NEW  packages/capsulo/src/lib/PageEditor/changes/
         diff-model.ts                 (Phase 1)
         diff-model.test-manual.ts     (Phase 1 check)
         changed-pages.ts              (Phase 2, 6)
@@ -235,12 +235,12 @@ NEW  src/lib/PageEditor/changes/
         ChangesSidebar.svelte         (Phase 4)
         CommitForm.svelte             (Phase 4)
         commit.ts                     (Phase 4)
-EDIT src/lib/PageEditor/persistence.ts            (+ baseline field, cache v2)
-EDIT src/lib/PageEditor/page-editor-cache.ts      (DB v1→v2 migration)
-EDIT src/lib/PageEditor/ContentSidebar/content-sidebar-document.svelte.ts (baseline tracking; remove direct save)
-EDIT src/lib/PageEditor/page-editor-documents.ts  (accept + write `comment`/`commit_id`)
-EDIT src/lib/PageEditor.svelte                    (replace Save button with status + link)
-EDIT src/lib/admin/AdminNav.svelte                (add "Changes" route)
+EDIT packages/capsulo/src/lib/PageEditor/persistence.ts            (+ baseline field, cache v2)
+EDIT packages/capsulo/src/lib/PageEditor/page-editor-cache.ts      (DB v1→v2 migration)
+EDIT packages/capsulo/src/lib/PageEditor/ContentSidebar/content-sidebar-document.svelte.ts (baseline tracking; remove direct save)
+EDIT packages/capsulo/src/lib/PageEditor/page-editor-documents.ts  (accept + write `comment`/`commit_id`)
+EDIT packages/capsulo/src/lib/PageEditor.svelte                    (replace Save button with status + link)
+EDIT packages/capsulo/src/lib/admin/AdminNav.svelte                (add "Changes" route)
 DB   supabase migration: write comment + commits table + commit_id (Phase 5)
 DEPS microdiff, diff (jsdiff)
 ```

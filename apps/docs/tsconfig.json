@@ -3,9 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "$lib": ["../../src/lib"],
-      "$lib/*": ["../../src/lib/*"],
-      "$/*": ["../../src/*"],
+      "$lib": ["../../packages/capsulo/src/lib"],
+      "$lib/*": ["../../packages/capsulo/src/lib/*"],
       "@/*": ["./src/*"]
     }
   },

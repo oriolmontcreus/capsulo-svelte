@@ -1,12 +1,12 @@
 ---
-import Layout from "./Layout.astro";
-import AdminNav from "$lib/admin/AdminNav.svelte";
-import AdminLanguageGuard from "$lib/admin/AdminLanguageGuard.astro";
-import { ADMIN_PORTAL_HOST_ID } from "$lib/admin/portal-host";
-import { ScrollArea } from "$lib/components/ui/scroll-area";
-import AiSidebar from "$lib/ai/components/AiSidebar.svelte";
-import { AI_ENABLED } from "$lib/ai/config";
-import { AI_SIDEBAR_STORAGE_KEY } from "$lib/ai/ai-sidebar-state.svelte";
+import Layout from "./AdminBaseLayout.astro";
+import AdminNav from "../lib/admin/AdminNav.svelte";
+import AdminLanguageGuard from "../lib/admin/AdminLanguageGuard.astro";
+import { ADMIN_PORTAL_HOST_ID } from "../lib/admin/portal-host";
+import { ScrollArea } from "../lib/components/ui/scroll-area";
+import AiSidebar from "../lib/ai/components/AiSidebar.svelte";
+import { AI_ENABLED } from "../lib/ai/config";
+import { AI_SIDEBAR_STORAGE_KEY } from "../lib/ai/ai-sidebar-state.svelte";
 
 interface Props {
 	activeRoute: "page-editor" | "globals" | "changes" | "history";

@@ -1,5 +1,5 @@
-import { capsuleInstanceId } from "$lib/capsules/core/page-instances";
-import { getCapsuleByKey } from "$lib/capsules/core/registry";
+import { capsuleInstanceId } from "../../capsules/core/page-instances";
+import { getCapsuleByKey } from "../../capsules/core/registry";
 import type { GroupedCapsuleEntry } from "./types";
 
 export function getCapsuleDisplayTitle(

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getCmsData } from "$lib/cms/get-cms-data";
+	import { getCmsData } from "capsulo/runtime";
 	import * as Card from "$lib/components/ui/card";
 
 	import { colorPickerTestsSchema } from "./colorpicker-tests.schema";

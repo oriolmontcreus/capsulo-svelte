@@ -1,7 +1,7 @@
 /**
  * Assert-based self-check for the history model. No test framework.
  *
- * Run with:  npx tsx src/lib/PageEditor/history/history-model.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/PageEditor/history/history-model.test-manual.ts
  *
  * The grouping case is the one that matters: a commit spanning several pages has
  * to come back as ONE entry. The legacy CMS had no grouping at all, and before

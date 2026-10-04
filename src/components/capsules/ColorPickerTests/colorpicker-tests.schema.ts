@@ -1,7 +1,4 @@
-import { createSchema } from "$lib/form-builder/core/create-schema";
-import type { FieldDefinition } from "$lib/form-builder/core/types";
-import { ColorPicker } from "$lib/form-builder/fields/ColorPickerField/color-picker-field.builder";
-import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
+import { createSchema, type FieldDefinition, ColorPicker, Text } from "capsulo/schema";
 
 export const colorPickerTestsSchema = createSchema<FieldDefinition>({
 	name: "ColorPicker Tests",

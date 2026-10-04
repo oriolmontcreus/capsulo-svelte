@@ -2,11 +2,11 @@
   import SunIcon from "@lucide/svelte/icons/sun";
   import MoonIcon from "@lucide/svelte/icons/moon";
 
-  import { Button } from "$lib/components/ui/button";
+  import { Button } from "./ui/button";
   import { toggleMode } from "mode-watcher";
-  import type { ButtonVariant } from "$lib/components/ui/button";
-  import { cn } from "$lib/utils";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import type { ButtonVariant } from "./ui/button";
+  import { cn } from "../utils";
+  import { t } from "../admin-i18n/i18n.svelte";
   import type { ClassValue } from "clsx";
 
   let {

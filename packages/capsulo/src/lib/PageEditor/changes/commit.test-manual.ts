@@ -2,14 +2,14 @@
  * Assert-based self-check for the commit page-selection logic. No test framework.
  * Covers the skip-empty guard and missing-cache handling used by commitChanges.
  *
- * Run with:  npx tsx src/lib/PageEditor/changes/commit.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/PageEditor/changes/commit.test-manual.ts
  */
 import assert from "node:assert/strict";
 import { selectCommittableDocuments } from "./commit-selection";
 import type {
 	PageEditorCachedDocument,
 	PageEditorValuesByInstance
-} from "$lib/PageEditor/persistence";
+} from "../persistence";
 
 function doc(
 	pageId: string,

@@ -1,11 +1,11 @@
 import {
 	loadPageEditorDocumentFromDb,
 	loadPageEditorDocumentMetadataFromDb
-} from "$lib/PageEditor/page-editor-documents";
+} from "./page-editor-documents";
 import {
 	loadPageEditorDocumentFromCache,
 	savePageEditorDocumentToCache
-} from "$lib/PageEditor/page-editor-cache";
+} from "./page-editor-cache";
 
 function isRemoteTimestampNewer(
 	remoteUpdatedAt: string | null,

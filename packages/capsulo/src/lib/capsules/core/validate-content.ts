@@ -3,9 +3,9 @@
  * the admin (blocking a commit or save) and the Worker API (rejecting invalid writes), so both
  * reach the same verdict. Plain TypeScript: no Svelte, browser or Worker imports.
  */
-import type { SchemaDefinition, SchemaValues } from "$lib/form-builder/core/types";
-import { validateSchemaValues, type ValidationIssue } from "$lib/form-builder/core/validation";
-import { withSchemaDefaults } from "$lib/form-builder/renderer/schema-renderer-i18n";
+import type { SchemaDefinition, SchemaValues } from "../../form-builder/core/types";
+import { validateSchemaValues, type ValidationIssue } from "../../form-builder/core/validation";
+import { withSchemaDefaults } from "../../form-builder/renderer/schema-renderer-i18n";
 import type { PageInstance } from "./page-instances";
 
 /** The key global variables are validated under, in place of a capsule instance id. */

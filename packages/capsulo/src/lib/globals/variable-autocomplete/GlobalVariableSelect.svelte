@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
 
-	import * as Popover from "$lib/components/ui/popover";
-	import { cn } from "$lib/utils";
+	import * as Popover from "../../components/ui/popover";
+	import { cn } from "../../utils";
 
 	import type { VariableItem } from "./types";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	type Props = {
 		open: boolean;

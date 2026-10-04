@@ -1,15 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import * as Tooltip from "$lib/components/ui/tooltip";
-  import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-  import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+  import * as Tooltip from "./components/ui/tooltip";
+  import { DEFAULT_LOCALE } from "./config/i18n-config";
+  import type { PageEditorValuesByInstance } from "./PageEditor/persistence";
   import {
     ensureGlobalsLoaded,
     globalsStore,
-  } from "$lib/globals/globals-store.svelte";
-  import GlobalVariablesProvider from "$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte";
-  import { buildVariableItems } from "$lib/globals/variable-autocomplete/build-variable-items";
-  import { formatVariablePreviewFromValues } from "$lib/globals/variable-autocomplete/format-variable-preview";
+  } from "./globals/globals-store.svelte";
+  import GlobalVariablesProvider from "./globals/variable-autocomplete/GlobalVariablesProvider.svelte";
+  import { buildVariableItems } from "./globals/variable-autocomplete/build-variable-items";
+  import { formatVariablePreviewFromValues } from "./globals/variable-autocomplete/format-variable-preview";
 
   import {
     Breadcrumb,
@@ -18,22 +18,22 @@
     BreadcrumbLink,
     BreadcrumbSeparator,
     BreadcrumbPage,
-  } from "$lib/components/ui/breadcrumb";
+  } from "./components/ui/breadcrumb";
 
   import ContentSidebar from "./PageEditor/ContentSidebar";
   import type { FieldFocusTarget } from "./PageEditor/ContentSidebar/types";
-  import { LOCALES } from "$lib/config/i18n-config";
+  import { LOCALES } from "./config/i18n-config";
   import "./PageEditor/ContentSidebar/capsule-group-colors.css";
   import Preview from "./PageEditor/Preview.svelte";
   import {
     DEFAULT_PREVIEW_DEVICE,
     type PreviewDeviceId,
-  } from "$lib/PageEditor/preview-devices";
-  import { Button } from "$lib/components/ui/button";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  } from "./PageEditor/preview-devices";
+  import { Button } from "./components/ui/button";
+  import { t } from "./admin-i18n/i18n.svelte";
   type Props = {
     pageId?: string;
-    entries?: import("$lib/capsules/core/types").CapsuleManifestEntry[];
+    entries?: import("./capsules/core/types").CapsuleManifestEntry[];
   };
 
   let { pageId, entries = [] }: Props = $props();

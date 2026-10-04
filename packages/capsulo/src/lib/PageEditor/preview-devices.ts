@@ -1,4 +1,4 @@
-import { t, type MessageKey } from "$lib/admin-i18n/i18n.svelte";
+import { t, type MessageKey } from "../admin-i18n/i18n.svelte";
 export type PreviewDeviceId =
   | "responsive"
   | "iphone-se"

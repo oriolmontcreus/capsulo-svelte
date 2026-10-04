@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
-	import { session, syncSession } from "$lib/stores/session";
-	import { Button } from "$lib/components/ui/button";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import { session, syncSession } from "../../stores/session";
+	import { Button } from "../../components/ui/button";
+	import { ScrollArea } from "../../components/ui/scroll-area";
 	import { loadCommitPage } from "./history-documents";
 	import type { CommitEntry } from "./history-model";
 	import CommitDetail from "./CommitDetail.svelte";
 	import CommitList from "./CommitList.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let commits = $state<CommitEntry[]>([]);
 	let cursor = $state<string | null>(null);

@@ -1,4 +1,4 @@
-import { loadAllPageEditorCacheDocuments } from "$lib/PageEditor/page-editor-cache";
+import { loadAllPageEditorCacheDocuments } from "../page-editor-cache";
 import { computePageChangeSet, countFieldChanges, type PageChangeSet } from "./diff-model";
 import { resolveInstanceDefaults } from "./schema-defaults";
 

@@ -1,18 +1,18 @@
 import capsuleManifest from "virtual:capsule-manifest";
-import { listPageInstances } from "$lib/capsules/core/page-instances";
-import { getCapsuleByKey } from "$lib/capsules/core/registry";
+import { listPageInstances } from "../capsules/core/page-instances";
+import { getCapsuleByKey } from "../capsules/core/registry";
 import {
 	GLOBALS_INSTANCE_ID,
 	validatePageContent,
 	type ContentIssue
-} from "$lib/capsules/core/validate-content";
-import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-import { normalizeRepeaterItems, repeaterItemValues } from "$lib/form-builder/core/translation-runtime";
-import type { FieldDefinition, SchemaValues } from "$lib/form-builder/core/types";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-import { getCapsuleDisplayTitle } from "$lib/PageEditor/ContentSidebar/capsule-instances";
-import { pageDisplayName } from "$lib/PageEditor/changes/changed-pages";
-import { repeaterItemLabel } from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
+} from "../capsules/core/validate-content";
+import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
+import { normalizeRepeaterItems, repeaterItemValues } from "../form-builder/core/translation-runtime";
+import type { FieldDefinition, SchemaValues } from "../form-builder/core/types";
+import type { PageEditorValuesByInstance } from "./persistence";
+import { getCapsuleDisplayTitle } from "./ContentSidebar/capsule-instances";
+import { pageDisplayName } from "./changes/changed-pages";
+import { repeaterItemLabel } from "../form-builder/fields/RepeaterField/modules/repeater-values";
 
 export const VALIDATION_OPTIONS = { defaultLocale: DEFAULT_LOCALE, locales: LOCALES };
 

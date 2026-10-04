@@ -83,7 +83,7 @@ In **preview mode**, the Page Editor can still override `cmsStore.locale` via `s
 | `getCmsData()` | Resolves draft values for `instanceId` + locale | Published values for the current URL locale, else schema defaults |
 | Capsule UI | Shows editor draft | Shows the last committed (published) content |
 
-The preview listener and heavy sync logic only run when the preview query is present. The site build stays **static**: published values are baked in at build time (`capsulo pull` snapshots them, `src/middleware.ts` seeds each page before it prerenders, and `Layout.astro` embeds them as JSON for hydration).
+The preview listener and heavy sync logic only run when the preview query is present. The site build stays **static**: published values are baked in at build time (`capsulo pull` snapshots them, `packages/capsulo/src/middleware.ts` seeds each page before it prerenders, and `Layout.astro` embeds them as JSON for hydration).
 
 ## Writing a Svelte capsule
 

@@ -5,7 +5,7 @@
  * Plain TypeScript with no Svelte or browser imports: the content validator and the Worker API
  * use it too. Components import from `$lib/admin-i18n`, which makes `t()` reactive.
  */
-import capsuloConfig from "../../../capsulo.config";
+import capsuloConfig from "virtual:capsulo/config";
 import type { CapsuloAdminLocale, CapsuloConfig } from "../config/define-config";
 import { en, type Message, type MessageKey, type Messages } from "./messages/en";
 import { es } from "./messages/es";

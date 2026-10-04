@@ -1,7 +1,7 @@
 /**
  * Assert-based self-check for the diff model. No test framework.
  *
- * Run with:  npx tsx src/lib/PageEditor/changes/diff-model.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/PageEditor/changes/diff-model.test-manual.ts
  */
 import assert from "node:assert/strict";
 import {
@@ -9,7 +9,7 @@ import {
 	countFieldChanges,
 	pageHasChanges
 } from "./diff-model";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { PageEditorValuesByInstance } from "../persistence";
 
 function values(input: PageEditorValuesByInstance): PageEditorValuesByInstance {
 	return input;

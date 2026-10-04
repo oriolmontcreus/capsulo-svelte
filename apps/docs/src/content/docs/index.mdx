@@ -76,9 +76,7 @@ Each capsule (a content component) describes its editable fields with a schema, 
 
 ```ts
 // src/components/capsules/Hero/hero.schema.ts
-import { createSchema } from '$lib/form-builder/core/create-schema';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
-import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+import { createSchema, Text, Textarea } from 'capsulo/schema';
 
 export const heroSchema = createSchema({
   name: 'Hero',
@@ -101,7 +99,7 @@ Read the published values with `getCmsData`. The `HeroData` type is generated fr
 ```svelte
 <!-- src/components/capsules/Hero/Hero.svelte -->
 <script lang="ts">
-  import { getCmsData } from '$lib/cms/get-cms-data';
+  import { getCmsData } from 'capsulo/runtime';
   import { heroSchema } from './hero.schema';
   import type { HeroData } from './hero.schema.d';
 
@@ -137,6 +135,20 @@ npx capsulo deploy
 ```
 
 It sets up the database and the upload storage, deploys the site to `https://<name>.<account>.workers.dev` and creates the first CMS user for your client.
+
+</Step>
+
+<Step>
+
+### Keep Capsulo up to date
+
+The admin and the CMS come from the `capsulo` package (an Astro integration), so your project only holds your site. New versions are one command away; deploy afterwards:
+
+```bash
+pnpm update capsulo
+```
+
+Need to change the admin itself? `npx capsulo eject` copies its source into `src/capsulo/` for you to edit. It asks first, because it's one way: after ejecting, updating the package no longer updates your admin.
 
 </Step>
 

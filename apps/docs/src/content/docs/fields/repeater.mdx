@@ -12,7 +12,7 @@ The `Repeater` field lets editors build a list of items, where every item has th
 ## Usage
 
 ```ts
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
+import { Repeater } from 'capsulo/schema';
 ```
 
 Pass the field name and the fields of each item:
@@ -99,7 +99,7 @@ export interface FeaturesCardItem {
 
 ```svelte
 <script lang="ts">
-  import { getCmsData } from '$lib/cms/get-cms-data';
+  import { getCmsData } from 'capsulo/runtime';
   import { featuresSchema } from './features.schema';
   import type { FeaturesData } from './features.schema.d';
 

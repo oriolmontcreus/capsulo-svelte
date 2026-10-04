@@ -1,5 +1,5 @@
-import { rememberUiLocale, startSession, verifyLogin } from "$lib/server/auth";
-import { HttpError, assertSameOrigin, handle, isRecord, json, readJson, requireString } from "$lib/server/http";
+import { rememberUiLocale, startSession, verifyLogin } from "../../../../lib/server/auth";
+import { HttpError, assertSameOrigin, handle, isRecord, json, readJson, requireString } from "../../../../lib/server/http";
 
 export const prerender = false;
 

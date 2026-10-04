@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import type { RepeaterFieldDefinition } from "$lib/form-builder/core/types";
+	import { DEFAULT_LOCALE } from "../../config/i18n-config";
+	import type { RepeaterFieldDefinition } from "../../form-builder/core/types";
 	import FieldValueView from "./FieldValueView.svelte";
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import RepeaterDiff from "./RepeaterDiff.svelte";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
 	import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	/** Item-level diff of a repeater: added, removed, moved and edited items. */
 	let {

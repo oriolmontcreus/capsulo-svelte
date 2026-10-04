@@ -1,11 +1,11 @@
 import type {
 	PageEditorCachedDocument,
 	PageEditorValuesByInstance
-} from "$lib/PageEditor/persistence";
+} from "./persistence";
 import {
 	deserializePageEditorValues,
 	serializePageEditorValues
-} from "$lib/PageEditor/persistence";
+} from "./persistence";
 
 const PAGE_EDITOR_DB_NAME = "page-editor-cache";
 const PAGE_EDITOR_DB_VERSION = 2;

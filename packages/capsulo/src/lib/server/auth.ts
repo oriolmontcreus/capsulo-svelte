@@ -8,9 +8,9 @@ import {
 	sha256Hex,
 	timingSafeEqualHex,
 	verifierForKey
-} from "capsulo/password";
+} from "../../password.js";
 
-import { UI_LOCALE_COOKIE, isUiLocale, type UiLocale } from "$lib/admin-i18n/core";
+import { UI_LOCALE_COOKIE, isUiLocale, type UiLocale } from "../admin-i18n/core";
 import { HttpError, assertSameOrigin, nowIso } from "./http";
 
 const SESSION_COOKIE = "capsulo_session";

@@ -1,4 +1,4 @@
-import { Select } from '$lib/form-builder/fields/SelectField/select-field.builder';
+import { Select } from 'capsulo/schema';
 
 export default Select('country')
   .label('Country')

@@ -1,4 +1,4 @@
-import { ColorPicker } from '$lib/form-builder/fields/ColorPickerField/color-picker-field.builder';
+import { ColorPicker } from 'capsulo/schema';
 
 export default ColorPicker('accentColor')
   .label('Accent color')

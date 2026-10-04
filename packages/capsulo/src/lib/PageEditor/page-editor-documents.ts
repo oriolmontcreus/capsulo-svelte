@@ -1,10 +1,10 @@
-import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
+import { capsuloFetch, jsonBody } from "../api/capsulo-client";
 import {
 	deserializePageEditorValues,
 	serializePageEditorValues,
 	type PageEditorValuesByInstance
-} from "$lib/PageEditor/persistence";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+} from "./persistence";
+import { t } from "../admin-i18n/i18n.svelte";
 
 export type LoadPageEditorDocumentResult = {
 	valuesByInstance: PageEditorValuesByInstance;

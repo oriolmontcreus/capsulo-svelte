@@ -1,0 +1,29 @@
+---
+import "../styles/global.css";
+import CapsuloScripts from "capsulo/components/CapsuloScripts.astro";
+import { getLocaleFromPathname } from "capsulo/runtime";
+
+interface Props {
+	title?: string;
+}
+
+const { title = "My Capsulo site" } = Astro.props;
+const locale = getLocaleFromPathname(Astro.url.pathname);
+---
+
+<!doctype html>
+<html lang={locale}>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" href="/favicon.ico" sizes="32x32" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<slot />
+		<!-- Published content for the islands, and the live preview used by the editor. -->
+		<CapsuloScripts />
+	</body>
+</html>

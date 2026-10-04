@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel } from "../../core/validation-helpers";
 import type { FileUploadFieldDefinition } from "./file-upload-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 export const fileUploadFieldValidator: FieldValidator<FileUploadFieldDefinition> = {
 	isEmpty: (_field, value) => !Array.isArray(value) || value.length === 0,

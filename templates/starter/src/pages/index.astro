@@ -1,0 +1,9 @@
+---
+import Layout from "$/layouts/Layout.astro";
+import Hero from "$/components/capsules/Hero/Hero.svelte";
+---
+
+<Layout>
+	<!-- Instance ids are `<schema key>-<nn>`, numbered per page: the editor stores content under them. -->
+	<Hero instanceId="hero-01" client:load />
+</Layout>

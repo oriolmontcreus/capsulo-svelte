@@ -1,9 +1,9 @@
 ---
-import AdminLayout from "$/layouts/AdminLayout.astro";
-import PageEditor from "$lib/PageEditor.svelte";
-import PageNotFound from "$lib/PageEditor/PageNotFound.svelte";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import PageEditor from "../../../lib/PageEditor.svelte";
+import PageNotFound from "../../../lib/PageEditor/PageNotFound.svelte";
 import capsuleManifest from "virtual:capsule-manifest";
-import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
+import type { CapsuleManifestEntry } from "../../../lib/capsules/core/types";
 
 type StaticPathProps = {
 	pageId: string;

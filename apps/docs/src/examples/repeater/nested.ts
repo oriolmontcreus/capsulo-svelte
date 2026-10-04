@@ -1,6 +1,4 @@
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
-import { RichEditor } from '$lib/form-builder/fields/RichEditorField/rich-editor-field.builder';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
+import { Repeater, RichEditor, Text } from 'capsulo/schema';
 
 export default Repeater('faq', [
   Text('section').label('Section'),

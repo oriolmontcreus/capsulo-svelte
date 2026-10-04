@@ -3,7 +3,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import SchemaRenderer from '$lib/form-builder/renderer/SchemaRenderer.svelte';
 	import { createSchemaInitialValues } from '$lib/form-builder/renderer/schema-renderer-i18n';
-	import { globalsSchema } from '$/config/globals/globals.schema';
+	import { globalsSchema } from '@/previews/example-globals.schema';
 	import GlobalVariablesProvider from '$lib/globals/variable-autocomplete/GlobalVariablesProvider.svelte';
 	import { buildVariableItems } from '$lib/globals/variable-autocomplete/build-variable-items';
 	import { formatVariablePreviewFromValues } from '$lib/globals/variable-autocomplete/format-variable-preview';
@@ -30,7 +30,7 @@
 	const schema = $derived(loadExampleSchema(example, title));
 
 	const defaultLocale = $derived(locales[0] ?? 'en');
-	// Global variables at the defaults of the starter's globals schema ("My Awesome Site", ...).
+	// Global variables at the defaults of the example globals schema ("My Awesome Site", ...).
 	const globals = $derived(createSchemaInitialValues(globalsSchema, defaultLocale));
 	const getPreview = (key: string) => formatVariablePreviewFromValues(key, globals, defaultLocale, defaultLocale);
 	const getVariableItems = () => buildVariableItems(globals, defaultLocale, defaultLocale);

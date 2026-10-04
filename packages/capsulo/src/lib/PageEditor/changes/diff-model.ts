@@ -1,8 +1,8 @@
 import diff from "microdiff";
 import type {
 	PageEditorValuesByInstance
-} from "$lib/PageEditor/persistence";
-import type { LocalizedFieldValue, SchemaValues } from "$lib/form-builder/core/types";
+} from "../persistence";
+import type { LocalizedFieldValue, SchemaValues } from "../../form-builder/core/types";
 
 export type FieldChangeKind = "added" | "removed" | "changed";
 

@@ -1,6 +1,6 @@
 ---
-import AdminLayout from "$/layouts/AdminLayout.astro";
-import PageEditorIndex from "$lib/PageEditor/PageEditorIndex.svelte";
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import PageEditorIndex from "../../../lib/PageEditor/PageEditorIndex.svelte";
 import capsuleManifest from "virtual:capsule-manifest";
 
 interface PageCard {
@@ -35,7 +35,7 @@ const pageCards: PageCard[] = Object.entries(capsuleManifest)
 </AdminLayout>
 
 <script>
-	import { initPageEditorIndexPrefetch } from "$lib/PageEditor/prefetch-page-editor-data";
+	import { initPageEditorIndexPrefetch } from "../../../lib/PageEditor/prefetch-page-editor-data";
 
 	initPageEditorIndexPrefetch();
 </script>

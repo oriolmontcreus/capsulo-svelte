@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 	import type { FieldChange, PageChangeSet } from "./diff-model";
 	import InstanceDiff from "./InstanceDiff.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		changeSet,

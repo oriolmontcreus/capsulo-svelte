@@ -1,4 +1,4 @@
-import { Toggle } from '$lib/form-builder/fields/ToggleField/toggle-field.builder';
+import { Toggle } from 'capsulo/schema';
 
 export default Toggle('marketing')
   .label('Marketing emails')

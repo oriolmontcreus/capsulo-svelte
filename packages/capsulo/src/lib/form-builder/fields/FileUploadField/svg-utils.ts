@@ -1,4 +1,4 @@
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../../../admin-i18n/i18n.svelte";
 
 export function isSvgPath(path: string): boolean {
 	return /\.svg$/i.test(path);

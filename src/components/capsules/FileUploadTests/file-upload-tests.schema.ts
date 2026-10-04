@@ -1,7 +1,4 @@
-import { createSchema } from "$lib/form-builder/core/create-schema";
-import type { FieldDefinition } from "$lib/form-builder/core/types";
-import { FileUpload } from "$lib/form-builder/fields/FileUploadField/file-upload-field.builder";
-import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
+import { createSchema, type FieldDefinition, FileUpload, Text } from "capsulo/schema";
 
 export const fileUploadTestsSchema = createSchema<FieldDefinition>({
   name: "File Upload Tests",

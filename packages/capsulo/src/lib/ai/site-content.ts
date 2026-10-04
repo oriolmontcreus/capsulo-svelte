@@ -1,21 +1,21 @@
-import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
+import { isPasswordField } from "../form-builder/fields/TextField/text-field.utils";
 import capsuleManifest from "virtual:capsule-manifest";
-import { globalsSchema } from "$/config/globals/globals.schema";
-import { getCapsuleByKey } from "$lib/capsules/core/registry";
-import type { RegisteredCapsule } from "$lib/capsules/core/types";
-import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-import type { FieldDefinition, SchemaDefinition, SchemaValues, SelectFieldDefinition } from "$lib/form-builder/core/types";
-import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
-import { getAllOptions, resolveSelectData } from "$lib/form-builder/fields/SelectField/modules/resolve-options";
-import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
-import { ensureGlobalsLoaded } from "$lib/globals/globals-store.svelte";
-import { loadGlobalsDraft } from "$lib/globals/globals-draft";
-import { pageDisplayName } from "$lib/PageEditor/changes/changed-pages";
-import { readPageDraft } from "$lib/PageEditor/changes/draft-write";
-import { capsuleKeyFromInstanceId } from "$lib/PageEditor/changes/schema-defaults";
-import { buildCapsuleInstanceData } from "$lib/PageEditor/ContentSidebar/capsule-instances";
-import { groupManifestEntries } from "$lib/PageEditor/ContentSidebar/group-entries";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
+import { getCapsuleByKey } from "../capsules/core/registry";
+import type { RegisteredCapsule } from "../capsules/core/types";
+import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
+import type { FieldDefinition, SchemaDefinition, SchemaValues, SelectFieldDefinition } from "../form-builder/core/types";
+import { normalizeRepeaterItems } from "../form-builder/core/translation-runtime";
+import { getAllOptions, resolveSelectData } from "../form-builder/fields/SelectField/modules/resolve-options";
+import { createSchemaInitialValues } from "../form-builder/renderer/schema-renderer-i18n";
+import { ensureGlobalsLoaded } from "../globals/globals-store.svelte";
+import { loadGlobalsDraft } from "../globals/globals-draft";
+import { pageDisplayName } from "../PageEditor/changes/changed-pages";
+import { readPageDraft } from "../PageEditor/changes/draft-write";
+import { capsuleKeyFromInstanceId } from "../PageEditor/changes/schema-defaults";
+import { buildCapsuleInstanceData } from "../PageEditor/ContentSidebar/capsule-instances";
+import { groupManifestEntries } from "../PageEditor/ContentSidebar/group-entries";
+import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
 
 /** Pseudo target id for the global variables in tool calls and edit records. */
 export const GLOBALS_TARGET = "globals";

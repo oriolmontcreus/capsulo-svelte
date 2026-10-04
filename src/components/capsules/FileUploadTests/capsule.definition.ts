@@ -1,4 +1,4 @@
-import { defineCapsule } from "$lib/capsules/core/define-capsule";
+import { defineCapsule } from "capsulo/schema";
 import FileUploadTests from "./FileUploadTests.svelte";
 import { fileUploadTestsSchema } from "./file-upload-tests.schema";
 

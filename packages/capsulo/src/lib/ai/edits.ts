@@ -1,20 +1,20 @@
-import { DEFAULT_LOCALE, LOCALES } from "$lib/config/i18n-config";
-import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
-import { validateFieldValue, validateSchemaValues, validationIssueKey } from "$lib/form-builder/core/validation";
+import { DEFAULT_LOCALE, LOCALES } from "../config/i18n-config";
+import { normalizeRepeaterItems } from "../form-builder/core/translation-runtime";
+import { validateFieldValue, validateSchemaValues, validationIssueKey } from "../form-builder/core/validation";
 import type {
 	FieldDefinition,
 	LocalizedFieldValue,
 	RepeaterFieldDefinition,
 	RepeaterItem,
 	SchemaValues
-} from "$lib/form-builder/core/types";
-import { createEmptyRepeaterItem } from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
-import { notifyGlobalsDraftReplaced, saveGlobalsDraft } from "$lib/globals/globals-draft";
-import { valuesEqual } from "$lib/PageEditor/changes/diff-model";
-import { setDraftFieldValue } from "$lib/PageEditor/changes/draft-values";
-import { updatePageDraft } from "$lib/PageEditor/changes/draft-write";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
-import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
+} from "../form-builder/core/types";
+import { createEmptyRepeaterItem } from "../form-builder/fields/RepeaterField/modules/repeater-values";
+import { notifyGlobalsDraftReplaced, saveGlobalsDraft } from "../globals/globals-draft";
+import { valuesEqual } from "../PageEditor/changes/diff-model";
+import { setDraftFieldValue } from "../PageEditor/changes/draft-values";
+import { updatePageDraft } from "../PageEditor/changes/draft-write";
+import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
+import { isPasswordField } from "../form-builder/fields/TextField/text-field.utils";
 import { createId } from "./chat-storage";
 import { sanitizeRichText } from "./sanitize-html";
 import {
@@ -28,7 +28,7 @@ import {
 	schemaForInstance,
 	selectOptionValues
 } from "./site-content";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../admin-i18n/core";
 
 /** One field/locale the agent changed. `before` is what the editor showed (defaults included). */
 export type EditedField = {

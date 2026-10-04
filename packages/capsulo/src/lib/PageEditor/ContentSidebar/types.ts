@@ -1,5 +1,5 @@
-import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { CapsuleManifestEntry } from "../../capsules/core/types";
+import type { PageEditorValuesByInstance } from "../persistence";
 
 export type PageEditorSaveControls = {
 	save: () => Promise<void>;

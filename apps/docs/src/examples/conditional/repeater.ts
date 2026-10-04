@@ -1,6 +1,4 @@
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
-import { Toggle } from '$lib/form-builder/fields/ToggleField/toggle-field.builder';
+import { Repeater, Text, Toggle } from 'capsulo/schema';
 
 export default Repeater('speakers', [
   Text('name').label('Name').required(),

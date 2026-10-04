@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Select as SelectPrimitive } from "bits-ui";
-	import { Field, FieldDescription, FieldError, FieldLabel } from "$lib/components/ui/field";
+	import { Field, FieldDescription, FieldError, FieldLabel } from "../../../components/ui/field";
 	import {
 		Root as SelectRoot,
 		Trigger as SelectTrigger,
@@ -9,8 +9,8 @@
 		Group as SelectGroup,
 		GroupHeading as SelectGroupHeading,
 		Portal as SelectPortal,
-	} from "$lib/components/ui/select";
-	import { cn } from "$lib/utils";
+	} from "../../../components/ui/select";
+	import { cn } from "../../../utils";
 	import SelectFieldGridStyles from "./SelectFieldGridStyles.svelte";
 	import SelectFieldSearchable from "./select-field-searchable.svelte";
 	import SelectOptionContent from "./SelectOptionContent.svelte";
@@ -26,7 +26,7 @@
 		formatSelectTriggerLabel,
 		normalizeSelectValue,
 	} from "./modules/select-value";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../../admin-i18n/i18n.svelte";
 
 	interface Props {
 		field: SelectFieldDefinition;

@@ -1,11 +1,11 @@
-import { loadPageEditorDocumentFromCache } from "$lib/PageEditor/page-editor-cache";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { loadPageEditorDocumentFromCache } from "../PageEditor/page-editor-cache";
+import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
 import {
 	PAGE_EDITOR_PREVIEW_CHANNEL,
 	type PageEditorPreviewReadyMessage,
 	type PageEditorPreviewSyncMessage,
 	isPageEditorPreviewMessage
-} from "$lib/PageEditor/preview-channel";
+} from "../PageEditor/preview-channel";
 
 import { applyPreviewSync, cmsStore } from "./cms-store.svelte";
 

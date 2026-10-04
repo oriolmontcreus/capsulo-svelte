@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ChangedPageSummary } from "./changed-pages";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		pages,

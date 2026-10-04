@@ -1,11 +1,11 @@
 import { env } from "cloudflare:workers";
 
-import { buildCommitMessageModelInput, parseCommitMessageRequest } from "$lib/ai/commit-message";
-import { AI_ENABLED, AI_MODEL } from "$lib/ai/config";
-import { AiRequestError, toAiRequestError } from "$lib/ai/protocol";
-import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "$lib/ai/stream";
-import { requireUser } from "$lib/server/auth";
-import { handle, json, readJson } from "$lib/server/http";
+import { buildCommitMessageModelInput, parseCommitMessageRequest } from "../../../../lib/ai/commit-message";
+import { AI_ENABLED, AI_MODEL } from "../../../../lib/ai/config";
+import { AiRequestError, toAiRequestError } from "../../../../lib/ai/protocol";
+import { AI_STREAM_CONTENT_TYPE, toAiEventStream } from "../../../../lib/ai/stream";
+import { requireUser } from "../../../../lib/server/auth";
+import { handle, json, readJson } from "../../../../lib/server/http";
 
 export const prerender = false;
 

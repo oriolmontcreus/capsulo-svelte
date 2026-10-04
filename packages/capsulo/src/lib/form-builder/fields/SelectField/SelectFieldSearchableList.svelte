@@ -1,7 +1,7 @@
 <script lang="ts">
   import CheckIcon from "@lucide/svelte/icons/check";
-  import * as Command from "$lib/components/ui/command";
-  import { cn } from "$lib/utils";
+  import * as Command from "../../../components/ui/command";
+  import { cn } from "../../../utils";
   import SelectFieldGridStyles from "./SelectFieldGridStyles.svelte";
   import SelectOptionContent from "./SelectOptionContent.svelte";
   import type {

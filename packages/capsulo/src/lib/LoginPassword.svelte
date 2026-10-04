@@ -2,17 +2,17 @@
   import { ArrowRight } from "@lucide/svelte";
   import { onMount } from "svelte";
   import { session, sessionDisplayName, signIn, syncSession } from "./stores/session";
-  import * as Card from "$lib/components/ui/card";
+  import * as Card from "./components/ui/card";
   import {
     FieldGroup,
     Field,
     FieldLabel,
     FieldContent,
     FieldError,
-  } from "$lib/components/ui/field";
-  import { Input } from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  } from "./components/ui/field";
+  import { Input } from "./components/ui/input";
+  import { Button } from "./components/ui/button";
+  import { t } from "./admin-i18n/i18n.svelte";
 
   const signedInUser = $derived($session?.user ?? null);
 

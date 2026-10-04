@@ -1,6 +1,4 @@
-import { Repeater } from '$lib/form-builder/fields/RepeaterField/repeater-field.builder';
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
-import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+import { Repeater, Text, Textarea } from 'capsulo/schema';
 
 export default Repeater('features', [
   Text('title').label('Title'),

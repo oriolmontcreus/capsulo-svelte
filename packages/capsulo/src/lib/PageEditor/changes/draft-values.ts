@@ -1,4 +1,4 @@
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { PageEditorValuesByInstance } from "../persistence";
 
 export type DraftFieldTarget = {
 	instanceId: string;

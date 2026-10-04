@@ -1,3 +1,3 @@
-import { Text } from '$lib/form-builder/fields/TextField/text-field.builder';
+import { Text } from 'capsulo/schema';
 
 export default Text('headline').label('Headline').translatable().defaultValue('Build faster with Capsulo');

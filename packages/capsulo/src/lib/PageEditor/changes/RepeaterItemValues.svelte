@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import type { RepeaterFieldDefinition, RepeaterItem } from "$lib/form-builder/core/types";
+	import { DEFAULT_LOCALE } from "../../config/i18n-config";
+	import type { RepeaterFieldDefinition, RepeaterItem } from "../../form-builder/core/types";
 	import { normalizeForComparison } from "./diff-model";
 	import FieldValueView from "./FieldValueView.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	/** Read-only list of an item's filled-in child values, with a tag on translations. */
 	let { field, item }: { field: RepeaterFieldDefinition; item: RepeaterItem } = $props();

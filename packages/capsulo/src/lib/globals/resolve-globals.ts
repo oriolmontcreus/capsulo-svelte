@@ -1,7 +1,7 @@
-import { globalsSchema } from "$/config/globals/globals.schema";
-import { resolveSchemaValues } from "$lib/form-builder/core/translation-runtime";
-import type { SchemaDefinition, SchemaValues } from "$lib/form-builder/core/types";
-import { createSchemaInitialValues } from "$lib/form-builder/renderer/schema-renderer-i18n";
+import { globalsSchema } from "virtual:capsulo/globals-schema";
+import { resolveSchemaValues } from "../form-builder/core/translation-runtime";
+import type { SchemaDefinition, SchemaValues } from "../form-builder/core/types";
+import { createSchemaInitialValues } from "../form-builder/renderer/schema-renderer-i18n";
 
 import { type GlobalsResolvedMap, formatGlobalDisplayValue } from "./types";
 

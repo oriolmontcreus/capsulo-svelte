@@ -49,7 +49,7 @@ Neutrals share a single `--base-hue: 265` (cool blue-violet) so light and dark t
 
 ### 2.3 Semantic shadcn tokens
 
-The shadcn layer ([src/styles/global.css](src/styles/global.css:95-162)) defines `--primary`, `--secondary`, `--muted`, `--destructive`, etc. These map to component variants in [src/lib/components/ui/button/button.svelte](src/lib/components/ui/button/button.svelte:7-32). Treat them as **role tokens**, not colors — change the variant to change meaning.
+The shadcn layer ([src/styles/global.css](src/styles/global.css:95-162)) defines `--primary`, `--secondary`, `--muted`, `--destructive`, etc. These map to component variants in [packages/capsulo/src/lib/components/ui/button/button.svelte](packages/capsulo/src/lib/components/ui/button/button.svelte:7-32). Treat them as **role tokens**, not colors — change the variant to change meaning.
 
 ### 2.4 Contrast targets
 
@@ -76,7 +76,7 @@ Single typeface: **Inter Variable**, loaded via `@fontsource-variable/inter` in 
 
 ### 3.2 Weight philosophy
 
-**Default to `font-normal` (400) everywhere.** Including titles. Hierarchy comes from *size and color*, not weight. See the login: `<Card.Title class="text-2xl">Sign in</Card.Title>` ([LoginMagicLink.svelte:60](src/lib/LoginMagicLink.svelte#L60)) — large, but regular weight.
+**Default to `font-normal` (400) everywhere.** Including titles. Hierarchy comes from *size and color*, not weight. See the login: `<Card.Title class="text-2xl">Sign in</Card.Title>` ([LoginMagicLink.svelte:60](packages/capsulo/src/lib/LoginMagicLink.svelte#L60)) — large, but regular weight.
 
 `font-semibold` (600) is reserved for **emphasis on specific words or values inside otherwise-normal text** — a name in a notification, the total in a summary, the matched term in a search result. It is a spotlight, not a default. If most of a heading is semibold, you've lost the spotlight.
 
@@ -173,7 +173,7 @@ Built on **shadcn-svelte** ([components.json](components.json)). Variants are th
 
 ### 7.1 Buttons
 
-Defined in [src/lib/components/ui/button/button.svelte](src/lib/components/ui/button/button.svelte:7-32). Use semantic variants:
+Defined in [packages/capsulo/src/lib/components/ui/button/button.svelte](packages/capsulo/src/lib/components/ui/button/button.svelte:7-32). Use semantic variants:
 
 - `default` — primary CTA (filled, high-contrast). One per view.
 - `secondary` — quiet action, often paired with a default. See "Continue as …" on `/login`.
@@ -186,7 +186,7 @@ Sizes: `xs | sm | default | lg | icon | icon-xs | icon-sm | icon-lg`. Icon butto
 
 ### 7.2 Inputs & Fields
 
-Compose with the `Field` family ([src/lib/components/ui/field](src/lib/components/ui/field)):
+Compose with the `Field` family ([packages/capsulo/src/lib/components/ui/field](packages/capsulo/src/lib/components/ui/field)):
 
 ```svelte
 <FieldGroup>
@@ -208,7 +208,7 @@ Standard structure: `Card.Root > Card.Header (Title + Description) > Card.Conten
 
 ### 7.4 Other primitives available
 
-`badge`, `dropdown-menu`, `select`, `separator`, `tabs`, `tooltip` — see [src/lib/components/ui/](src/lib/components/ui/). Prefer these over hand-rolled equivalents.
+`badge`, `dropdown-menu`, `select`, `separator`, `tabs`, `tooltip` — see [packages/capsulo/src/lib/components/ui/](packages/capsulo/src/lib/components/ui/). Prefer these over hand-rolled equivalents.
 
 ---
 
@@ -228,7 +228,7 @@ See [src/pages/login.astro](src/pages/login.astro):
 
 ### 8.3 Theme toggle placement
 
-Always top-right, fixed within the layout, above decorative backgrounds (`z-20`). See [LightSwitch.svelte](src/lib/components/LightSwitch.svelte) usage in the login.
+Always top-right, fixed within the layout, above decorative backgrounds (`z-20`). See [LightSwitch.svelte](packages/capsulo/src/lib/components/LightSwitch.svelte) usage in the login.
 
 ---
 
@@ -268,6 +268,6 @@ Triggered by the `.dark` class on a root ancestor (see `@variant dark` in [globa
 ## 13. When in doubt
 
 1. Open [/login](src/pages/login.astro) and ask: *would this fit here?*
-2. Check if a shadcn primitive in [src/lib/components/ui/](src/lib/components/ui/) already solves it.
+2. Check if a shadcn primitive in [packages/capsulo/src/lib/components/ui/](packages/capsulo/src/lib/components/ui/) already solves it.
 3. Re-read sections 1 (Principles) and 4 (Radius).
 4. If you're still unsure, prefer **less**: less color, less weight, less radius variation, less motion.

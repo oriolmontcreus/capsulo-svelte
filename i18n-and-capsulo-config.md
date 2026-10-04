@@ -25,9 +25,9 @@ Si cambias **`cache.dbVersion`**, los clientes pueden disparar upgrade del esque
 ### Dónde se consume
 
 - **`astro.config.mjs`** importa este fichero para **`i18n.defaultLocale`** y **`i18n.locales`** (rutas prefijadas por idioma, integración con `autoI18nRoutes`).
-- **`src/lib/i18n-utils.ts`** expone **`LOCALES`**, **`DEFAULT_LOCALE`** e **`isValidLocale`** leyendo `capsuloConfig.i18n`.
+- **`packages/capsulo/src/lib/i18n-utils.ts`** expone **`LOCALES`**, **`DEFAULT_LOCALE`** e **`isValidLocale`** leyendo `capsuloConfig.i18n`.
 - **Admin React:** `CMSManager`, sidebar, variables globales, validación de borradores, preferencias, GitHub API, almacenamiento IDB, etc. importan **`@/capsulo.config`**.
-- **Traducciones en el form builder:** `TranslationProvider` usa **`getI18nConfig`** / **`isTranslationEnabled`** con la misma config tipada vía `CapsuloConfig` en `src/lib/define-config.ts` (tipos de referencia; el objeto real sigue siendo `capsulo.config.ts`).
+- **Traducciones en el form builder:** `TranslationProvider` usa **`getI18nConfig`** / **`isTranslationEnabled`** con la misma config tipada vía `CapsuloConfig` en `packages/capsulo/src/lib/define-config.ts` (tipos de referencia; el objeto real sigue siendo `capsulo.config.ts`).
 
 En la práctica: **tocar `capsulo.config.ts` puede cambiar rutas del sitio, idiomas disponibles, comportamiento del guardado y el árbol de páginas del admin**. Conviene versionarlo y documentar cambios en equipo.
 
@@ -42,7 +42,7 @@ Hay **dos capas** que conviene no mezclar:
 
 ### Habilitación de “modo traducción” en el admin
 
-En **`src/lib/form-builder/core/translation-config.ts`**:
+En **`packages/capsulo/src/lib/form-builder/core/translation-config.ts`**:
 
 - Se valida **`capsulo.config.ts` → `i18n`** (códigos tipo ISO 639‑1, `defaultLocale` dentro de `locales`, sin duplicados, etc.).
 - **`isTranslationEnabled`**: traducciones activas solo si hay **`locales.length > 1`**. Con un solo idioma, el contexto de traducción expone API vacía (sin sidebar real).
@@ -54,12 +54,12 @@ En **`src/lib/form-builder/core/translation-config.ts`**:
 
 ### Sitio público: lectura por locale
 
-**`src/lib/cms-loader.ts`** (`extractFieldValue` + `getAllComponentsData`):
+**`packages/capsulo/src/lib/cms-loader.ts`** (`extractFieldValue` + `getAllComponentsData`):
 
 - Si el campo es traducible y `value` es un mapa de locales, se elige el valor para **`targetLocale`** con **fusión / fallback** respecto al locale por defecto (`deepMergeWithFallback` donde aplica).
 - **`getPageCMS`** (`cms-auto.ts`) obtiene el locale desde la URL / params de Astro y pasa por **`loadPageData`** + **`getAllComponentsData`**.
 
-**`src/lib/i18n-utils.ts`** alinea **`DEFAULT_LOCALE`** y **`LOCALES`** con **`capsulo.config.ts`** para regex de pathname, comprobaciones y helpers como **`getLocaleFromPathname`**.
+**`packages/capsulo/src/lib/i18n-utils.ts`** alinea **`DEFAULT_LOCALE`** y **`LOCALES`** con **`capsulo.config.ts`** para regex de pathname, comprobaciones y helpers como **`getLocaleFromPathname`**.
 
 ### CMS (React): estado de UI y borradores
 
@@ -95,13 +95,13 @@ Si **`capsulo.config.ts`** y **`astro.config`** divergieran en locales, tendría
 | Tema | Archivo |
 |------|---------|
 | Config central | `capsulo.config.ts` |
-| Tipos config | `src/lib/define-config.ts` |
-| Validación i18n / enable | `src/lib/form-builder/core/translation-config.ts` |
-| Locales para URLs y helpers | `src/lib/i18n-utils.ts` |
-| Provider modo traducción | `src/lib/form-builder/context/TranslationContext.tsx` |
-| Datos de traducción en edición | `src/lib/form-builder/context/TranslationDataContext.tsx`, `translation-store` |
-| Lectura en público | `src/lib/cms-loader.ts`, `src/lib/cms-auto.ts` |
-| Astro i18n | `astro.config.mjs`, `src/lib/astro-i18n-auto-routes.ts` |
+| Tipos config | `packages/capsulo/src/lib/define-config.ts` |
+| Validación i18n / enable | `packages/capsulo/src/lib/form-builder/core/translation-config.ts` |
+| Locales para URLs y helpers | `packages/capsulo/src/lib/i18n-utils.ts` |
+| Provider modo traducción | `packages/capsulo/src/lib/form-builder/context/TranslationContext.tsx` |
+| Datos de traducción en edición | `packages/capsulo/src/lib/form-builder/context/TranslationDataContext.tsx`, `translation-store` |
+| Lectura en público | `packages/capsulo/src/lib/cms-loader.ts`, `packages/capsulo/src/lib/cms-auto.ts` |
+| Astro i18n | `astro.config.mjs`, `packages/capsulo/src/lib/astro-i18n-auto-routes.ts` |
 | UI sidebar traducciones | `src/components/admin/sidebar/TranslationsTab.tsx` |
 
 ---

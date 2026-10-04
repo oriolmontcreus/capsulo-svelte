@@ -25,21 +25,21 @@ The flow is:
 
 ## Main Files and Responsibilities
 
-- `src/lib/capsules/core/types.ts`
+- `packages/capsulo/src/lib/capsules/core/types.ts`
   - Shared contracts: `CapsuleDefinition`, `RegisteredCapsule`, `CapsuleManifest`.
-- `src/lib/capsules/core/define-capsule.ts`
+- `packages/capsulo/src/lib/capsules/core/define-capsule.ts`
   - Minimal runtime guard for capsule definitions.
-- `src/lib/capsules/core/registry.ts`
+- `packages/capsulo/src/lib/capsules/core/registry.ts`
   - Loads and validates all capsule definitions.
   - Enforces unique schema keys.
-- `src/lib/vite-plugin-capsule-manifest.ts`
+- `packages/capsulo/src/lib/vite-plugin-capsule-manifest.ts`
   - Scans public pages and builds `virtual:capsule-manifest`.
   - Tracks `occurrenceCount` per imported capsule component.
 - `src/pages/capsule-prototype.astro`
   - Public page used to validate detection with repeated capsule instances.
-- `src/pages/admin-capsules-prototype.astro`
+- `packages/capsulo/src/routes/admin-capsules-prototype.astro`
   - Admin prototype page that consumes the generated manifest.
-- `src/lib/capsules/admin/CapsuleAutoDetectionPrototype.svelte`
+- `packages/capsulo/src/lib/capsules/admin/CapsuleAutoDetectionPrototype.svelte`
   - Simple UI that maps detected entries to schemas and renders one form per instance.
 
 ## Capsule Contract (Required)

@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { Input } from "$lib/components/ui/input";
+  import { Input } from "../../../components/ui/input";
   import {
     Field,
     FieldDescription,
     FieldError,
     FieldLabel,
-  } from "$lib/components/ui/field";
+  } from "../../../components/ui/field";
   import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-  } from "$lib/components/ui/popover";
+  } from "../../../components/ui/popover";
   import {
     Root as TabsRoot,
     List as TabsList,
     Trigger as TabsTrigger,
-  } from "$lib/components/ui/tabs";
+  } from "../../../components/ui/tabs";
   import type { ColorPickerFieldDefinition } from "./color-picker-field.types";
   import {
     COLOR_CHANNELS_BY_SPACE,
@@ -35,7 +35,7 @@
     round,
     setChannelValue,
   } from "./color-utils";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../../admin-i18n/i18n.svelte";
 
   interface Props {
     field: ColorPickerFieldDefinition;

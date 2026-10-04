@@ -1,6 +1,6 @@
-import { requireUser } from "$lib/server/auth";
-import { handle, json } from "$lib/server/http";
-import { storeUpload } from "$lib/server/uploads";
+import { requireUser } from "../../../lib/server/auth";
+import { handle, json } from "../../../lib/server/http";
+import { storeUpload } from "../../../lib/server/uploads";
 
 export const prerender = false;
 

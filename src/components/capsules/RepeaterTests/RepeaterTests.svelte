@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { getCmsData } from "$lib/cms/get-cms-data";
-  import { cmsStore } from "$lib/cms/cms-store.svelte";
+  import { getCmsData, cmsStore, mediaUrl } from "capsulo/runtime";
   import * as Card from "$lib/components/ui/card";
-  import { mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
 
   import { repeaterTestsSchema } from "./repeater-tests.schema";
   import type { RepeaterTestsData } from "./repeater-tests.schema.d";

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import type { FieldDefinition } from "$lib/form-builder/core/types";
-	import { isPasswordField } from "$lib/form-builder/fields/TextField/text-field.utils";
+	import { DEFAULT_LOCALE } from "../../config/i18n-config";
+	import type { FieldDefinition } from "../../form-builder/core/types";
+	import { isPasswordField } from "../../form-builder/fields/TextField/text-field.utils";
 	import type { FieldChange } from "./diff-model";
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import FieldValueView from "./FieldValueView.svelte";
 	import RepeaterDiff from "./RepeaterDiff.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		field,

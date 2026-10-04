@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel, isBlankString } from "../../core/validation-helpers";
 import type { ColorPickerFieldDefinition } from "./color-picker-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 export const colorPickerFieldValidator: FieldValidator<ColorPickerFieldDefinition> = {
 	isEmpty: (_field, value) => isBlankString(value),

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
-	import { getCapsuleByKey } from "$lib/capsules/core/registry";
-	import type { FieldDefinition } from "$lib/form-builder/core/types";
+	import { getCapsuleByKey } from "../../capsules/core/registry";
+	import type { FieldDefinition } from "../../form-builder/core/types";
 	import type { FieldChange, InstanceChange } from "./diff-model";
 	import FieldDiff from "./FieldDiff.svelte";
 	import { capsuleKeyFromInstanceId } from "./schema-defaults";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		instance,

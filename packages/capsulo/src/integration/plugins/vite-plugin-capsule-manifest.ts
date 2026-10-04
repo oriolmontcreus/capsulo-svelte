@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Plugin, ResolvedConfig, ViteDevServer } from "vite";
-import type { CapsuleManifest } from "./capsules/core/types";
+import type { CapsuleManifest } from "../../lib/capsules/core/types";
 
 const VIRTUAL_MODULE_ID = "virtual:capsule-manifest";
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
@@ -44,13 +44,8 @@ function getPageIdFromFile(filePath: string, pagesDir: string): string {
 function isPublicPage(filePath: string, pagesDir: string): boolean {
 	const relativePath = normalizeSlashes(path.relative(pagesDir, filePath));
 	const segments = relativePath.split("/");
-	const fileName = segments[segments.length - 1] ?? "";
 
 	if (segments.includes("api")) {
-		return false;
-	}
-
-	if (segments.includes("admin") || fileName.startsWith("admin")) {
 		return false;
 	}
 
@@ -198,10 +193,11 @@ export function capsuleManifestPlugin(): Plugin {
 
 			server.watcher.on("change", (changedPath: string) => {
 				const normalized = normalizeSlashes(changedPath);
-				const relevantPage = normalized.includes("/src/pages/") && normalized.endsWith(".astro");
+				const root = normalizeSlashes(projectRoot);
+				const relevantPage = normalized.startsWith(`${root}/src/pages/`) && normalized.endsWith(".astro");
 				const relevantCapsuleDefinition = normalized.endsWith("/capsule.definition.ts");
 				const relevantCapsuleSchema =
-					normalized.includes("/src/components/capsules/") &&
+					normalized.startsWith(`${root}/src/components/capsules/`) &&
 					(normalized.endsWith(".schema.ts") || normalized.endsWith(".schema.tsx"));
 
 				if (!relevantPage && !relevantCapsuleDefinition && !relevantCapsuleSchema) {

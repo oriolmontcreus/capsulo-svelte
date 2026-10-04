@@ -1,7 +1,7 @@
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { getLocaleFromPathname } from "$lib/i18n/routing";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import { DEFAULT_LOCALE } from "../config/i18n-config";
+import type { SchemaValues } from "../form-builder/core/types";
+import { getLocaleFromPathname } from "../i18n/routing";
+import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
 
 export const cmsStore = $state({
 	active: false,

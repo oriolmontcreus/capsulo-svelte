@@ -1,9 +1,9 @@
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
-import { resolveGlobalsValues } from "$lib/globals/resolve-globals";
-import { formatGlobalDisplayValue } from "$lib/globals/types";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { DEFAULT_LOCALE } from "../../config/i18n-config";
+import type { SchemaValues } from "../../form-builder/core/types";
+import { getGlobalsKnownKeys } from "../get-globals";
+import { resolveGlobalsValues } from "../resolve-globals";
+import { formatGlobalDisplayValue } from "../types";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 const knownKeys = getGlobalsKnownKeys();
 

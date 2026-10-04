@@ -1,7 +1,7 @@
-import { createIdbStore } from "$lib/utils/idb-store";
+import { createIdbStore } from "../utils/idb-store";
 import type { EditRecord } from "./edits";
 import type { AiErrorCode, AiMessage } from "./protocol";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../admin-i18n/i18n.svelte";
 
 /** What the sidebar shows. The model sees `transcript` instead. */
 export type ChatEntry =

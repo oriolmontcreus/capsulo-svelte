@@ -2,7 +2,7 @@
 // @ts-check
 import * as p from "@clack/prompts";
 
-import { ExecError, isVerbose, tail } from "../src/lib/exec.js";
+import { ExecError, isVerbose, tail } from "../cli/lib/exec.js";
 
 const HELP = `capsulo <command>
 
@@ -11,6 +11,7 @@ Commands:
   users    Manage the people who can sign in to the CMS
   pull     Snapshot published content for the static build (runs before \`astro build\`)
   storage  Show where uploads are stored, or move them from KV to R2 (\`capsulo storage r2\`)
+  eject    Copy the admin and integration into src/capsulo/ to customize them (ends automatic updates)
 
 Run \`capsulo <command> --help\` for details.`;
 
@@ -18,10 +19,11 @@ const [command, ...args] = process.argv.slice(2);
 
 /** @type {Record<string, () => Promise<(argv: string[]) => Promise<void>>>} */
 const commands = {
-	deploy: async () => (await import("../src/commands/deploy.js")).deployCommand,
-	users: async () => (await import("../src/commands/users.js")).usersCommand,
-	pull: async () => (await import("../src/commands/pull.js")).pullCommand,
-	storage: async () => (await import("../src/commands/storage.js")).storageCommand,
+	deploy: async () => (await import("../cli/commands/deploy.js")).deployCommand,
+	users: async () => (await import("../cli/commands/users.js")).usersCommand,
+	pull: async () => (await import("../cli/commands/pull.js")).pullCommand,
+	storage: async () => (await import("../cli/commands/storage.js")).storageCommand,
+	eject: async () => (await import("../cli/commands/eject.js")).ejectCommand,
 };
 
 if (!command || command === "--help" || command === "-h" || command === "help") {

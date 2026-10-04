@@ -1,5 +1,5 @@
-import { getLoginChallenge } from "$lib/server/auth";
-import { handle, isRecord, json, readJson, requireString, HttpError } from "$lib/server/http";
+import { getLoginChallenge } from "../../../../lib/server/auth";
+import { handle, isRecord, json, readJson, requireString, HttpError } from "../../../../lib/server/http";
 
 export const prerender = false;
 

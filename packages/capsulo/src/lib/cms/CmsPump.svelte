@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { initCmsPreview, teardownCmsPreview } from "$lib/cms/cms-preview-runtime";
-	import { resetPreviewStore, syncSiteLocaleFromPathname } from "$lib/cms/cms-store.svelte";
-	import { pathnameToPageId } from "$lib/i18n/routing";
-	import { PAGE_EDITOR_PREVIEW_PARAM } from "$lib/PageEditor/preview-channel";
+	import { initCmsPreview, teardownCmsPreview } from "./cms-preview-runtime";
+	import { resetPreviewStore, syncSiteLocaleFromPathname } from "./cms-store.svelte";
+	import { pathnameToPageId } from "../i18n/routing";
+	import { PAGE_EDITOR_PREVIEW_PARAM } from "../PageEditor/preview-channel";
 
 	async function bootCmsRuntime(): Promise<void> {
 		if (typeof window === "undefined") return;

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import * as Tooltip from "$lib/components/ui/tooltip";
+  import { Button } from "../../components/ui/button";
+  import * as Tooltip from "../../components/ui/tooltip";
   import CopyMinusIcon from "@lucide/svelte/icons/copy-minus";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../admin-i18n/i18n.svelte";
 
   type Props = {
     disabled?: boolean;

@@ -3,7 +3,7 @@
 A static-first site + CMS that runs on **one free Cloudflare account** (no credit card):
 
 - **Public pages** are prerendered by Astro and served as static assets, which are free and unlimited on Workers.
-- **The CMS** (`/admin`) talks to a small API on the same Worker (`src/pages/api/capsulo`):
+- **The CMS** (`/admin`) talks to a small API on the same Worker (`/api/capsulo/*`):
   - **D1** stores pages, history, globals, users and sessions.
   - **Workers KV** stores uploaded files by default (up to 25 MB each). A project can use **R2** instead for bigger files; see [File storage](#file-storage).
 - **Publishing:** a CMS commit fires a Workers Builds Deploy Hook. The build pulls the published content and uploads, and bakes them into the static site.
@@ -16,7 +16,44 @@ cd my-client-site
 pnpm dev                                    # site: http://localhost:4321, CMS: http://localhost:4321/admin
 ```
 
+The new project contains only your site: pages, layouts, styles, `capsulo.config.ts` and your capsules (`src/components/capsules`). The admin, the CMS API and the build plumbing come from the `capsulo` package as an Astro integration:
+
+```js
+// astro.config.mjs
+import capsulo, { capsuloAdapter } from "capsulo/astro";
+import capsuloConfig from "./capsulo.config.ts";
+
+export default defineConfig({
+	adapter: capsuloAdapter(),
+	integrations: [capsulo(capsuloConfig)],
+});
+```
+
+Capsules and schemas import what they need from the package: `capsulo/schema` (`defineCapsule`, `createSchema`, the field builders), `capsulo/runtime` (`getCmsData`, `cmsStore`, `mediaUrl`) and `capsulo/components/CapsuloScripts.astro` (put once in your layout).
+
 No accounts or `.env` are needed to develop. `pnpm dev` applies the D1 migrations to a local database, and `/admin` signs you in automatically as a local "Developer" user. To test the real login flow, put `DEV_AUTO_LOGIN=false` in `.dev.vars`.
+
+## Updating Capsulo
+
+The admin and the CMS live in `node_modules`, so a project gets new Capsulo versions with one command:
+
+```sh
+pnpm update capsulo   # then deploy (or push, with auto-publishing)
+```
+
+Database changes ship with the package: `wrangler.jsonc` points `migrations_dir` at `node_modules/capsulo/src/migrations`, so `pnpm dev` and `capsulo deploy` apply new migrations on their own.
+
+## Ejecting
+
+If a project needs changes to the admin itself, eject it:
+
+```sh
+npx capsulo eject
+```
+
+After a confirmation, it copies Capsulo's source (admin, API routes, integration, migrations) into `src/capsulo/`, points `astro.config.mjs`, `capsulo.config.ts` and your `capsulo/*` imports at that copy, moves `migrations_dir` to `src/capsulo/migrations`, adds the admin's dependencies to `package.json` and records the ejected version in `.capsulo/project.json`. The copy is byte for byte the installed version, so diffing it against a newer release shows exactly what changed.
+
+**This is one way:** after ejecting, `pnpm update capsulo` no longer updates the admin, and new Capsulo versions have to be merged into `src/capsulo/` by hand. The `capsulo` CLI stays installed (pinned to the ejected version, since its SQL matches that schema). `npm create capsulo` can also eject from the start (`--eject`).
 
 ## Deploy
 
@@ -73,13 +110,13 @@ npx capsulo users remove editor2
 
 Commands target the deployed database once the project is deployed, and the local one before that. Force either with `--remote` or `--local`.
 
-Passwords fit the free plan's 10 ms CPU limit. The browser stretches them with PBKDF2-SHA256 (600k rounds) and the Worker only compares one SHA-256 of the result, so a leaked database still costs an attacker the full PBKDF2 work per guess. See `packages/cli/src/password.js`.
+Passwords fit the free plan's 10 ms CPU limit. The browser stretches them with PBKDF2-SHA256 (600k rounds) and the Worker only compares one SHA-256 of the result, so a leaked database still costs an attacker the full PBKDF2 work per guess. See `packages/capsulo/src/password.js`.
 
 ## How content reaches the public site
 
 - `pnpm build` runs `capsulo pull && astro build`.
 - `capsulo pull` fetches `<siteUrl>/api/capsulo/export` (the site URL is in `.capsulo/project.json`). It writes `.capsulo/published/content.json` and copies uploads into `public/uploads/`.
-- `src/middleware.ts` loads each page's published values before it prerenders, so capsules render the real content through `getCmsData()`. In `astro dev` the values come straight from the local D1.
+- Capsulo's middleware loads each page's published values before it prerenders, so capsules render the real content through `getCmsData()`. In `astro dev` the values come straight from the local D1.
 - In the editor preview, drafts still flow in over `postMessage` (see [`docs/cms/live-preview.md`](docs/cms/live-preview.md)).
 
 `capsulo pull --local` snapshots your local database instead, which is handy for checking a production build locally.
@@ -95,7 +132,7 @@ export default defineCapsuloConfig({
 });
 ```
 
-Messages live in `src/lib/admin-i18n/messages` (`en.ts` is the source of truth). Labels and descriptions in your schemas aren't translated: write them in your editors' language.
+Messages live in `packages/capsulo/src/lib/admin-i18n/messages` (`en.ts` is the source of truth). Labels and descriptions in your schemas aren't translated: write them in your editors' language.
 
 ## AI agent
 
@@ -127,11 +164,15 @@ These are per Cloudflare account and shared by every project in it:
 
 ## Repository layout
 
-- `src/`: the Astro site, CMS admin and API (`src/pages/api/capsulo`, `src/lib/server`).
-- `migrations/`: D1 schema.
-- `packages/cli`: the `capsulo` CLI (`deploy`, `users`, `pull`, `storage`).
+- `packages/capsulo`: the `capsulo` package.
+  - `src/`: everything a project gets as source (and exactly what `capsulo eject` copies). It holds the integration (`src/integration`), the admin and API routes (`src/routes`), the admin's code (`src/lib`), the D1 migrations (`src/migrations`) and the public entry points (`src/schema.ts`, `src/runtime.ts`, `src/config.js`, `src/components`).
+  - `cli/` and `bin/`: the CLI (`deploy`, `users`, `pull`, `storage`, `eject`).
+  - `pnpm --dir packages/capsulo build` bundles the integration to `dist/astro.js` (`capsulo/astro`). Astro loads `astro.config` with plain Node, which can't run TypeScript from `node_modules`; everything else ships as source.
+- The repo root is the dev playground: a site with test capsules and pages that uses the package from the workspace. Its `astro.config.mjs` imports the integration from source, so changes apply without a build.
+- `templates/starter`: what `npm create capsulo` copies into a new project.
+- `packages/create-capsulo`: `npm create capsulo`. To test it against this checkout, run `pnpm --dir packages/capsulo build`, then `node packages/create-capsulo/bin/create-capsulo.js ../test-site --template .`
 - `apps/docs`: the public docs site (see below).
-- `packages/create-capsulo`: `npm create capsulo`. To test it against this checkout, run `node packages/create-capsulo/bin/create-capsulo.js ../test-site --template .`
+- Manual tests: `npx tsx --import ./packages/capsulo/test/virtual-modules.mjs <file>.test-manual.ts` (the loader stands in for the integration's virtual modules).
 
 ## Docs site
 

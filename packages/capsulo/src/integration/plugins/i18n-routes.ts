@@ -1,10 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import type { AstroIntegration } from "astro";
 
-import capsuloConfig from "../../capsulo.config";
-import { getI18nConfig } from "./config/i18n-config";
+import type { ResolvedI18nConfig } from "../../lib/config/i18n-resolve";
 
 type PageRoute = {
   pattern: string;
@@ -23,10 +20,8 @@ function isPublicPage(relativePath: string): boolean {
   if (!isAstroPage(relativePath)) return false;
 
   const segments = relativePath.split("/");
-  const fileName = segments[segments.length - 1] ?? "";
 
   if (segments.includes("api")) return false;
-  if (segments.includes("admin") || fileName.startsWith("admin")) return false;
 
   return true;
 }
@@ -75,6 +70,7 @@ function listPageRoutes(
 
     routes.push({
       pattern: getUrlPathFromFile(relativePath),
+      // Relative to the project root, which is how Astro resolves a string entrypoint.
       entrypoint: `./src/pages/${relativePath}`,
     });
   }
@@ -113,11 +109,23 @@ export function buildUnprefixedLocaleRedirects(
   return redirects;
 }
 
-/**
- * Injects locale-prefixed routes for public pages so a single .astro file
- * serves every configured locale at `/{locale}/page`.
- */
-function writeStaticRedirectsFile(
+/** The locale-prefixed copies of every site page: one .astro file serves `/{locale}/page`. */
+export function listLocalizedPageRoutes(i18n: ResolvedI18nConfig, pagesDir: string): PageRoute[] {
+  const publicPages = listPublicPageRoutes(pagesDir);
+  const routes: PageRoute[] = [];
+
+  for (const locale of i18n.locales) {
+    if (!i18n.prefixDefaultLocale && locale === i18n.defaultLocale) continue;
+    for (const page of publicPages) {
+      routes.push({ pattern: buildLocalizedPattern(locale, page.pattern), entrypoint: page.entrypoint });
+    }
+  }
+
+  return routes;
+}
+
+/** `_redirects` for static hosts: unprefixed paths go to the default locale. */
+export function writeStaticRedirectsFile(
   outputDir: string,
   defaultLocale: string,
   pagesDir: string,
@@ -130,56 +138,9 @@ function writeStaticRedirectsFile(
   // Root is handled by Astro redirectToDefaultLocale; include for static hosts anyway.
   lines.unshift(`/  /${defaultLocale}/  302`);
 
-  if (lines.length === 0) return;
-
   fs.writeFileSync(
     path.join(outputDir, "_redirects"),
     `${lines.join("\n")}\n`,
     "utf-8",
   );
-}
-
-export function autoI18nRoutes(): AstroIntegration {
-  return {
-    name: "auto-i18n-routes",
-    hooks: {
-      "astro:config:setup": ({ injectRoute, config }) => {
-        if (!config.i18n) return;
-
-        const { prefixDefaultLocale } = getI18nConfig(capsuloConfig);
-        const locales = capsuloConfig.i18n.locales.map((locale) =>
-          locale.trim(),
-        );
-        const pagesDir = path.join(fileURLToPath(config.root), "src", "pages");
-        const publicPages = listPublicPageRoutes(pagesDir);
-
-        for (const locale of locales) {
-          if (!prefixDefaultLocale && locale === config.i18n.defaultLocale) {
-            continue;
-          }
-
-          for (const page of publicPages) {
-            injectRoute({
-              pattern: buildLocalizedPattern(locale, page.pattern),
-              entrypoint: page.entrypoint,
-            });
-          }
-        }
-
-      },
-
-      "astro:build:done": ({ dir }) => {
-        const prefixDefaultLocale =
-          capsuloConfig.i18n.prefixDefaultLocale ?? true;
-        if (!prefixDefaultLocale) return;
-
-        const pagesDir = path.join(process.cwd(), "src", "pages");
-        writeStaticRedirectsFile(
-          fileURLToPath(dir),
-          capsuloConfig.i18n.defaultLocale.trim(),
-          pagesDir,
-        );
-      },
-    },
-  };
 }

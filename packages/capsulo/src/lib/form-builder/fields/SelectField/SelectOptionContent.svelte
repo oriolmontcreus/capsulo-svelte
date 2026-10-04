@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from "$lib/utils";
+	import { cn } from "../../../utils";
 	import SelectOptionLabel from "./SelectOptionLabel.svelte";
 	import type { SelectOption } from "./select-field.types";
 

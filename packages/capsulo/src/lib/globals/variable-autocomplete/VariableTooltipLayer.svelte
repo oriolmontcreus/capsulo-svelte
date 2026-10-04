@@ -2,10 +2,10 @@
 	import type { Snippet } from "svelte";
 	import { getContext } from "svelte";
 
-	import * as Tooltip from "$lib/components/ui/tooltip";
+	import * as Tooltip from "../../components/ui/tooltip";
 
 	import { GLOBAL_VARIABLES_CONTEXT_KEY, type GlobalVariablesContext } from "./context";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	type Props = {
 		children: Snippet;

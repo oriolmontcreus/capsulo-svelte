@@ -1,5 +1,5 @@
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import { createIdbStore } from "$lib/utils/idb-store";
+import type { SchemaValues } from "../form-builder/core/types";
+import { createIdbStore } from "../utils/idb-store";
 
 /**
  * Unsaved global variables. The Global Variables editor keeps its edits here until Save,

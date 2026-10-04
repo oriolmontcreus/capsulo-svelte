@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel } from "../../core/validation-helpers";
 import type { ToggleFieldDefinition } from "./toggle-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 /** A required toggle must be switched on (e.g. "I accept the terms"). */
 export const toggleFieldValidator: FieldValidator<ToggleFieldDefinition> = {

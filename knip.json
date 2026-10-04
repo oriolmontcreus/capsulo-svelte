@@ -12,33 +12,46 @@
       "exports",
       "types",
       "enumMembers"
+    ],
+    "packages/capsulo/src/lib/components/ui/**/index.ts": [
+      "exports",
+      "types",
+      "enumMembers"
     ]
   },
   "workspaces": {
     ".": {
       "entry": [
         "capsulo.config.ts",
-        "src/**/*.test-manual.ts",
         "src/components/capsules/**/capsule.definition.ts",
-        "src/lib/capsules/core/define-capsule.ts",
         "src/config/**/*.ts",
+        "src/styles/**/*.css"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,svelte,astro}"
+      ]
+    },
+    "packages/capsulo": {
+      "entry": [
+        "bin/*.js",
+        "scripts/*.js",
+        "test/*.test-manual.js",
+        "test/*.mjs",
+        "src/**/*.test-manual.ts",
+        "src/components/*.astro",
+        "src/routes/**/*.{astro,ts}",
         "src/styles/**/*.css",
         "src/lib/form-builder/demo/**/*.{ts,svelte}",
         "src/lib/form-builder/core/schema-to-zod.ts",
-        "src/lib/form-builder/schemas/**/*.ts"
+        "src/lib/form-builder/schemas/**/*.ts",
+        "src/lib/globals/empty-globals.schema.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx,svelte,astro}",
-        "scripts/**/*.ts"
+        "src/**/*.{ts,js,svelte,astro}",
+        "cli/**/*.js"
       ],
       "ignore": [
         "src/lib/components/ui/dropdown-menu/**"
-      ]
-    },
-    "packages/cli": {
-      "entry": [
-        "bin/*.js",
-        "src/**/*.test-manual.js"
       ]
     },
     "packages/create-capsulo": {
@@ -51,13 +64,15 @@
         "src/pages/**/*.{astro,ts}",
         "src/scripts/*.ts",
         "src/previews/mock-*.ts",
-        "src/styles/**/*.css"
+        "src/styles/**/*.css",
+        "src/previews/example-globals.schema.ts"
       ],
       "project": [
         "src/**/*.{ts,astro}"
       ],
       "ignoreDependencies": [
-        "postcss-selector-parser"
+        "postcss-selector-parser",
+        "bits-ui"
       ]
     }
   },

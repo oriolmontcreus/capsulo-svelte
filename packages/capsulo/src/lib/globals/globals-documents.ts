@@ -1,5 +1,5 @@
-import { capsuloFetch, jsonBody } from "$lib/api/capsulo-client";
-import type { SchemaValues } from "$lib/form-builder/core/types";
+import { capsuloFetch, jsonBody } from "../api/capsulo-client";
+import type { SchemaValues } from "../form-builder/core/types";
 
 import { deserializeGlobalsValues, serializeGlobalsValues } from "./globals-persistence";
 

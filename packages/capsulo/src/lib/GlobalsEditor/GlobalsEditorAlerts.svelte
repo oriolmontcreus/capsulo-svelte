@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { ContentIssue } from "$lib/capsules/core/validate-content";
-	import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import type { ContentIssue } from "../capsules/core/validate-content";
+	import { DEFAULT_LOCALE } from "../config/i18n-config";
+	import { t } from "../admin-i18n/i18n.svelte";
 
 	type Props = {
 		hasCheckedAuth: boolean;

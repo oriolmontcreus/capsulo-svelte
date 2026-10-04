@@ -1,20 +1,20 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Select from "$lib/components/ui/select";
-  import * as Tooltip from "$lib/components/ui/tooltip";
-  import { LOCALES, DEFAULT_LOCALE } from "$lib/config/i18n-config";
-  import type { SchemaValues } from "$lib/form-builder/core/types";
-  import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+  import { Button } from "../components/ui/button";
+  import * as Select from "../components/ui/select";
+  import * as Tooltip from "../components/ui/tooltip";
+  import { LOCALES, DEFAULT_LOCALE } from "../config/i18n-config";
+  import type { SchemaValues } from "../form-builder/core/types";
+  import type { PageEditorValuesByInstance } from "./persistence";
   import {
     PAGE_EDITOR_PREVIEW_CHANNEL,
     PAGE_EDITOR_PREVIEW_PARAM,
     isPageEditorPreviewMessage,
     type PageEditorPreviewReadyMessage,
     type PageEditorPreviewSyncMessage,
-  } from "$lib/PageEditor/preview-channel";
-  import { pageIdToPathname } from "$lib/i18n/routing";
-  import { formatLocaleLabel } from "$lib/utils/locale-label";
+  } from "./preview-channel";
+  import { pageIdToPathname } from "../i18n/routing";
+  import { formatLocaleLabel } from "../utils/locale-label";
   import {
     clampPreviewDimension,
     DEFAULT_PREVIEW_DEVICE,
@@ -26,14 +26,14 @@
     PREVIEW_DEVICE_GROUPS,
     resolvePreviewDevice,
     type PreviewDeviceId,
-  } from "$lib/PageEditor/preview-devices";
+  } from "./preview-devices";
 
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
   import Copy from "@lucide/svelte/icons/copy";
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import Maximize2 from "@lucide/svelte/icons/maximize-2";
   import Minimize2 from "@lucide/svelte/icons/minimize-2";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../admin-i18n/i18n.svelte";
 
   type Props = {
     pageId: string;

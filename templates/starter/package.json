@@ -1,0 +1,30 @@
+{
+  "name": "capsulo-site",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "wrangler d1 migrations apply DB --local && astro dev",
+    "build": "capsulo pull && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "deploy": "capsulo deploy"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
+    "@astrojs/svelte": "^9.0.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "astro": "^7.3.5",
+    "capsulo": "^0.1.0",
+    "svelte": "^5.55.5",
+    "tailwindcss": "^4.2.4"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "wrangler": "^4.147.0"
+  }
+}

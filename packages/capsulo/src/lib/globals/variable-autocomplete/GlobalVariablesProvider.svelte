@@ -2,7 +2,7 @@
 	import type { Snippet } from "svelte";
 	import { setContext } from "svelte";
 
-	import { getGlobalsKnownKeys } from "$lib/globals/get-globals";
+	import { getGlobalsKnownKeys } from "../get-globals";
 
 	import { GLOBAL_VARIABLES_CONTEXT_KEY } from "./context";
 	import type { VariableItem } from "./types";

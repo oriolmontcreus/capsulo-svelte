@@ -1,7 +1,7 @@
 /**
  * Assert-based self-check for the timestamp formatters. No test framework.
  *
- * Run with:  npx tsx src/lib/utils/format-timestamp.test-manual.ts
+ * Run with:  npx tsx --import ./packages/capsulo/test/virtual-modules.mjs packages/capsulo/src/lib/utils/format-timestamp.test-manual.ts
  *
  * Outside the browser the admin speaks English (unless capsulo.config.ts sets
  * `admin.locale`), so relative times are compared against English Intl output.

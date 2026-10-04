@@ -1,9 +1,9 @@
-import { normalizeRepeaterItems } from "$lib/form-builder/core/translation-runtime";
-import type { FieldDefinition, RepeaterFieldDefinition, RepeaterItem } from "$lib/form-builder/core/types";
+import { normalizeRepeaterItems } from "../../form-builder/core/translation-runtime";
+import type { FieldDefinition, RepeaterFieldDefinition, RepeaterItem } from "../../form-builder/core/types";
 import {
 	getRepeaterItemSummary,
 	repeaterItemLabel,
-} from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
+} from "../../form-builder/fields/RepeaterField/modules/repeater-values";
 import { valuesEqual } from "./diff-model";
 
 /** One child field of an item that differs, for one locale. */

@@ -7,7 +7,7 @@ import {
 	type MessageKey,
 	type MessageParams,
 	type UiLocale
-} from "$lib/admin-i18n/core";
+} from "../admin-i18n/core";
 
 export class HttpError extends Error {
 	/** Set for errors editors can see: sent in the admin language of the request. */

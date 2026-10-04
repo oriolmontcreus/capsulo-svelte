@@ -57,9 +57,9 @@ These rules should be preserved unless there is a deliberate architectural migra
 
 ### Authoring Layer
 
-- `src/lib/form-builder/core/types.ts`
-- `src/lib/form-builder/core/create-schema.ts`
-- `src/lib/form-builder/schemas/*.ts`
+- `packages/capsulo/src/lib/form-builder/core/types.ts`
+- `packages/capsulo/src/lib/form-builder/core/create-schema.ts`
+- `packages/capsulo/src/lib/form-builder/schemas/*.ts`
 
 Responsibilities:
 
@@ -69,10 +69,10 @@ Responsibilities:
 
 ### Field Modules
 
-- `src/lib/form-builder/fields/<FieldName>/*.types.ts`
-- `src/lib/form-builder/fields/<FieldName>/*.builder.ts`
-- `src/lib/form-builder/fields/<FieldName>/*.field.svelte`
-- `src/lib/form-builder/fields/<FieldName>/*.validation.ts`
+- `packages/capsulo/src/lib/form-builder/fields/<FieldName>/*.types.ts`
+- `packages/capsulo/src/lib/form-builder/fields/<FieldName>/*.builder.ts`
+- `packages/capsulo/src/lib/form-builder/fields/<FieldName>/*.field.svelte`
+- `packages/capsulo/src/lib/form-builder/fields/<FieldName>/*.validation.ts`
 
 Responsibilities:
 
@@ -82,8 +82,8 @@ Responsibilities:
 
 ### Runtime Rendering Layer
 
-- `src/lib/form-builder/renderer/field-registry.ts`
-- `src/lib/form-builder/renderer/SchemaRenderer.svelte`
+- `packages/capsulo/src/lib/form-builder/renderer/field-registry.ts`
+- `packages/capsulo/src/lib/form-builder/renderer/SchemaRenderer.svelte`
 
 Responsibilities:
 
@@ -94,10 +94,10 @@ Responsibilities:
 
 ### Conditions & Validation Layer
 
-- `src/lib/form-builder/core/conditions.ts`
-- `src/lib/form-builder/core/validation.ts` (+ `validation-helpers.ts`)
-- `src/lib/capsules/core/validate-content.ts` (pages / globals, schema defaults merged)
-- `src/lib/form-builder/core/schema-to-zod.ts` (a Zod view of the same validator)
+- `packages/capsulo/src/lib/form-builder/core/conditions.ts`
+- `packages/capsulo/src/lib/form-builder/core/validation.ts` (+ `validation-helpers.ts`)
+- `packages/capsulo/src/lib/capsules/core/validate-content.ts` (pages / globals, schema defaults merged)
+- `packages/capsulo/src/lib/form-builder/core/schema-to-zod.ts` (a Zod view of the same validator)
 
 Responsibilities:
 

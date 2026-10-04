@@ -5,13 +5,13 @@
     FieldDescription,
     FieldError,
     FieldLabel,
-  } from "$lib/components/ui/field";
+  } from "../../../components/ui/field";
   import type { FileUploadFieldDefinition } from "./file-upload-field.types";
   import { UploadError, fileNameFromPath, mediaUrl, uploadFile } from "./storage";
   import { isSvgPath } from "./svg-utils";
   import ImageZoomModal from "./ImageZoomModal.svelte";
   import SvgEditorModal from "./SvgEditorModal.svelte";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../../../admin-i18n/i18n.svelte";
 
   interface Props {
     field: FileUploadFieldDefinition;

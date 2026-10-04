@@ -1,7 +1,7 @@
 import type { FieldValidator } from "../../core/validation";
 import { fieldLabel } from "../../core/validation-helpers";
 import type { SelectFieldDefinition } from "./select-field.types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../../admin-i18n/core";
 
 /** Values of the schema's own options; internal links are built from the site's pages at runtime. */
 function staticOptionValues(field: SelectFieldDefinition): Set<string> | null {

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { Button } from "$lib/components/ui/button";
+	import { Button } from "../../components/ui/button";
 	import {
 		formatAbsoluteTimestamp,
 		formatRelativeTimestamp
-	} from "$lib/utils/format-timestamp";
+	} from "../../utils/format-timestamp";
 	import { groupCommitsByDay, type CommitEntry } from "./history-model";
 	import AuthorAvatar from "./AuthorAvatar.svelte";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		commits,

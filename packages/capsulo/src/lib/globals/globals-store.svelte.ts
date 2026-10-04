@@ -1,5 +1,5 @@
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
-import type { SchemaValues } from "$lib/form-builder/core/types";
+import { DEFAULT_LOCALE } from "../config/i18n-config";
+import type { SchemaValues } from "../form-builder/core/types";
 
 import { loadGlobalsDocumentFromDb } from "./globals-documents";
 import { withGlobalsDefaults } from "./resolve-globals";

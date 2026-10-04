@@ -1,4 +1,4 @@
-import type { CapsuleManifestEntry } from "$lib/capsules/core/types";
+import type { CapsuleManifestEntry } from "../../capsules/core/types";
 import type { GroupedCapsuleEntry } from "./types";
 
 export function groupManifestEntries(

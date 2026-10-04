@@ -1,5 +1,5 @@
-import { exportPublishedContent } from "$lib/server/content";
-import { handle } from "$lib/server/http";
+import { exportPublishedContent } from "../../../lib/server/content";
+import { handle } from "../../../lib/server/http";
 
 export const prerender = false;
 

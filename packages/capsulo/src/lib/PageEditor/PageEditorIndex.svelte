@@ -6,17 +6,17 @@
     BreadcrumbLink,
     BreadcrumbSeparator,
     BreadcrumbPage,
-  } from "$lib/components/ui/breadcrumb";
+  } from "../components/ui/breadcrumb";
   import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card";
+  } from "../components/ui/card";
   import FolderIcon from "@lucide/svelte/icons/folder";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import { onMount } from "svelte";
-  import { t } from "$lib/admin-i18n/i18n.svelte";
+  import { t } from "../admin-i18n/i18n.svelte";
 
   interface PageCard {
     pageId: string;

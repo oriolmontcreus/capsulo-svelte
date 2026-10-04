@@ -1,8 +1,6 @@
 <script lang="ts">
-  import { getCmsData } from "$lib/cms/get-cms-data";
-  import { cmsStore } from "$lib/cms/cms-store.svelte";
+  import { getCmsData, cmsStore, fileNameFromPath, mediaUrl } from "capsulo/runtime";
   import * as Card from "$lib/components/ui/card";
-  import { fileNameFromPath, mediaUrl } from "$lib/form-builder/fields/FileUploadField/storage";
 
   import { fileUploadTestsSchema } from "./file-upload-tests.schema";
   import type { FileUploadTestsData } from "./file-upload-tests.schema.d";

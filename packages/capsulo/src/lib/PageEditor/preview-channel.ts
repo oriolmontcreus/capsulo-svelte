@@ -1,5 +1,5 @@
-import type { SchemaValues } from "$lib/form-builder/core/types";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { SchemaValues } from "../form-builder/core/types";
+import type { PageEditorValuesByInstance } from "./persistence";
 
 export const PAGE_EDITOR_PREVIEW_PARAM = "pageEditorPreview";
 export const PAGE_EDITOR_PREVIEW_CHANNEL = "page-editor-preview";

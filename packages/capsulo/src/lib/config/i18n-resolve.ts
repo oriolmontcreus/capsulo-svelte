@@ -1,4 +1,7 @@
-import capsuloConfig from "../../../capsulo.config";
+/**
+ * Validates and resolves the `i18n` block of capsulo.config.ts. Pure: the integration runs it
+ * at config time, and `i18n-config.ts` runs it on the site's config at runtime.
+ */
 import type { CapsuloConfig, CapsuloI18nConfig } from "./define-config";
 
 const LOCALE_CODE_PATTERN = /^[a-z]{2}(?:-[A-Z]{2})?$/;
@@ -22,7 +25,7 @@ function assertLocaleCode(locale: string, path: string): void {
 	}
 }
 
-export function assertI18nConfig(i18n: CapsuloI18nConfig): asserts i18n is CapsuloI18nConfig {
+function assertI18nConfig(i18n: CapsuloI18nConfig): asserts i18n is CapsuloI18nConfig {
 	if (!Array.isArray(i18n.locales) || i18n.locales.length === 0) {
 		throw new Error(`${formatPath("i18n.locales")} must contain at least one locale.`);
 	}
@@ -66,7 +69,7 @@ export function assertI18nConfig(i18n: CapsuloI18nConfig): asserts i18n is Capsu
 	}
 }
 
-export function getI18nConfig(config: CapsuloConfig = capsuloConfig): ResolvedI18nConfig {
+export function getI18nConfig(config: CapsuloConfig): ResolvedI18nConfig {
 	assertI18nConfig(config.i18n);
 
 	const locales = config.i18n.locales.map((locale) => locale.trim());
@@ -81,14 +84,4 @@ export function getI18nConfig(config: CapsuloConfig = capsuloConfig): ResolvedI1
 		fallbackLocale: fallbackLocale && fallbackLocale.length > 0 ? fallbackLocale : undefined,
 		prefixDefaultLocale
 	};
-}
-
-const resolvedConfig = getI18nConfig(capsuloConfig);
-
-export const LOCALES = resolvedConfig.locales;
-export const DEFAULT_LOCALE = resolvedConfig.defaultLocale;
-export const PREFIX_DEFAULT_LOCALE = resolvedConfig.prefixDefaultLocale;
-
-export function isValidLocale(locale: string): boolean {
-	return LOCALES.includes(locale);
 }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { SchemaDefinition, SchemaValues } from "./types";
 import { validateSchemaValues } from "./validation";
-import { DEFAULT_LOCALE } from "$lib/config/i18n-config";
+import { DEFAULT_LOCALE } from "../../config/i18n-config";
 
 interface SchemaToZodOptions {
 	defaultLocale?: string;

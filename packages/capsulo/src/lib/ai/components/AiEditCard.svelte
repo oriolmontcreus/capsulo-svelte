@@ -1,12 +1,12 @@
 <script lang="ts">
 	import CheckIcon from "@lucide/svelte/icons/check";
 	import Undo2Icon from "@lucide/svelte/icons/undo-2";
-	import { Button } from "$lib/components/ui/button";
-	import FieldDiff from "$lib/PageEditor/changes/FieldDiff.svelte";
-	import type { FieldChange } from "$lib/PageEditor/changes/diff-model";
+	import { Button } from "../../components/ui/button";
+	import FieldDiff from "../../PageEditor/changes/FieldDiff.svelte";
+	import type { FieldChange } from "../../PageEditor/changes/diff-model";
 	import type { EditRecord } from "../edits";
 	import { GLOBALS_TARGET, findField, schemaForInstance } from "../site-content";
-	import { t } from "$lib/admin-i18n/i18n.svelte";
+	import { t } from "../../admin-i18n/i18n.svelte";
 
 	let {
 		edit,

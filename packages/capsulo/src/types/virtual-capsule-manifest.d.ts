@@ -1,6 +1,4 @@
 declare module "virtual:capsule-manifest" {
-	import type { CapsuleManifest } from "$lib/capsules/core/types";
-
-	const capsuleManifest: CapsuleManifest;
+	const capsuleManifest: import("../lib/capsules/core/types").CapsuleManifest;
 	export default capsuleManifest;
 }

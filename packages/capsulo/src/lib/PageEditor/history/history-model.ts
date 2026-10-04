@@ -1,4 +1,4 @@
-import { dayKey, formatDayGroup } from "$lib/utils/format-timestamp";
+import { dayKey, formatDayGroup } from "../../utils/format-timestamp";
 
 /** Shape of a `commits` row as selected by history-documents.ts. */
 export type CommitRow = {

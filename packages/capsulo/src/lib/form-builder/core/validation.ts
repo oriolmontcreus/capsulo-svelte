@@ -15,7 +15,7 @@ import { isFieldHidden, isFieldRequired, resolveConditionValues } from "./condit
 import { normalizeRepeaterItems, repeaterItemValues, resolveFieldValue } from "./translation-runtime";
 import type { FieldDefinition, FieldType, SchemaDefinition, SchemaValues } from "./types";
 import { fieldLabel } from "./validation-helpers";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../admin-i18n/core";
 
 export interface FieldValidator<TField extends FieldDefinition> {
 	/** Whether the value counts as "not filled in" for `required`. */

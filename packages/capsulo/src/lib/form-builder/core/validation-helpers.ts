@@ -1,5 +1,5 @@
 import type { FieldDefinition } from "./types";
-import { t } from "$lib/admin-i18n/core";
+import { t } from "../../admin-i18n/core";
 
 /** Same tokens the editors highlight and the site replaces: `{{key}}`. */
 const VARIABLE_TOKEN_PATTERN = /\{\{\s*[^{}]+?\s*\}\}/;

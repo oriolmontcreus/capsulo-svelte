@@ -1,8 +1,8 @@
-import { requireUser } from "$lib/server/auth";
-import { getGlobals, saveGlobals } from "$lib/server/content";
-import { HttpError, handle, isRecord, json, readJson, requestUiLocale } from "$lib/server/http";
-import { requestRebuild } from "$lib/server/publish";
-import { scheduleUnusedUploadCleanup } from "$lib/server/uploads";
+import { requireUser } from "../../../lib/server/auth";
+import { getGlobals, saveGlobals } from "../../../lib/server/content";
+import { HttpError, handle, isRecord, json, readJson, requestUiLocale } from "../../../lib/server/http";
+import { requestRebuild } from "../../../lib/server/publish";
+import { scheduleUnusedUploadCleanup } from "../../../lib/server/uploads";
 
 export const prerender = false;
 

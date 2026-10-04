@@ -1,4 +1,4 @@
-import type { FieldDefinition, ResolvedSchemaValues, SchemaDefinition } from "$lib/form-builder/core/types";
+import type { FieldDefinition, ResolvedSchemaValues, SchemaDefinition } from "../form-builder/core/types";
 
 import type { GlobalVariableValues } from "./resolve-globals";
 

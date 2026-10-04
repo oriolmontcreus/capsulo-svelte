@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Field, FieldDescription, FieldError, FieldLabel } from "$lib/components/ui/field";
-	import * as InputGroup from "$lib/components/ui/input-group";
-	import VariableTipTapSurface from "$lib/globals/variable-autocomplete/variable-tiptap/VariableTipTapSurface.svelte";
+	import { Field, FieldDescription, FieldError, FieldLabel } from "../../../components/ui/field";
+	import * as InputGroup from "../../../components/ui/input-group";
+	import VariableTipTapSurface from "../../../globals/variable-autocomplete/variable-tiptap/VariableTipTapSurface.svelte";
 	import FieldAdornment from "../shared/FieldAdornment.svelte";
 	import type { TextFieldDefinition } from "./text-field.types";
 

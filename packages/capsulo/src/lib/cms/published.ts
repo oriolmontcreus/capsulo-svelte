@@ -1,5 +1,5 @@
-import type { GlobalVariableValues } from "$lib/globals/resolve-globals";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+import type { GlobalVariableValues } from "../globals/resolve-globals";
+import type { PageEditorValuesByInstance } from "../PageEditor/persistence";
 
 /** Id of the `<script type="application/json">` that carries a page's published content. */
 export const PUBLISHED_ELEMENT_ID = "capsulo-published";

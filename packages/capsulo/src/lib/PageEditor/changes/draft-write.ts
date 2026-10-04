@@ -1,11 +1,11 @@
 import {
 	loadPageEditorDocumentFromCache,
 	savePageEditorDocumentToCache
-} from "$lib/PageEditor/page-editor-cache";
-import { loadPageEditorDocumentFromDb } from "$lib/PageEditor/page-editor-documents";
-import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
+} from "../page-editor-cache";
+import { loadPageEditorDocumentFromDb } from "../page-editor-documents";
+import type { PageEditorValuesByInstance } from "../persistence";
 import { setDraftFieldValue, type DraftFieldTarget } from "./draft-values";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 /**
  * Dispatched after any draft write so the AdminNav dirty-count badge and an open

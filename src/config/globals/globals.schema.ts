@@ -1,7 +1,4 @@
-import { createSchema } from "$lib/form-builder/core/create-schema";
-import type { FieldDefinition } from "$lib/form-builder/core/types";
-import { Text } from "$lib/form-builder/fields/TextField/text-field.builder";
-import { Textarea } from "$lib/form-builder/fields/TextareaField/textarea-field.builder";
+import { createSchema, type FieldDefinition, Text, Textarea } from "capsulo/schema";
 
 export const globalsSchema = createSchema<FieldDefinition>({
 	name: "Global Variables",

@@ -1,4 +1,4 @@
-import type { SchemaValues } from "$lib/form-builder/core/types";
+import type { SchemaValues } from "../form-builder/core/types";
 
 export type PageEditorValuesByInstance = Record<string, SchemaValues>;
 

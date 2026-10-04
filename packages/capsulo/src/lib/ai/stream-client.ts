@@ -1,7 +1,7 @@
-import { CAPSULO_API_BASE } from "$lib/api/capsulo-client";
+import { CAPSULO_API_BASE } from "../api/capsulo-client";
 import type { AiErrorCode, AiResponseBody } from "./protocol";
 import type { AiStreamEvent } from "./stream";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../admin-i18n/i18n.svelte";
 
 export class AgentError extends Error {
 	constructor(

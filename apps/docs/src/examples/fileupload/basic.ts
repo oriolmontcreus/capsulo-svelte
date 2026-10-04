@@ -1,3 +1,3 @@
-import { FileUpload } from '$lib/form-builder/fields/FileUploadField/file-upload-field.builder';
+import { FileUpload } from 'capsulo/schema';
 
 export default FileUpload('attachment').label('Attachment');

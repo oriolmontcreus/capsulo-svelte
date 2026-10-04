@@ -1,14 +1,14 @@
 import { get } from "svelte/store";
-import { session, syncSession } from "$lib/stores/session";
+import { session, syncSession } from "../../stores/session";
 import {
 	loadAllPageEditorCacheDocuments,
 	savePageEditorDocumentToCache
-} from "$lib/PageEditor/page-editor-cache";
-import { commitPageEditorDocuments } from "$lib/PageEditor/page-editor-documents";
-import { validatePageValues } from "$lib/PageEditor/validate-documents";
+} from "../page-editor-cache";
+import { commitPageEditorDocuments } from "../page-editor-documents";
+import { validatePageValues } from "../validate-documents";
 import { selectCommittableDocuments } from "./commit-selection";
 import { resolveInstanceDefaults } from "./schema-defaults";
-import { t } from "$lib/admin-i18n/i18n.svelte";
+import { t } from "../../admin-i18n/i18n.svelte";
 
 export type CommitFailure = {
 	pageId: string;

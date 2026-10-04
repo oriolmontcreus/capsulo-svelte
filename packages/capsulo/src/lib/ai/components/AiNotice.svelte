@@ -2,7 +2,7 @@
 	import CheckIcon from "@lucide/svelte/icons/check";
 	import CopyIcon from "@lucide/svelte/icons/copy";
 	import type { ChatEntry } from "../chat-storage";
-	import { formatDate, t } from "$lib/admin-i18n/i18n.svelte";
+	import { formatDate, t } from "../../admin-i18n/i18n.svelte";
 
 	type NoticeCode = Extract<ChatEntry, { kind: "notice" }>["code"];
 

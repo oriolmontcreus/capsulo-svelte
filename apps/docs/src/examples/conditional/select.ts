@@ -1,5 +1,4 @@
-import { Select } from '$lib/form-builder/fields/SelectField/select-field.builder';
-import { Textarea } from '$lib/form-builder/fields/TextareaField/textarea-field.builder';
+import { Select, Textarea } from 'capsulo/schema';
 
 export default [
   Select('audience')

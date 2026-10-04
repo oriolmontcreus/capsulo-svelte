@@ -1,3 +1,4 @@
+import capsuleDefinitionModules from "virtual:capsulo/capsules";
 import type { CapsuleDefinition, RegisteredCapsule } from "./types";
 
 type CapsuleModule = {
@@ -5,10 +6,8 @@ type CapsuleModule = {
 	capsule?: CapsuleDefinition;
 };
 
-const capsuleModules = import.meta.glob<CapsuleModule>(
-	"../../../components/capsules/**/capsule.definition.ts",
-	{ eager: true }
-);
+/** Every `capsule.definition.ts` in the site's capsules folder (see the integration's virtual modules). */
+const capsuleModules = capsuleDefinitionModules as Record<string, CapsuleModule>;
 
 function getFolderNameFromPath(filePath: string): string {
 	const parts = filePath.split("/");
