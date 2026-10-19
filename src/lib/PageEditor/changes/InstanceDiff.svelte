@@ -9,9 +9,12 @@
 	let {
 		instance,
 		fieldAction,
+		revertValue,
 	}: {
 		instance: InstanceChange;
 		fieldAction?: Snippet<[FieldChange]>;
+		/** Changes page: writes a partly reverted value (one repeater item or item field). */
+		revertValue?: (change: FieldChange, value: unknown) => void;
 	} = $props();
 
 	const capsuleKey = $derived(capsuleKeyFromInstanceId(instance.instanceId));
@@ -43,7 +46,7 @@
 		{#each instance.fields as change (change.fieldName + "::" + change.locale)}
 			{@const field = findField(change.fieldName)}
 			{#if field}
-				<FieldDiff {field} {change} action={fieldAction} />
+				<FieldDiff {field} {change} action={fieldAction} {revertValue} />
 			{/if}
 		{/each}
 	</div>

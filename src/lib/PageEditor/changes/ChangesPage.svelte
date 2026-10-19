@@ -29,8 +29,11 @@
 		return selectedPageId ? getPageChangeSet(selectedPageId) : Promise.resolve(null);
 	});
 
-	/** Discards one pending field edit by writing the committed value back. */
-	async function revertField(change: FieldChange): Promise<void> {
+	/**
+	 * Writes `value` into the draft for the change's field/locale: the committed value
+	 * (Revert on a field) or a partly reverted one (Revert on one repeater item or item field).
+	 */
+	async function revertField(change: FieldChange, value: unknown = change.oldValue): Promise<void> {
 		if (!selectedPageId) return;
 
 		revertError = null;
@@ -41,7 +44,7 @@
 				fieldName: change.fieldName,
 				locale: change.locale,
 			},
-			change.oldValue,
+			value,
 		);
 
 		if (!result.ok) {
@@ -128,7 +131,7 @@
 						{/if}
 					</div>
 					{#await changeSetPromise then changeSet}
-						<PageDiff {changeSet} fieldAction={revertAction} />
+						<PageDiff {changeSet} fieldAction={revertAction} revertValue={revertField} />
 					{/await}
 				{/if}
 			</div>
