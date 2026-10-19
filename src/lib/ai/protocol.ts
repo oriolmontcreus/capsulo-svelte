@@ -14,7 +14,11 @@ import { AI_TOOLS } from "./tools";
  */
 export const DEFAULT_AI_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 
-const MAX_OUTPUT_TOKENS = 2048;
+/**
+ * A ceiling, not a target: with thinking off a reply is a few hundred tokens, but a
+ * repeater edit writes out the whole item list, so leave room for a long tool call.
+ */
+const MAX_OUTPUT_TOKENS = 4096;
 const MAX_MESSAGES = 80;
 /** ~100K tokens: keeps one request well inside the model's context and the free quota. */
 const MAX_REQUEST_CHARS = 400_000;
@@ -50,7 +54,9 @@ export type AiErrorCode =
 	| "dev-login-required"
 	| "quota-exceeded"
 	| "bad-request"
-	| "model-error";
+	| "model-error"
+	/** The model answered with neither text nor tool calls (often its budget went to reasoning). */
+	| "empty-reply";
 
 export class AiRequestError extends Error {
 	constructor(
@@ -146,6 +152,10 @@ export function buildModelInput(request: AiRequestBody, options: { stream?: bool
 		tools: AI_TOOLS,
 		max_tokens: MAX_OUTPUT_TOKENS,
 		temperature: 0.2,
+		// Gemma 4 (the default model) otherwise thinks without limit: a repeater edit reasoned
+		// for 3 minutes, spent the whole 4096-token budget and returned nothing. With thinking
+		// off the same request finished in ~17 seconds. Models without the switch ignore it.
+		chat_template_kwargs: { enable_thinking: false },
 		...(options.stream ? { stream: true } : {})
 	};
 }

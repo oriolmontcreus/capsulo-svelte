@@ -1,12 +1,15 @@
 import type { EditRecord } from "./edits";
 import type { AiMessage, AiResponseBody } from "./protocol";
-import { requestAiStream } from "./stream-client";
+import { AgentError, requestAiStream } from "./stream-client";
 import { describeToolCall, runToolCall } from "./tool-runner";
 
 /** Model calls per user message. Each one costs part of the free daily allowance. */
 const MAX_STEPS = 8;
 /** Tool results from earlier turns are shortened to this before being resent. */
 const OLD_TOOL_RESULT_CHARS = 1500;
+/** Extra attempts for a model step that failed in a way worth retrying (dropped stream, empty reply). */
+const MAX_STEP_RETRIES = 2;
+const RETRYABLE_CODES = new Set(["network", "model-error", "empty-reply"]);
 
 export type AgentCallbacks = {
 	/** What the agent is doing right now ("Reading Home"), or null when it's thinking. */
@@ -15,6 +18,10 @@ export type AgentCallbacks = {
 	onStepStart: () => void;
 	onText: (delta: string) => void;
 	onEdit: (edit: EditRecord) => void;
+	/** The step that was streaming failed and will be retried: drop the text it sent. */
+	onStepDiscarded: () => void;
+	/** Something the user must know regardless of what the model says (e.g. an edit wasn't saved). */
+	onNotice: (text: string) => void;
 };
 
 /**
@@ -46,6 +53,41 @@ function requestStep(
 	return requestAiStream("/ai", { context, messages: compactTranscript(transcript) }, onText, signal);
 }
 
+function wait(ms: number, signal: AbortSignal): Promise<void> {
+	return new Promise((resolve, reject) => {
+		const timer = setTimeout(resolve, ms);
+		signal.addEventListener("abort", () => {
+			clearTimeout(timer);
+			reject(new DOMException("Stopped", "AbortError"));
+		}, { once: true });
+	});
+}
+
+/**
+ * requestStep, retried when the model or the connection fails in a passing way: a dropped
+ * stream, an empty reply, a model error. Users shouldn't have to press Send again for those.
+ */
+async function requestStepWithRetries(
+	context: string,
+	transcript: AiMessage[],
+	callbacks: AgentCallbacks,
+	signal: AbortSignal
+): Promise<AiResponseBody> {
+	for (let attempt = 0; ; attempt++) {
+		try {
+			return await requestStep(context, transcript, callbacks.onText, signal);
+		} catch (error) {
+			const retryable = error instanceof AgentError && RETRYABLE_CODES.has(error.code);
+			if (signal.aborted || !retryable || attempt >= MAX_STEP_RETRIES) throw error;
+			console.warn(`[capsulo ai] retrying a failed step (${attempt + 1}/${MAX_STEP_RETRIES})`, error);
+			callbacks.onStepDiscarded();
+			callbacks.onProgress("Retrying");
+			await wait(800 * (attempt + 1), signal);
+			callbacks.onProgress(null);
+		}
+	}
+}
+
 /**
  * Runs one user message to completion: asks the model, runs the tools it calls in
  * the browser (reads and draft edits), sends the results back, and repeats until it
@@ -58,18 +100,53 @@ export async function runAgent(
 	callbacks: AgentCallbacks,
 	signal: AbortSignal
 ): Promise<void> {
+	let edited = false;
+	/** Requested changes not saved yet, by `instanceId:field` ("*": a call that couldn't be read). */
+	const unsaved = new Map<string, string>();
+	// The model's summary can claim a change that a tool rejected; the user hears the truth.
+	const reportUnsaved = () => {
+		if (unsaved.size === 0) return;
+		const messages = [...unsaved.values()];
+		const detail = messages[0].replace(/^changes\[\d+\]:\s*/, "");
+		const more = messages.length > 1 ? ` (and ${messages.length - 1} more)` : "";
+		callbacks.onNotice(`Some of the requested changes weren't saved: ${detail}${more} Only the changes listed above were made.`);
+	};
+
 	for (let step = 0; step < MAX_STEPS; step++) {
 		callbacks.onProgress(null);
 		callbacks.onStepStart();
-		const { message } = await requestStep(context, transcript, callbacks.onText, signal);
+		let message: AiResponseBody["message"];
+		try {
+			({ message } = await requestStepWithRetries(context, transcript, callbacks, signal));
+		} catch (error) {
+			// The edit is saved and its card (Review/Undo) is showing; an empty wrap-up
+			// reply isn't worth an error.
+			if (!(edited && error instanceof AgentError && error.code === "empty-reply")) throw error;
+			const done = "Done. The changes are saved as a draft; review them above.";
+			transcript.push({ role: "assistant", content: done });
+			callbacks.onText(done);
+			reportUnsaved();
+			return;
+		}
 		transcript.push({ role: "assistant", content: message.content, toolCalls: message.toolCalls.length ? message.toolCalls : undefined });
-		if (message.toolCalls.length === 0) return;
+		if (message.toolCalls.length === 0) {
+			reportUnsaved();
+			return;
+		}
 
 		for (const call of message.toolCalls) {
 			if (signal.aborted) throw new DOMException("Stopped", "AbortError");
 			callbacks.onProgress(describeToolCall(call));
 			const outcome = await runToolCall(call);
-			if (outcome.edit) callbacks.onEdit(outcome.edit);
+			if (outcome.edit) {
+				edited = true;
+				callbacks.onEdit(outcome.edit);
+			}
+			if (outcome.update) {
+				if (outcome.update.saved.length > 0) unsaved.delete("*");
+				for (const key of outcome.update.saved) unsaved.delete(key);
+				for (const { key, message } of outcome.update.failed) unsaved.set(key, message);
+			}
 			transcript.push({ role: "tool", toolCallId: call.id, content: outcome.content });
 		}
 	}
@@ -77,6 +154,7 @@ export async function runAgent(
 	transcript.push({ role: "assistant", content: stopped });
 	callbacks.onStepStart();
 	callbacks.onText(stopped);
+	reportUnsaved();
 }
 
 /**

@@ -148,7 +148,7 @@ export function toAiEventStream(
 								? " It used its whole output budget on reasoning."
 								: " It hit its output limit."
 							: "";
-					emit({ type: "error", error: `The AI model returned an empty reply.${cause} Try again.`, code: "model-error" });
+					emit({ type: "error", error: `The AI model returned an empty reply.${cause} Try again.`, code: "empty-reply" });
 					return;
 				}
 

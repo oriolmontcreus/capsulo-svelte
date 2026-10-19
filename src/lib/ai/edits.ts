@@ -9,7 +9,7 @@ import type {
 } from "$lib/form-builder/core/types";
 import { createEmptyRepeaterItem } from "$lib/form-builder/fields/RepeaterField/modules/repeater-values";
 import { notifyGlobalsDraftReplaced, saveGlobalsDraft } from "$lib/globals/globals-draft";
-import { valuesEqual } from "$lib/PageEditor/changes/diff-model";
+import { normalizeForComparison, valuesEqual } from "$lib/PageEditor/changes/diff-model";
 import { setDraftFieldValue } from "$lib/PageEditor/changes/draft-values";
 import { updatePageDraft } from "$lib/PageEditor/changes/draft-write";
 import type { PageEditorValuesByInstance } from "$lib/PageEditor/persistence";
@@ -62,8 +62,27 @@ function isColor(value: string): boolean {
 
 type Validated = { value: unknown } | { error: string };
 
+/**
+ * Model control tokens (Gemma's `<|"|>` string delimiter and the like) that leak into tool
+ * calls when the model garbles one. They never belong in content.
+ */
+export const CONTROL_TOKEN_PATTERN = /<\|/;
+
+/** Keys of one requested change; anything else means the call was garbled. */
+const CHANGE_KEYS = ["instanceId", "field", "locale", "value"];
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * True for a value that only repeats the empty value the model was shown: models echo the
+ * `null` of an unset locale or field back, sometimes as the string "null". Writing it would
+ * put "null" on the page, so it counts as "leave it as it is".
+ */
+function isEchoedEmpty(value: unknown, previous: unknown): boolean {
+	if (value === null) return true;
+	return value === "null" && normalizeForComparison(previous) === undefined;
 }
 
 /**
@@ -118,6 +137,7 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
 				continue;
 			}
 			if (!isTranslatable(child)) {
+				if (isEchoedEmpty(rawChild, previousChild[DEFAULT_LOCALE])) continue;
 				const validated = validateValue(child, rawChild, DEFAULT_LOCALE);
 				if ("error" in validated) return { error: `${childPath}: ${validated.error}` };
 				item[child.name] = { [DEFAULT_LOCALE]: validated.value };
@@ -131,7 +151,7 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
 				if (!LOCALES.includes(locale)) {
 					return { error: `${childPath} has unknown locale "${locale}". Locales: ${LOCALES.join(", ")}.` };
 				}
-				if (value === null) continue;
+				if (isEchoedEmpty(value, previousChild[locale])) continue;
 				const validated = validateValue(child, value, locale);
 				if ("error" in validated) return { error: `${childPath} (${locale}): ${validated.error}` };
 				next[locale] = validated.value;
@@ -151,6 +171,9 @@ function validateRepeater(field: RepeaterFieldDefinition, raw: unknown, previous
  */
 function validateValue(field: FieldDefinition, raw: unknown, locale: string, previous?: unknown): Validated {
 	const name = `"${field.name}"`;
+	if (typeof raw === "string" && CONTROL_TOKEN_PATTERN.test(raw)) {
+		return { error: `${name} contains model control tokens such as <|"|>, so the call was garbled. Send it again with plain text.` };
+	}
 	switch (field.type) {
 		case "text":
 		case "textarea": {
@@ -210,6 +233,15 @@ function resolveChange(
 	index: number
 ): Resolved | { error: string } {
 	const prefix = `changes[${index}]:`;
+	if (typeof change !== "object" || change === null || Array.isArray(change)) {
+		return { error: `${prefix} each change must be an object with ${CHANGE_KEYS.join(", ")}.` };
+	}
+	const unexpected = Object.keys(change).filter((key) => !CHANGE_KEYS.includes(key));
+	if (unexpected.length > 0) {
+		return {
+			error: `${prefix} unexpected keys ${unexpected.map((key) => JSON.stringify(key)).join(", ")} (a change takes ${CHANGE_KEYS.join(", ")}), so the call was garbled. Send it again.`
+		};
+	}
 	const instanceId = target === GLOBALS_TARGET ? GLOBALS_TARGET : change.instanceId;
 	if (typeof instanceId !== "string" || !instanceIds.includes(instanceId)) {
 		return { error: `${prefix} unknown instanceId ${JSON.stringify(change.instanceId)}. Use one of: ${instanceIds.join(", ")}.` };
