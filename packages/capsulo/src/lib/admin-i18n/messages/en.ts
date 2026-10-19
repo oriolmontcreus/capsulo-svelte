@@ -164,6 +164,11 @@ export const en = {
 	"diff.on": "On",
 	"diff.off": "Off",
 	"diff.hiddenValue": "Hidden value",
+	"diff.revertAddedItem": "Remove this new item",
+	"diff.revertRemovedItem": "Bring this item back where it was",
+	"diff.revertEditedItem": "Restore this item's committed values and position",
+	"diff.revertMovedItem": "Move this item back where it was",
+	"diff.revertItemField": "Restore the committed value of this field",
 
 	// History page
 	"history.title": "History",

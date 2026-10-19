@@ -192,6 +192,15 @@
 						pushEntry({ id: createId(), kind: "edit", edit });
 						persist();
 					},
+					onStepDiscarded: () => {
+						chat.entries = chat.entries.filter((item) => item.id !== streamingId);
+						streamingId = null;
+					},
+					onNotice: (text) => {
+						endStreamedText();
+						pushEntry({ id: createId(), kind: "notice", text });
+						persist();
+					},
 				},
 				abortController.signal,
 			);

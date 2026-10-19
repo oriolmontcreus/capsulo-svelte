@@ -150,6 +150,11 @@ export const fr: Messages = {
 	"diff.on": "Activé",
 	"diff.off": "Désactivé",
 	"diff.hiddenValue": "Valeur masquée",
+	"diff.revertAddedItem": "Retirer ce nouvel élément",
+	"diff.revertRemovedItem": "Rétablir cet élément à sa place d'origine",
+	"diff.revertEditedItem": "Rétablir les valeurs validées et la position de cet élément",
+	"diff.revertMovedItem": "Remettre cet élément à sa place d'origine",
+	"diff.revertItemField": "Rétablir la valeur validée de ce champ",
 
 	// History page
 	"history.title": "Historique",

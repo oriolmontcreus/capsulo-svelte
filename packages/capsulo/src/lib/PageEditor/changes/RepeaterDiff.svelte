@@ -1,19 +1,36 @@
 <script lang="ts">
 	import { DEFAULT_LOCALE } from "../../config/i18n-config";
-	import type { RepeaterFieldDefinition } from "../../form-builder/core/types";
+	import { Button } from "../../components/ui/button";
+	import type { RepeaterFieldDefinition, RepeaterItem } from "../../form-builder/core/types";
 	import FieldValueView from "./FieldValueView.svelte";
 	import InlineTextDiff from "./InlineTextDiff.svelte";
 	import RepeaterDiff from "./RepeaterDiff.svelte";
 	import RepeaterItemValues from "./RepeaterItemValues.svelte";
-	import { diffRepeaterItems, repeaterItemTitle } from "./repeater-diff";
+	import {
+		diffRepeaterItems,
+		repeaterItemTitle,
+		revertAddedItem,
+		revertItem,
+		setItemFieldValue,
+	} from "./repeater-diff";
 	import { t } from "../../admin-i18n/i18n.svelte";
 
-	/** Item-level diff of a repeater: added, removed, moved and edited items. */
+	/**
+	 * Item-level diff of a repeater: added, removed, moved and edited items. With
+	 * `onRevert` (Changes page), each item and each changed item field gets a Revert
+	 * button that hands back the whole list with just that part restored.
+	 */
 	let {
 		field,
 		oldValue,
 		newValue,
-	}: { field: RepeaterFieldDefinition; oldValue: unknown; newValue: unknown } = $props();
+		onRevert,
+	}: {
+		field: RepeaterFieldDefinition;
+		oldValue: unknown;
+		newValue: unknown;
+		onRevert?: (items: RepeaterItem[]) => void;
+	} = $props();
 
 	const changes = $derived(diffRepeaterItems(field, oldValue, newValue));
 
@@ -29,6 +46,22 @@
 	};
 </script>
 
+<!-- Shown on hover, like the field-level Revert, but only for the innermost hovered item so
+     nested items don't light up every enclosing button. focus-visible keeps it keyboard reachable. -->
+{#snippet revertButton(title: string, revert: () => RepeaterItem[], reveal: string)}
+	{#if onRevert}
+		<Button
+			variant="ghost"
+			size="xs"
+			class="ml-auto shrink-0 opacity-0 transition-opacity focus-visible:opacity-100 {reveal}"
+			{title}
+			onclick={() => onRevert(revert())}
+		>
+			{t("changes.revert")}
+		</Button>
+	{/if}
+{/snippet}
+
 {#if changes.length === 0}
 	<span class="text-muted-foreground text-sm italic">{t("diff.noItemChanges")}</span>
 {:else}
@@ -36,7 +69,7 @@
 		{#each changes as change (`${change.kind}-${change.item._id}`)}
 			{@const title = repeaterItemTitle(field, change.item, change.index, DEFAULT_LOCALE)}
 			<li class="border-border space-y-2 rounded-md border px-3 py-2">
-				<div class="flex min-w-0 items-center gap-2">
+				<div class="flex min-h-6 min-w-0 items-center gap-2">
 					{#if change.kind === "added"}
 						<span class="rounded px-1.5 py-0.5 text-[10px] font-medium uppercase {badgeClass.added}">{t("diff.added")}</span>
 					{:else if change.kind === "removed"}
@@ -52,6 +85,22 @@
 						{/if}
 					{/if}
 					<span class="truncate text-sm font-medium" class:line-through={change.kind === "removed"}>{title}</span>
+					{#if change.kind === "added"}
+						{@render revertButton(t("diff.revertAddedItem"), () => revertAddedItem(newValue, change.item._id), "[li:hover:not(:has(li:hover))>div>&]:opacity-100")}
+					{:else if change.kind === "removed"}
+						{@render revertButton(t("diff.revertRemovedItem"), () =>
+							revertItem(oldValue, newValue, change.item._id),
+							"[li:hover:not(:has(li:hover))>div>&]:opacity-100",
+						)}
+					{:else}
+						{@render revertButton(
+							change.changes.length > 0
+								? t("diff.revertEditedItem")
+								: t("diff.revertMovedItem"),
+							() => revertItem(oldValue, newValue, change.item._id),
+							"[li:hover:not(:has(li:hover))>div>&]:opacity-100",
+						)}
+					{/if}
 				</div>
 
 				{#if change.kind === "added"}
@@ -61,18 +110,25 @@
 				{:else if change.changes.length > 0}
 					<div class="space-y-2">
 						{#each change.changes as childChange (`${childChange.field.name}-${childChange.locale}`)}
-							<div class="space-y-1">
-								<div class="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+							{@const revertChild = (value: unknown) =>
+								setItemFieldValue(oldValue, newValue, change.item._id, childChange.field.name, childChange.locale, value)}
+							<div class="space-y-1" data-repeater-child>
+								<div class="text-muted-foreground flex min-h-6 items-center gap-1.5 text-[11px]">
 									{childChange.field.label ?? childChange.field.name}
 									{#if childChange.locale !== DEFAULT_LOCALE}
 										<span class="bg-muted rounded px-1 text-[10px] uppercase">{childChange.locale}</span>
 									{/if}
+									{@render revertButton(t("diff.revertItemField"), () =>
+										revertChild(childChange.oldValue),
+										"[[data-repeater-child]:hover:not(:has(li:hover))>div>&]:opacity-100",
+									)}
 								</div>
 								{#if childChange.field.type === "repeater"}
 									<RepeaterDiff
 										field={childChange.field}
 										oldValue={childChange.oldValue}
 										newValue={childChange.newValue}
+										onRevert={onRevert && ((nested) => onRevert(revertChild(nested)))}
 									/>
 								{:else if childChange.field.type === "text" || childChange.field.type === "textarea"}
 									<InlineTextDiff oldText={asText(childChange.oldValue)} newText={asText(childChange.newValue)} />

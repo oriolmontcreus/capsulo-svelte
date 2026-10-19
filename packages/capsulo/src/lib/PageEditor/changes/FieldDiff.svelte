@@ -13,11 +13,14 @@
 		field,
 		change,
 		action,
+		revertValue,
 	}: {
 		field: FieldDefinition;
 		change: FieldChange;
 		/** Per-field Revert (Changes page) or Recover (History page) control. */
 		action?: Snippet<[FieldChange]>;
+		/** Changes page: writes a partly reverted value (one repeater item or item field). */
+		revertValue?: (change: FieldChange, value: unknown) => void;
 	} = $props();
 
 	const isInline = $derived((field.type === "text" || field.type === "textarea") && !isPasswordField(field));
@@ -42,7 +45,12 @@
 	</div>
 
 	{#if field.type === "repeater"}
-		<RepeaterDiff {field} oldValue={change.oldValue} newValue={change.newValue} />
+		<RepeaterDiff
+			{field}
+			oldValue={change.oldValue}
+			newValue={change.newValue}
+			onRevert={revertValue && ((items) => revertValue(change, items))}
+		/>
 	{:else if isInline}
 		<InlineTextDiff oldText={asText(change.oldValue)} newText={asText(change.newValue)} />
 	{:else}

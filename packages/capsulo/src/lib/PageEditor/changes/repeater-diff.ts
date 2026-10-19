@@ -87,6 +87,62 @@ export function diffRepeaterItems(
 	return result;
 }
 
+/**
+ * Puts `item` back where it sat in the old list: right after the closest earlier item
+ * (in the old order) that is still in `items`, or first when there is none.
+ */
+function insertAtOldPosition(oldItems: RepeaterItem[], items: RepeaterItem[], item: RepeaterItem): RepeaterItem[] {
+	const oldIndex = oldItems.findIndex((entry) => entry._id === item._id);
+	for (let index = oldIndex - 1; index >= 0; index -= 1) {
+		const anchor = items.findIndex((entry) => entry._id === oldItems[index]._id);
+		if (anchor !== -1) return [...items.slice(0, anchor + 1), item, ...items.slice(anchor + 1)];
+	}
+	return [item, ...items];
+}
+
+/** Reverting an added item: the new list without it. */
+export function revertAddedItem(newValue: unknown, itemId: string): RepeaterItem[] {
+	return normalizeRepeaterItems(newValue).filter((item) => item._id !== itemId);
+}
+
+/**
+ * Reverting a removed, edited or moved item: its old version, back at its old position.
+ * Other items keep their current content and order.
+ */
+export function revertItem(oldValue: unknown, newValue: unknown, itemId: string): RepeaterItem[] {
+	const oldItems = normalizeRepeaterItems(oldValue);
+	const oldItem = oldItems.find((item) => item._id === itemId);
+	const items = normalizeRepeaterItems(newValue).filter((item) => item._id !== itemId);
+	return oldItem ? insertAtOldPosition(oldItems, items, oldItem) : items;
+}
+
+/**
+ * Sets one child field of one item, for one locale (`undefined` clears that locale). A field
+ * left with no locales is dropped when the committed item didn't have it, so a fully reverted
+ * list compares equal to the committed one.
+ */
+export function setItemFieldValue(
+	oldValue: unknown,
+	newValue: unknown,
+	itemId: string,
+	fieldName: string,
+	locale: string,
+	value: unknown,
+): RepeaterItem[] {
+	const oldItem = normalizeRepeaterItems(oldValue).find((item) => item._id === itemId);
+	return normalizeRepeaterItems(newValue).map((item) => {
+		if (item._id !== itemId) return item;
+		const byLocale = { ...localeMap(item, fieldName) };
+		if (value === undefined) delete byLocale[locale];
+		else byLocale[locale] = value;
+		if (Object.keys(byLocale).length === 0 && !(oldItem && fieldName in oldItem)) {
+			const { [fieldName]: _dropped, ...rest } = item;
+			return rest as RepeaterItem;
+		}
+		return { ...item, [fieldName]: byLocale };
+	});
+}
+
 /** How an item is named in diffs: its first text value, else "{itemName} N". */
 export function repeaterItemTitle(
 	field: RepeaterFieldDefinition,

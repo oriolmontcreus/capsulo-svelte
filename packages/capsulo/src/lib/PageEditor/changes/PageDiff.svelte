@@ -9,12 +9,15 @@
 		emptyTitle = undefined,
 		emptyDescription = undefined,
 		fieldAction,
+		revertValue,
 	}: {
 		changeSet: PageChangeSet | null;
 		emptyTitle?: string;
 		emptyDescription?: string;
 		/** Per-field Revert (Changes page) or Recover (History page) control. */
 		fieldAction?: Snippet<[FieldChange]>;
+		/** Changes page: writes a partly reverted value (one repeater item or item field). */
+		revertValue?: (change: FieldChange, value: unknown) => void;
 	} = $props();
 </script>
 
@@ -26,7 +29,7 @@
 {:else}
 	<div class="space-y-10">
 		{#each changeSet.instances as instance (instance.instanceId)}
-			<InstanceDiff {instance} {fieldAction} />
+			<InstanceDiff {instance} {fieldAction} {revertValue} />
 		{/each}
 	</div>
 {/if}
